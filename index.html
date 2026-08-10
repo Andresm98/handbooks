@@ -4,8 +4,15 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AnaxDevBook | Knowledge Hub Domain</title>
+    <title>Anax Apeiron DevBook | Knowledge Hub Domain</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="theme-color" content="#38bdf8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         :root {
             --bg-color: #0f172a;
@@ -145,12 +152,21 @@
             }
         }
     </style>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+                    .catch(err => console.warn('Error al registrar Service Worker:', err));
+            });
+        }
+    </script>
 </head>
 
 <body>
 
     <header>
-        <h1>ANAX<span>DEVBOOK</span></h1>
+        <h1>Anax Apeiron<span> DEVBOOK</span></h1>
         <div class="search-container">
             <i class="fa fa-search"></i>
             <input id="search" type="text" placeholder="Buscar guías..." autocomplete="off">
@@ -264,7 +280,19 @@
             </a>
         </li>
 
-    
+        <!-- Guía 9 -->
+        <li>
+            <a href="docs/guia-ia-agentica.html" class="guide-card">
+                <i class="fa-solid fa-diagram-project main-icon"></i>
+                <span class="name">Guía Agéntica</span>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Guía completa para desarrolladores de
+                    software en el ámbito AI Agent.</p>
+                <div class="meta">
+                    <span><i class="fa fa-file-code"></i> 46 KB</span>
+                    <span><i class="fa fa-calendar"></i> Agosto 2026</span>
+                </div>
+            </a>
+        </li>
     </ul>
 
     <script>

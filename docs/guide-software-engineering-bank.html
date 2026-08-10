@@ -5,6 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guía de Dominio — Ingeniero de Software (Banca)</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="theme-color" content="#38bdf8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registrado:', reg.scope))
+                    .catch(err => console.warn('Error al registrar Service Worker:', err));
+            });
+        }
+    </script>
     <meta name="description"
         content="Guía de estudio completa para Ingeniero de Software / Banco Pichincha — backend, frontend, nube, datos, arquitectura y banca.">
     <style>
@@ -1228,6 +1244,29 @@
         ::-webkit-scrollbar-track {
             background: transparent;
         }
+
+        .home-link {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.92);
+            color: #111;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            text-decoration: none;
+            margin-right: 1rem;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .home-link:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 1);
+        }
     </style>
 </head>
 
@@ -1238,6 +1277,7 @@
             <button class="menu-btn" id="menuBtn" aria-label="Abrir menú">☰</button>
             <div class="brand" onclick="Router.go('home')" style="cursor:pointer;">📘 Guía de Dominio <small>Ing.
                     Software · Banca</small></div>
+            <a href="../index.html" class="home-link" aria-label="Inicio">HOME</a>
             <div class="search-wrap">
                 <span class="search-icon">⌕</span>
                 <input class="search-input" id="searchInput"

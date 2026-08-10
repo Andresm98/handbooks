@@ -5,6 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Del ticket al roadmap — Guía Full-Stack Engineer · Performanze</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#38bdf8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registrado:', reg.scope))
+                    .catch(err => console.warn('Error al registrar Service Worker:', err));
+            });
+        }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -667,6 +680,31 @@
             color: var(--text-muted);
             font-size: 0.82rem;
         }
+
+        .home-link {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 9999;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.12);
+            color: #edf2f7;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.82rem;
+            text-decoration: none;
+            backdrop-filter: blur(4px);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .home-link:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.18);
+        }
     </style>
 </head>
 
@@ -701,6 +739,7 @@
                 <span class="chip">AWS / GCP / Supabase</span>
                 <span class="chip">3–5 años · entorno ágil</span>
             </div>
+            <a href="../index.html" class="home-link" aria-label="Inicio">HOME</a>
         </div>
     </header>
 

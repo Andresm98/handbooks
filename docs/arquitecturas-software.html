@@ -5,6 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arquitecturas de Software Modernas — Guía Avanzada</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#38bdf8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registrado:', reg.scope))
+                    .catch(err => console.warn('Error al registrar Service Worker:', err));
+            });
+        }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
         href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Newsreader:ital,wght@0,300;0,500;1,300&display=swap"
@@ -910,6 +923,30 @@
         .footer span {
             font-family: 'IBM Plex Mono', monospace;
         }
+
+        .home-link {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.92);
+            color: #111;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.82rem;
+            text-decoration: none;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .home-link:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 1);
+        }
     </style>
 </head>
 
@@ -1007,6 +1044,7 @@
                         <span class="lbl">Tablas comparativas</span>
                     </div>
                 </div>
+                <a href="../index.html" class="home-link" aria-label="Inicio">HOME</a>
             </header>
 
             <div class="content">

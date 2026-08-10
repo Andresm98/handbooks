@@ -5,6 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solution Architect — Complete Study Guide</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="theme-color" content="#38bdf8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registrado:', reg.scope))
+                    .catch(err => console.warn('Error al registrar Service Worker:', err));
+            });
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap');
 
@@ -640,6 +656,30 @@
             font-size: 11px;
             color: var(--muted);
         }
+
+        .home-link {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.92);
+            color: #111;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            text-decoration: none;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .home-link:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 1);
+        }
     </style>
 </head>
 
@@ -663,6 +703,7 @@
     <!-- HERO -->
     <div class="hero">
         <div class="hero-badge">// GUÍA COMPLETA E2E</div>
+        <a href="../index.html" class="home-link" aria-label="Inicio">HOME</a>
         <h1>Solution Architect<br><span>Study Guide</span></h1>
         <p>Preparación técnica integral para roles de Arquitecto de Soluciones. Basada en evaluación técnica real
             cubriendo fundamentos, multi-cloud, patrones, seguridad y diseño de sistemas distribuidos.</p>
