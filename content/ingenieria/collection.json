@@ -1,0 +1,144 @@
+{
+  "id": "ingenieria",
+  "order": 1,
+  "title": "Ingeniería de Software, Arquitectura e IA",
+  "description": "De ingeniero de software a arquitecto de soluciones con IA: cuatro handbooks que no se repiten entre sí y un roadmap interactivo.",
+  "apps": [
+    {
+      "id": "roadmap",
+      "href": "/apps/roadmap.html",
+      "title": "Roadmap interactivo de Ingeniería de Software (Banca)",
+      "meta": "23 temas · checklist y favoritos · offline",
+      "card": {
+        "kicker": "Aplicación · Práctica",
+        "tagline": "Niveles, checklist, entrevistas y proyectos",
+        "description": "Ruta Junior → Arquitecto con dependencias entre temas, matriz de prioridad, preguntas de entrevista por nivel, proyectos prácticos y progreso guardado.",
+        "icon": "RM",
+        "color": "#f43f5e"
+      }
+    }
+  ],
+  "paths": [
+    {
+      "role": "Software Engineer",
+      "summary": "Del oficio del código a operar sistemas en producción.",
+      "steps": [
+        {
+          "label": "Qué es un ingeniero senior",
+          "href": "/ingenieria/software-engineer#cap01"
+        },
+        {
+          "label": "Oficio del código y diseño",
+          "href": "/ingenieria/software-engineer#cap02"
+        },
+        {
+          "label": "Backend, frontend y datos con el stack de referencia",
+          "href": "/ingenieria/software-engineer#cap04"
+        },
+        {
+          "label": "Testing, performance y seguridad",
+          "href": "/ingenieria/software-engineer#cap07"
+        },
+        {
+          "label": "Patrones de arquitectura",
+          "href": "/ingenieria/arquitectura-software#patrones"
+        },
+        {
+          "label": "Practicar con el roadmap",
+          "href": "/apps/roadmap.html",
+          "note": "checklist y entrevistas por nivel"
+        }
+      ]
+    },
+    {
+      "role": "AI Software Engineer",
+      "summary": "Construir, medir y operar sistemas con LLMs.",
+      "steps": [
+        {
+          "label": "Mapa de competencias",
+          "href": "/ingenieria/ia-generativa#competencias"
+        },
+        {
+          "label": "Fundamentos: ML, Transformers, LLMs",
+          "href": "/ingenieria/ia-generativa#fundamentos-ml"
+        },
+        {
+          "label": "Integrar LLMs en software",
+          "href": "/ingenieria/ia-generativa#integracion-apis"
+        },
+        {
+          "label": "RAG de punta a punta",
+          "href": "/ingenieria/ia-generativa#rag"
+        },
+        {
+          "label": "Agentes, herramientas y MCP",
+          "href": "/ingenieria/ia-generativa#agentes"
+        },
+        {
+          "label": "Evals y LLMOps",
+          "href": "/ingenieria/ia-generativa#evaluacion"
+        }
+      ]
+    },
+    {
+      "role": "Solutions Architect",
+      "summary": "Decidir qué se construye, con qué y a qué costo.",
+      "steps": [
+        {
+          "label": "El rol y los modelos mentales",
+          "href": "/ingenieria/solutions-architect#cap01"
+        },
+        {
+          "label": "Estilos como herramientas de decisión",
+          "href": "/ingenieria/arquitectura-software#estilos-decision"
+        },
+        {
+          "label": "Cloud, redes y costos",
+          "href": "/ingenieria/solutions-architect#cap06"
+        },
+        {
+          "label": "Datos y seguridad",
+          "href": "/ingenieria/solutions-architect#cap07"
+        },
+        {
+          "label": "Operación y modernización",
+          "href": "/ingenieria/solutions-architect#cap09"
+        },
+        {
+          "label": "Casos y trade-offs para entrevistas",
+          "href": "/ingenieria/solutions-architect#estudio-casos"
+        }
+      ]
+    },
+    {
+      "role": "AI Solutions Architect",
+      "summary": "Arquitectura, riesgo y estrategia de sistemas con IA.",
+      "steps": [
+        {
+          "label": "Mapa de competencias",
+          "href": "/ingenieria/ia-generativa#competencias"
+        },
+        {
+          "label": "Selección de modelos e inferencia",
+          "href": "/ingenieria/ia-generativa#seleccion-modelos"
+        },
+        {
+          "label": "RAG en producción",
+          "href": "/ingenieria/ia-generativa#rag-produccion"
+        },
+        {
+          "label": "Seguridad y gobernanza",
+          "href": "/ingenieria/ia-generativa#seguridad"
+        },
+        {
+          "label": "Plataformas, ADRs y estrategia",
+          "href": "/ingenieria/ia-generativa#plataformas"
+        },
+        {
+          "label": "System design de IA",
+          "href": "/ingenieria/ia-generativa#system-design-ia"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+<p>Las decisiones de arquitectura de IA generativa tienen la particularidad de que sus trade-offs cambian rápido (nuevos modelos, nuevos precios, nuevas capacidades). Documentarlas como ADR es lo que permite revisarlas con criterio en vez de "porque siempre lo hicimos así".</p>
+
+<h3>Plantilla de ADR adaptada a decisiones de IA</h3>
+<div class="diagram">ADR-NNNN: [Título de la decisión]
+
+Estado: Propuesto | Aceptado | Reemplazado por ADR-XXXX
+
+Contexto
+· Problema de negocio y restricciones técnicas
+· Volumen esperado, SLA de latencia, sensibilidad del dato
+
+Opciones consideradas
+1. [Opción A] — costo, latencia, calidad, riesgo de vendor lock-in
+2. [Opción B] — ídem
+3. [Opción C] — ídem
+
+Decisión
+· Opción elegida y justificación basada en el peso relativo
+de cada criterio para este caso de uso específico
+
+Consecuencias
+· Qué se gana
+· Qué se sacrifica (deuda técnica aceptada conscientemente)
+· Condición de revisión (ej. "revisar si el precio del modelo
+baja 30% o si aparece un modelo con mejor benchmark en Y")</div>
+
+<h3>Temas que casi siempre merecen su propio ADR</h3>
+<ul>
+<li>Elección de modelo base y estrategia de fallback si el proveedor tiene degradación de servicio.</li>
+<li>RAG vs. fine-tuning vs. contexto directo para una fuente de conocimiento específica.</li>
+<li>Nivel de autonomía del agente: qué acciones requieren aprobación humana y cuáles no.</li>
+<li>Estrategia de versionado de prompts (¿viven en código, en un servicio de configuración, o en un prompt registry dedicado?).</li>
+<li>Gate de calidad antes de activar un flujo agéntico en producción (cobertura de evals mínima, umbral de tasa de error aceptable).</li>
+</ul>
+
+<div class="callout beige">
+<div class="callout-label">Aplicado a tu contexto</div>
+La misma disciplina que ya aplicas en CodeGuardian —condicionar la activación del hub semántico A2A en producción a que la automatización CI/E2E sea un gate obligatorio— es exactamente el tipo de consecuencia que un ADR de IA debe capturar explícitamente: no basta con que la funcionalidad exista, la decisión de activarla en default de producción es una decisión de riesgo separada y debe documentarse como tal.
+</div>
+
+<h3>Modelo C4 aplicado a sistemas agénticos</h3>
+<p>El modelo C4 (Context, Containers, Components, Code) se traslada bien a sistemas de IA si se trata cada agente y cada índice de conocimiento como un contenedor de primer nivel, no como un detalle interno oculto dentro de "el backend".</p>
+
+<h3>Nivel de contenedores para una plataforma agéntica</h3>
+<div class="diagram">┌──────────────────────────────────────────────────────────┐
+│                     Sistema: Plataforma Agéntica            │
+│                                                              │
+│  ┌───────────┐   ┌────────────────┐   ┌─────────────────┐  │
+│  │  Gateway   │──►│  Orquestador    │──►│  Agente Worker   │  │
+│  │  (BFF /    │   │  (saga state    │   │  (K8s Job        │  │
+│  │  proxy)    │   │   machine)      │   │   efímero)       │  │
+│  └───────────┘   └────────┬───────┘   └────────┬─────────┘  │
+│                            │                      │            │
+│                            ▼                      ▼            │
+│                   ┌────────────────┐   ┌─────────────────┐    │
+│                   │  Event Backbone │   │  Servidor MCP    │    │
+│                   │  (Kafka/Redpanda│   │  (herramientas   │    │
+│                   │   / Service Bus)│   │   externas)      │    │
+│                   └────────┬───────┘   └─────────────────┘    │
+│                            │                                   │
+│                            ▼                                   │
+│                   ┌────────────────┐   ┌─────────────────┐    │
+│                   │  Vector Store   │   │  Audit / CQRS    │    │
+│                   │  (RAG)          │   │  Read Store      │    │
+│                   └────────────────┘   └─────────────────┘    │
+└──────────────────────────────────────────────────────────┘</div>
+
+<p class="muted">Cada contenedor de este diagrama justifica su propio ADR de despliegue, su propia base de datos (database-per-service), y su propio conjunto de métricas de observabilidad — la misma disciplina que ya aplicas modelando "BP Internet Banking" en Structurizr se traslada directamente a plataformas agénticas.</p>
+
+<h3>Árbol de decisión rápido</h3>
+<div class="diagram">¿El problema requiere conocimiento externo o actualizado?
+│
+├─ No ──► ¿Requiere acción sobre sistemas externos?
+│           │
+│           ├─ No ──► Prompt directo / generación simple
+│           │
+│           └─ Sí ──► Agente simple con tool use
+│
+└─ Sí ──► RAG
+│
+└─► ¿La tarea tiene sub-dominios independientes
+o requiere múltiples pasos de decisión?
+│
+├─ No ──► Agente único con RAG + herramientas
+│
+└─ Sí ──► Sistema multiagente
+(orquestador + workers especializados)
+│
+└─► ¿Las sub-tareas son paralelizables?
+│
+├─ Sí ──► Fan-out / Fan-in
+└─ No ──► Pipeline secuencial</div>
+
+<p>La arquitectura de sistemas con IA generativa es el área más joven y más mal diseñada
+actualmente. La mayoría de los sistemas "con IA" en producción son PoCs que escalaron — con
+todos los problemas que eso implica. El SA debe entender los patrones reales de sistemas de IA
+en producción, no los demos de YouTube.</p>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Patrones conocidos, problema nuevo</span>
+<p>Los sistemas de IA reutilizan patrones arquitectónicos establecidos: <strong>Event-Driven Architecture</strong> para pipelines de indexación asíncrona; <strong>CQRS</strong> con un modelo de escritura (ingesta) y otro de lectura (búsqueda y generación); <strong>arquitectura hexagonal</strong> para aislar los modelos como adaptadores externos; y <strong>motores de workflow</strong> como Temporal para orquestar agentes con durabilidad y reintentos garantizados. El handbook de <a href="/ingenieria/arquitectura-software">Arquitectura de Software</a> cubre estos patrones en profundidad.</p>
+</div>

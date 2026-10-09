@@ -1,0 +1,31 @@
+# docker compose up --build web            → imagen de producción en http://localhost:3000
+# docker compose --profile dev up --build  → desarrollo con recarga en caliente en http://localhost:3001
+services:
+  web:
+    build:
+      context: .
+      target: runner
+    image: anaxdevbook:local
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache:uid=1001,gid=1001
+    security_opt:
+      - no-new-privileges:true
+
+  dev:
+    profiles: ["dev"]
+    build:
+      context: .
+      target: dev
+    ports:
+      - "3001:3000"
+    environment:
+      WATCHPACK_POLLING: "true"   # detecta cambios en volúmenes montados desde Windows/macOS
+    volumes:
+      - ./content:/app/content
+      - ./src:/app/src
+      - ./public:/app/public

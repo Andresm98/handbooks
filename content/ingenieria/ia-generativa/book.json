@@ -1,0 +1,319 @@
+{
+  "id": "ia-generativa",
+  "order": 1,
+  "card": {
+    "kicker": "IA · AI Engineer · AI Architect",
+    "tagline": "LLMs, RAG, agentes, MCP, evals y gobernanza",
+    "description": "Fundamentos de ML y Transformers, integración de LLMs, RAG, agentes, MCP, evals, seguridad, gobernanza, costos y arquitectura de plataforma. Con mapa de competencias por rol.",
+    "icon": "AI",
+    "color": "#8b5cf6",
+    "badge": "Ampliado"
+  },
+  "title": "IA Generativa, RAG y Sistemas Agénticos",
+  "short": "IA Generativa y Agentes",
+  "eyebrow": "Handbook · AI Software Engineer & AI Solutions Architect",
+  "heading_html": "IA Generativa, RAG y <em>Sistemas Agénticos</em>",
+  "lede": "Todo lo que hay que dominar para construir y diseñar sistemas con IA en producción: de los fundamentos de Machine Learning y los Transformers a RAG, agentes, MCP, evals, seguridad, gobernanza, costos y arquitectura de plataforma. Con un mapa de competencias por rol, ejercicios de system design y preguntas de entrevista.",
+  "description": "Handbook de IA generativa para AI Software Engineers y AI Solutions Architects: fundamentos, LLMs, RAG, agentes, MCP, evals, seguridad, gobernanza y arquitectura.",
+  "revised": "octubre 2026",
+  "parts": [
+    {
+      "label": "Parte 0",
+      "title": "Orientación",
+      "chapters": [
+        {
+          "id": "competencias",
+          "file": "competencias.html",
+          "title": "Mapa de competencias: AI Software Engineer y AI Solutions Architect",
+          "badge": "Nuevo",
+          "lede": "Qué hay que dominar en cada rol, a qué nivel, en qué orden estudiarlo y qué proyectos lo demuestran."
+        }
+      ]
+    },
+    {
+      "label": "Parte I",
+      "title": "Fundamentos de IA",
+      "chapters": [
+        {
+          "id": "fundamentos-ml",
+          "file": "fundamentos-ml.html",
+          "title": "Machine Learning para ingenieros de software",
+          "badge": "Nuevo",
+          "lede": "Entrenamiento e inferencia, paradigmas, métricas, overfitting y cuándo un modelo clásico gana a un LLM."
+        },
+        {
+          "id": "deep-learning-transformers",
+          "file": "deep-learning-transformers.html",
+          "title": "Deep learning y la arquitectura Transformer",
+          "badge": "Nuevo",
+          "lede": "Tokens, embeddings, atención, generación autoregresiva y KV cache: el origen de casi todo el comportamiento de un LLM."
+        },
+        {
+          "id": "ciclo-vida-llm",
+          "file": "ciclo-vida-llm.html",
+          "title": "Cómo se construye un LLM",
+          "badge": "Nuevo",
+          "lede": "Pre-entrenamiento, ajuste supervisado, alineamiento con preferencias y modelos de razonamiento, y los sesgos que deja cada fase."
+        },
+        {
+          "id": "genai",
+          "file": "genai.html",
+          "title": "IA generativa: el bloque base",
+          "lede": "Las tres capacidades que se combinan, los parámetros de inferencia y por qué un modelo alucina."
+        },
+        {
+          "id": "context-window",
+          "file": "context-window.html",
+          "title": "Context window y context engineering",
+          "lede": "La ventana de contexto como recurso escaso y cómo decidir qué entra en cada llamada."
+        },
+        {
+          "id": "prompt-engineering",
+          "file": "prompt-engineering.html",
+          "title": "Prompt engineering",
+          "lede": "Prompts como artefactos versionados: estructura, técnicas anti-alucinación y salidas estructuradas."
+        }
+      ]
+    },
+    {
+      "label": "Parte II",
+      "title": "Ingeniería de aplicaciones con LLMs",
+      "chapters": [
+        {
+          "id": "integracion-apis",
+          "file": "integracion-apis.html",
+          "title": "Integrar LLMs en software: APIs, streaming, herramientas y errores",
+          "badge": "Nuevo",
+          "revised": "oct 2026",
+          "lede": "Código de producción contra la API de un modelo: streaming, salidas estructuradas, tool use, caché, lotes, errores y rechazos."
+        },
+        {
+          "id": "seleccion-modelos",
+          "file": "seleccion-modelos.html",
+          "title": "Selección de modelos y benchmarks",
+          "badge": "Nuevo",
+          "lede": "Un método para elegir y re-elegir modelo con tus datos: benchmarks, evals propias, routing, cascadas y fallback."
+        },
+        {
+          "id": "fine-tuning",
+          "file": "fine-tuning.html",
+          "title": "Prompting, RAG o fine-tuning",
+          "badge": "Nuevo",
+          "lede": "Cuándo adaptar los pesos de un modelo, qué técnicas existen y por qué los datos son el 80% del trabajo."
+        },
+        {
+          "id": "inferencia",
+          "file": "inferencia.html",
+          "title": "Inferencia y self-hosting: GPUs, cuantización y serving",
+          "badge": "Nuevo",
+          "lede": "API gestionada frente a modelo propio: memoria, cuantización, runtimes de serving y métricas."
+        }
+      ]
+    },
+    {
+      "label": "Parte III",
+      "title": "RAG: Retrieval-Augmented Generation",
+      "chapters": [
+        {
+          "id": "rag",
+          "file": "rag.html",
+          "title": "RAG: fundamentos, pipeline y axiomas",
+          "lede": "Qué problema resuelve RAG, cómo se estructura el pipeline y cuándo no usarlo."
+        },
+        {
+          "id": "embeddings",
+          "file": "embeddings.html",
+          "title": "Embeddings y búsqueda vectorial",
+          "revised": "oct 2026",
+          "lede": "Métricas de similitud, modelos de embeddings, índices ANN y cómo elegir base de datos vectorial."
+        },
+        {
+          "id": "ingesta-chunking",
+          "file": "ingesta-chunking.html",
+          "title": "Ingesta de documentos y chunking",
+          "lede": "Parseo, metadatos y la decisión de diseño con más impacto en la calidad de un RAG."
+        },
+        {
+          "id": "retrieval",
+          "file": "retrieval.html",
+          "title": "Retrieval híbrido, re-ranking y filtros",
+          "lede": "BM25 más vectores, fusión de rankings, cross-encoders y filtrado por metadatos."
+        },
+        {
+          "id": "rag-avanzado",
+          "file": "rag-avanzado.html",
+          "title": "Generación aumentada y técnicas avanzadas",
+          "lede": "Prompt de generación, HyDE, query rewriting, RAPTOR, contextual retrieval, Graph RAG y agentic RAG."
+        },
+        {
+          "id": "rag-produccion",
+          "file": "rag-produccion.html",
+          "title": "RAG en producción: permisos, frescura y problemas reales",
+          "badge": "Ampliado",
+          "lede": "Los cinco problemas que no se ven en la demo, permisos heredados, multi-tenancy y frescura del índice."
+        }
+      ]
+    },
+    {
+      "label": "Parte IV",
+      "title": "Agentes",
+      "chapters": [
+        {
+          "id": "agentes",
+          "file": "agentes.html",
+          "title": "Agentes: conceptos y loop agéntico",
+          "lede": "Qué es un agente, sus componentes, cuándo se justifica y la autonomía como dial."
+        },
+        {
+          "id": "patrones-agentes",
+          "file": "patrones-agentes.html",
+          "title": "Workflows y patrones de agentes",
+          "lede": "Del encadenamiento determinista al orquestador–trabajadores: elegir el patrón mínimo."
+        },
+        {
+          "id": "herramientas-mcp",
+          "file": "herramientas-mcp.html",
+          "title": "Herramientas, MCP y A2A",
+          "badge": "Ampliado",
+          "revised": "oct 2026",
+          "lede": "Diseñar herramientas para un modelo, Model Context Protocol, sus riesgos y la comunicación entre agentes."
+        },
+        {
+          "id": "memoria",
+          "file": "memoria.html",
+          "title": "Memoria y estado",
+          "lede": "Tipos de memoria, checkpointing, memoria a largo plazo y caché semántica."
+        },
+        {
+          "id": "multiagente",
+          "file": "multiagente.html",
+          "title": "Sistemas multiagente y paralelismo",
+          "lede": "Topologías, costo real, patrones de paralelismo y contexto compartido frente a aislado."
+        },
+        {
+          "id": "frameworks",
+          "file": "frameworks.html",
+          "title": "Frameworks de orquestación",
+          "revised": "oct 2026",
+          "lede": "Categorías de frameworks, motores de workflow durables y criterios de selección."
+        }
+      ]
+    },
+    {
+      "label": "Parte V",
+      "title": "Calidad, seguridad y operación",
+      "chapters": [
+        {
+          "id": "evaluacion",
+          "file": "evaluacion.html",
+          "title": "Evaluación (evals) de sistemas de IA",
+          "badge": "Ampliado",
+          "lede": "Tipos de evaluación, golden datasets, métricas de RAG, evaluación de agentes y evals como gate de CI."
+        },
+        {
+          "id": "observabilidad",
+          "file": "observabilidad.html",
+          "title": "Observabilidad y LLMOps",
+          "lede": "Qué trazar, métricas clave, AI Gateway y el ciclo de vida de cambios en producción."
+        },
+        {
+          "id": "seguridad",
+          "file": "seguridad.html",
+          "title": "Seguridad de aplicaciones con LLM",
+          "badge": "Ampliado",
+          "lede": "OWASP Top 10 para LLMs, prompt injection indirecta, controles arquitectónicos y red teaming."
+        },
+        {
+          "id": "gobernanza",
+          "file": "gobernanza.html",
+          "title": "Gobernanza, regulación e IA responsable",
+          "badge": "Nuevo",
+          "revised": "oct 2026",
+          "lede": "EU AI Act, NIST AI RMF, ISO/IEC 42001, protección de datos y prácticas que se traducen en arquitectura."
+        },
+        {
+          "id": "costos",
+          "file": "costos.html",
+          "title": "Costos, latencia y FinOps de IA",
+          "lede": "Estimar el costo mensual, palancas de optimización y dónde se va el tiempo de respuesta."
+        }
+      ]
+    },
+    {
+      "label": "Parte VI",
+      "title": "Arquitectura de soluciones con IA",
+      "chapters": [
+        {
+          "id": "despliegue",
+          "file": "despliegue.html",
+          "title": "Patrones de despliegue de agentes",
+          "lede": "Runners, autoescalado por eventos, correlación y aislamiento de agentes que ejecutan código."
+        },
+        {
+          "id": "eventos",
+          "file": "eventos.html",
+          "title": "Arquitectura orientada a eventos para agentes",
+          "lede": "Saga, outbox, CDC y CQRS aplicados a flujos agénticos auditables."
+        },
+        {
+          "id": "plataformas",
+          "file": "plataformas.html",
+          "title": "Plataformas cloud y stack por capa",
+          "revised": "oct 2026",
+          "lede": "Comparativa AWS, Azure y GCP, y catálogo de servicios por capa arquitectónica."
+        },
+        {
+          "id": "proyecto-referencia",
+          "file": "proyecto-referencia.html",
+          "title": "Estructura de proyecto y código base",
+          "lede": "Un esqueleto de proyecto y un componente RAG mínimo con permisos y citas."
+        },
+        {
+          "id": "decisiones",
+          "file": "decisiones.html",
+          "title": "ADRs, C4 y árbol de decisión",
+          "lede": "Documentar decisiones de IA con condiciones de revisión y modelar agentes como contenedores."
+        },
+        {
+          "id": "estrategia",
+          "file": "estrategia.html",
+          "title": "Estrategia de adopción y modelo de madurez",
+          "badge": "Nuevo",
+          "lede": "Discovery, priorización, build vs buy, de PoC a producción y organización del equipo."
+        },
+        {
+          "id": "casos-uso",
+          "file": "casos-uso.html",
+          "title": "Casos de uso: generales y banca",
+          "lede": "Qué combinación de bloques resuelve cada problema, con foco en banca y un caso de referencia."
+        }
+      ]
+    },
+    {
+      "label": "Parte VII",
+      "title": "Práctica",
+      "chapters": [
+        {
+          "id": "system-design-ia",
+          "file": "system-design-ia.html",
+          "title": "System design de IA: ejercicios resueltos",
+          "badge": "Nuevo",
+          "lede": "Una plantilla de 45 minutos y cuatro diseños completos: RAG, agente, workflow documental y plataforma."
+        },
+        {
+          "id": "entrevistas-ia",
+          "file": "entrevistas-ia.html",
+          "title": "Preguntas de entrevista: AI Engineer y AI Architect",
+          "badge": "Nuevo",
+          "lede": "Preguntas por nivel con el núcleo de una buena respuesta."
+        },
+        {
+          "id": "glosario",
+          "file": "glosario.html",
+          "title": "Glosario de IA",
+          "badge": "Nuevo"
+        }
+      ]
+    }
+  ]
+}
