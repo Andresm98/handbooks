@@ -1,0 +1,159 @@
+{
+  "id": "solutions-architect",
+  "title": "Solutions Architecture",
+  "short": "Solutions Architect",
+  "eyebrow": "Handbook · Solutions Architecture",
+  "heading_html": "Handbook de élite para <em>Solutions Architects</em>",
+  "lede": "Años de experiencia en Big Tech, fintech y sistemas distribuidos a gran escala, condensados en una referencia para Staff y Principal Engineers: el rol, los modelos mentales, cloud, datos, seguridad, operación, modernización y casos reales, con la guía de estudio de multi-cloud y redes integrada.",
+  "description": "Handbook de Solutions Architecture: rol, modelos mentales, sistemas distribuidos, cloud, datos, seguridad, DevOps/SRE, modernización y casos reales.",
+  "revised": "octubre 2026",
+  "parts": [
+    {
+      "label": "Parte I",
+      "title": "El rol y el pensamiento",
+      "chapters": [
+        {
+          "id": "cap01",
+          "file": "cap01.html",
+          "title": "El rol del Solutions Architect"
+        },
+        {
+          "id": "cap02",
+          "file": "cap02.html",
+          "title": "Mental models y pensamiento sistémico"
+        },
+        {
+          "id": "cap04",
+          "file": "cap04.html",
+          "title": "Arquitectura alineada al negocio"
+        }
+      ]
+    },
+    {
+      "label": "Parte II",
+      "title": "Fundamentos técnicos",
+      "chapters": [
+        {
+          "id": "cap03",
+          "file": "cap03.html",
+          "title": "Fundamentos de sistemas distribuidos para SA"
+        },
+        {
+          "id": "estudio-backend",
+          "file": "estudio-backend.html",
+          "title": "APIs, autenticación y escalabilidad",
+          "lede": "Tipos de API y protocolos, autenticación y autorización, concurrencia y balanceo de carga."
+        },
+        {
+          "id": "cap05",
+          "file": "cap05.html",
+          "title": "Estilos arquitectónicos",
+          "lede": "Matriz de decisión y estilos, en el handbook de Arquitectura de Software."
+        }
+      ]
+    },
+    {
+      "label": "Parte III",
+      "title": "Cloud e infraestructura",
+      "chapters": [
+        {
+          "id": "cap06",
+          "file": "cap06.html",
+          "title": "Cloud & infrastructure architecture"
+        },
+        {
+          "id": "estudio-cloud",
+          "file": "estudio-cloud.html",
+          "title": "Multi-cloud: AWS, Azure y GCP",
+          "lede": "Servicios equivalentes por categoría, modelos de nube y de servicio, y el AWS Well-Architected Framework."
+        },
+        {
+          "id": "estudio-networking",
+          "file": "estudio-networking.html",
+          "title": "Redes: VPC, balanceo de carga y CDN"
+        },
+        {
+          "id": "estudio-costos",
+          "file": "estudio-costos.html",
+          "title": "Optimización de costos por proveedor"
+        }
+      ]
+    },
+    {
+      "label": "Parte IV",
+      "title": "Datos y seguridad",
+      "chapters": [
+        {
+          "id": "cap07",
+          "file": "cap07.html",
+          "title": "Data architecture para Solutions Architects"
+        },
+        {
+          "id": "estudio-data",
+          "file": "estudio-data.html",
+          "title": "Bases de datos, caching y pipelines",
+          "lede": "SQL frente a NoSQL por tipo, estrategias de caché y streaming de datos."
+        },
+        {
+          "id": "cap08",
+          "file": "cap08.html",
+          "title": "Seguridad arquitectónica"
+        },
+        {
+          "id": "estudio-seguridad",
+          "file": "estudio-seguridad.html",
+          "title": "IAM, Zero Trust y criptografía aplicada"
+        }
+      ]
+    },
+    {
+      "label": "Parte V",
+      "title": "Operación y evolución",
+      "chapters": [
+        {
+          "id": "cap09",
+          "file": "cap09.html",
+          "title": "DevOps, SRE y observabilidad"
+        },
+        {
+          "id": "estudio-devops",
+          "file": "estudio-devops.html",
+          "title": "CI/CD, infraestructura como código y resiliencia"
+        },
+        {
+          "id": "cap10",
+          "file": "cap10.html",
+          "title": "Modernización de sistemas legacy"
+        },
+        {
+          "id": "cap11",
+          "file": "cap11.html",
+          "title": "IA para Solutions Architects",
+          "lede": "Resumen de decisiones y enlaces al handbook de IA Generativa, RAG y Sistemas Agénticos."
+        }
+      ]
+    },
+    {
+      "label": "Parte VI",
+      "title": "Casos y decisiones",
+      "chapters": [
+        {
+          "id": "cap12",
+          "file": "cap12.html",
+          "title": "Casos reales de industria"
+        },
+        {
+          "id": "estudio-casos",
+          "file": "estudio-casos.html",
+          "title": "Arquitecturas end-to-end y trade-offs para entrevistas",
+          "lede": "Plataforma bancaria digital, e-commerce a gran escala, trade-offs clave, DDD, Agile y deuda técnica."
+        },
+        {
+          "id": "bonus",
+          "file": "bonus.html",
+          "title": "El ciclo de vida de una decisión arquitectónica"
+        }
+      ]
+    }
+  ]
+}

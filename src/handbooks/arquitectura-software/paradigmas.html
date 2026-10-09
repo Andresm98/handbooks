@@ -1,0 +1,394 @@
+<!-- MONOLÍTICA -->
+<h3 id="monolitica">Arquitectura Monolítica</h3>
+<p>Una aplicación <strong>monolítica</strong> es una unidad desplegable única donde todos los
+componentes (UI, lógica de negocio, acceso a datos) están acoplados en un solo proceso. Es el
+punto de partida natural de la mayoría de los sistemas.</p>
+
+<div class="diagram">
+<pre><code>
+  ┌─────────────────────────────────────────┐
+  │           MONOLITO                       │
+  │  ┌───────────────────────────────────┐  │
+  │  │      UI / Presentación            │  │
+  │  ├───────────────────────────────────┤  │
+  │  │      Lógica de Negocio            │  │
+  │  ├───────────────────────────────────┤  │
+  │  │      Acceso a Datos / DAL         │  │
+  │  └──────────────────┬────────────────┘  │
+  └─────────────────────┼───────────────────┘
+                        │
+               ┌────────▼────────┐
+               │   Base de Datos │
+               │    Única (SQL)  │
+               └─────────────────┘
+</code></pre>
+</div>
+
+<div class="when-box">
+<div class="when-use">
+<span class="when-label">Cuándo usar</span>
+<ul>
+<li>Proyectos nuevos o MVPs</li>
+<li>Equipos pequeños (&lt; 10 desarrolladores)</li>
+<li>Dominio del problema no bien definido</li>
+<li>Aplicaciones de baja escala</li>
+</ul>
+</div>
+<div class="when-avoid">
+<span class="when-label">Cuándo evitar</span>
+<ul>
+<li>Equipos grandes con ownership distribuido</li>
+<li>Necesidad de escalar componentes independientemente</li>
+<li>Ciclos de despliegue frecuentes</li>
+<li>Alta carga o tráfico variable</li>
+</ul>
+</div>
+</div>
+
+<!-- MICROSERVICIOS -->
+<hr class="divider">
+<h3 id="microservicios">Microservicios</h3>
+<p>Descompone la aplicación en <strong>servicios pequeños, autónomos y enfocados en un
+dominio</strong> específico. Cada servicio tiene su propia base de datos, puede desplegarse
+de forma independiente y se comunica a través de APIs o mensajería.</p>
+
+<div class="diagram">
+<pre><code>
+                      ┌────────────────┐
+     Clientes ──────► │  API Gateway   │
+                      └───┬────┬───┬───┘
+                          │    │   │
+               ┌──────────┘    │   └───────────┐
+               ▼               ▼               ▼
+  ┌────────────────┐  ┌─────────────────┐  ┌────────────────┐
+  │  User Service  │  │  Order Service  │  │  Payment Svc   │
+  │  DB: PostgreSQL│  │  DB: MongoDB    │  │  DB: PostgreSQL│
+  └────────────────┘  └────────┬────────┘  └────────────────┘
+                               │
+                    ┌──────────▼─────────┐
+                    │  Message Broker     │
+                    │  (RabbitMQ/Kafka)   │
+                    └──────────┬─────────┘
+                               │
+                    ┌──────────▼─────────┐
+                    │  Notification Svc   │
+                    │  DB: Redis          │
+                    └─────────────────────┘
+</code></pre>
+</div>
+
+<pre data-lang="go"><code>// Ejemplo: Microservicio de Orders (Go)
+// Cada servicio es un binario independiente con su propio main
+
+package main
+
+import (
+    "net/http"
+    "encoding/json"
+)
+
+type OrderService struct {
+    db    OrderRepository
+    events EventPublisher   // Comunicación async
+}
+
+// Handler HTTP - interfaz de entrada del servicio
+func (s *OrderService) CreateOrder(w http.ResponseWriter, r *http.Request) {
+    var req CreateOrderRequest
+    json.NewDecoder(r.Body).Decode(&req)
+
+    order, err := s.db.Save(Order{
+        UserID: req.UserID,
+        Items:  req.Items,
+        Status: "PENDING",
+    })
+    if err != nil {
+        http.Error(w, err.Error(), 500)
+        return
+    }
+
+    // Publica evento para otros servicios (pago, notificaciones)
+    s.events.Publish("order.created", order)
+    json.NewEncoder(w).Encode(order)
+}
+
+func main() {
+    svc := &OrderService{
+        db:     NewPostgresRepository(),
+        events: NewKafkaPublisher("kafka:9092"),
+    }
+    http.HandleFunc("/orders", svc.CreateOrder)
+    http.ListenAndServe(":8080", nil)   // Puerto dedicado
+}</code></pre>
+
+<div class="when-box">
+<div class="when-use">
+<span class="when-label">Cuándo usar</span>
+<ul>
+<li>Equipos grandes con ownership por dominio</li>
+<li>Necesidad de escalar componentes independientemente</li>
+<li>Tecnologías diversas por servicio</li>
+<li>Alta disponibilidad como requisito crítico</li>
+</ul>
+</div>
+<div class="when-avoid">
+<span class="when-label">Cuándo evitar</span>
+<ul>
+<li>Dominio del problema no definido aún</li>
+<li>Equipos sin experiencia en sistemas distribuidos</li>
+<li>Cuando la latencia de red importa criticamente</li>
+<li>Proyectos con presupuesto de operaciones reducido</li>
+</ul>
+</div>
+</div>
+
+<!-- SERVERLESS -->
+<hr class="divider">
+<h3 id="serverless">Serverless (FaaS)</h3>
+<p>En una arquitectura <strong>serverless</strong>, los desarrolladores escriben funciones
+individuales que el proveedor cloud ejecuta bajo demanda, escalando automáticamente y cobrando
+solo por el tiempo de ejecución real.</p>
+
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="dot dot-blue"></span>AWS Lambda</div>
+<p>Funciones en Node, Python, Go, Java. Hasta 15 minutos de ejecución. Triggers via API GW,
+S3, DynamoDB, SQS.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot dot-green"></span>Google Cloud Functions</div>
+<p>Integración nativa con Firebase, Pub/Sub, BigQuery. Ideal para pipelines de datos y
+webhooks.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot dot-orange"></span>Azure Functions</div>
+<p>Deep integration con el ecosistema Microsoft. Durable Functions para workflows complejos.
+</p>
+</div>
+</div>
+
+<pre data-lang="python"><code># Función AWS Lambda: Procesamiento de imagen tras upload a S3
+import boto3
+import json
+from PIL import Image
+import io
+
+def handler(event, context):
+    s3 = boto3.client('s3')
+
+    # Trigger automático cuando se sube un archivo a S3
+    bucket = event['Records'][0]['s3']['bucket']['name']
+    key    = event['Records'][0]['s3']['object']['key']
+
+    # Descargar imagen original
+    response = s3.get_object(Bucket=bucket, Key=key)
+    image = Image.open(response['Body'])
+
+    # Generar thumbnail
+    image.thumbnail((300, 300))
+    buffer = io.BytesIO()
+    image.save(buffer, format='JPEG', quality=85)
+
+    # Guardar thumbnail en bucket de salida
+    s3.put_object(
+        Bucket=f"{bucket}-thumbs",
+        Key=key,
+        Body=buffer.getvalue(),
+        ContentType='image/jpeg'
+    )
+
+    return {"statusCode": 200, "processed": key}
+# BILLING: Solo se cobra por los milisegundos de ejecución real</code></pre>
+
+<div class="callout warning">
+<div class="callout-icon"></div>
+<p><strong>Cold Start:</strong> Las funciones serverless sufren latencia adicional (~100ms–2s)
+cuando no han sido invocadas recientemente. Para APIs críticas de baja latencia, considerar
+<em>provisioned concurrency</em> o contenedores.</p>
+</div>
+
+<!-- EVENT-DRIVEN -->
+<hr class="divider">
+<h3 id="eda">Event-Driven Architecture (EDA)</h3>
+<p>Los componentes del sistema se comunican <strong>emitiendo y consumiendo eventos</strong>, en
+lugar de llamadas síncronas directas. Desacopla productores de consumidores, permitiendo
+escalabilidad y extensibilidad independiente.</p>
+
+<div class="diagram">
+<pre><code>
+  PRODUCER                   BROKER                    CONSUMERS
+  ┌─────────────┐            ┌──────────┐            ┌──────────────┐
+  │ Order Svc   │──evento──► │          │──evento──► │ Payment Svc  │
+  │             │            │  Kafka / │            └──────────────┘
+  │             │            │  RabbitMQ│──evento──► ┌──────────────┐
+  │             │            │          │            │ Notif. Svc   │
+  └─────────────┘            │  Topics  │──evento──► └──────────────┘
+  ┌─────────────┐            │  /Queues │            ┌──────────────┐
+  │ Inventory   │──evento──► │          │            │ Analytics    │
+  └─────────────┘            └──────────┘            └──────────────┘
+
+  Clave: Los productores NO conocen a los consumidores
+</code></pre>
+</div>
+
+<!-- SOA -->
+<hr class="divider">
+<h3 id="soa">SOA – Service-Oriented Architecture</h3>
+<p>Precursor de los microservicios. Organiza la lógica de negocio en <strong>servicios reutilizables
+de grano grueso</strong> que se comunican mediante un Enterprise Service Bus (ESB). Común en
+sistemas empresariales legados.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>SOA</th>
+<th>Microservicios</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tamaño del servicio</td>
+<td class="yellow">Grano grueso (módulo de negocio)</td>
+<td class="green">Grano fino (función específica)</td>
+</tr>
+<tr>
+<td>Comunicación</td>
+<td class="yellow">ESB centralizado, SOAP/WS-*</td>
+<td class="green">REST/gRPC, mensajería directa</td>
+</tr>
+<tr>
+<td>Base de datos</td>
+<td class="yellow">Compartida entre servicios</td>
+<td class="green">Una por servicio</td>
+</tr>
+<tr>
+<td>Despliegue</td>
+<td class="yellow">Suele desplegarse en conjunto</td>
+<td class="green">Totalmente independiente</td>
+</tr>
+<tr>
+<td>Adopción típica</td>
+<td>Grandes corporaciones, ERP</td>
+<td>Tech companies, startups</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- HEXAGONAL / CLEAN -->
+<hr class="divider">
+<h3 id="hexagonal">Hexagonal (Ports & Adapters) y Clean Architecture</h3>
+<p>Ambas arquitecturas buscan el mismo objetivo: <strong>aislar el dominio de negocio</strong> de
+los detalles de infraestructura (base de datos, framework web, APIs externas). La diferencia
+está en la terminología y el nivel de detalle.</p>
+
+<div class="diagram">
+<pre><code>
+  HEXAGONAL (Ports & Adapters)
+  ┌─────────────────────────────────────────────────┐
+  │   Adapters (Driving)         Adapters (Driven)  │
+  │  ┌──────────────┐           ┌──────────────────┐│
+  │  │ REST API     │           │ PostgreSQL Repo   ││
+  │  │ CLI          │  ┌──────┐ │ Redis Cache       ││
+  │  │ Kafka Event  ├─►│DOMAIN│◄┤ SMTP Email        ││
+  │  │ gRPC         │  │CORE  │ │ Stripe Payment    ││
+  │  └──────────────┘  └──────┘ └──────────────────┘│
+  │      Driving Ports     Driven Ports              │
+  └─────────────────────────────────────────────────┘
+  
+  CLEAN ARCHITECTURE (Capas concéntricas)
+            ┌─────────────────────────────────┐
+            │         Frameworks & Drivers    │ ← DB, UI, External
+            │  ┌───────────────────────────┐  │
+            │  │   Interface Adapters      │  │ ← Controllers, Gateways
+            │  │  ┌─────────────────────┐  │  │
+            │  │  │   Use Cases (App)    │  │  │ ← Business rules
+            │  │  │  ┌───────────────┐  │  │  │
+            │  │  │  │   Entities    │  │  │  │ ← Enterprise rules
+            │  │  │  └───────────────┘  │  │  │
+            │  │  └─────────────────────┘  │  │
+            │  └───────────────────────────┘  │
+            └─────────────────────────────────┘
+  Regla: Las dependencias apuntan HACIA ADENTRO siempre
+</code></pre>
+</div>
+
+<pre data-lang="typescript"><code>// Clean Architecture - Capa de Dominio (sin dependencias externas)
+
+// ENTITY: Reglas de negocio empresariales
+class Order {
+  constructor(
+    private id: OrderId,
+    private items: OrderItem[],
+    private status: OrderStatus
+  ) {}
+
+  confirm(): void {
+    if (this.items.length === 0) throw new Error("Order must have items");
+    this.status = OrderStatus.CONFIRMED;
+  }
+
+  total(): Money {
+    return this.items.reduce((acc, item) => acc.add(item.subtotal()), Money.zero());
+  }
+}
+
+// USE CASE: Orquesta entidades y define flujo de la app
+class ConfirmOrderUseCase {
+  constructor(
+    private orderRepo: OrderRepository,    // Puerto (interfaz)
+    private eventBus: EventBus             // Puerto (interfaz)
+  ) {}
+
+  async execute(orderId: string): Promise<void> {
+    const order = await this.orderRepo.findById(orderId);
+    order.confirm();
+    await this.orderRepo.save(order);
+    await this.eventBus.publish(new OrderConfirmedEvent(order));
+    // Sin dependencia de HTTP, DB, o framework. Solo dominio.
+  }
+}</code></pre>
+
+<!-- CQRS -->
+<hr class="divider">
+<h3 id="cqrs">CQRS y Event Sourcing</h3>
+
+<h4>COMMAND QUERY RESPONSIBILITY SEGREGATION (CQRS)</h4>
+<p>Separa el modelo de lectura del modelo de escritura. Los <strong>Commands</strong> modifican el
+estado; las <strong>Queries</strong> lo consultan. Permite optimizar cada lado de forma
+independiente.</p>
+
+<div class="diagram">
+<pre><code>
+  Cliente
+    │
+    ├──[Command: CreateOrder]──► Command Handler ──► Write DB (normalizada)
+    │                                                    │
+    │                                             Event: OrderCreated
+    │                                                    │
+    │                                             ┌──────▼──────────┐
+    │                                             │  Projector      │
+    │                                             │ (Event Handler) │
+    │                                             └──────┬──────────┘
+    │                                                    │
+    └──[Query: GetOrders]────► Query Handler ◄──── Read DB (desnormalizada,
+                                                         optimizada para lectura)
+</code></pre>
+</div>
+
+<h4>EVENT SOURCING</h4>
+<p>En lugar de almacenar el <em>estado actual</em>, se almacenan todos los <strong>eventos que
+llevaron a ese estado</strong>. El estado actual se reconstruye reproduciendo la cadena de
+eventos.</p>
+
+<pre data-lang="json"><code>// Event Store: Historial inmutable de eventos para una Order
+[
+  { "seq": 1, "event": "OrderCreated",   "data": {"userId": "u1", "items": [...]} },
+  { "seq": 2, "event": "ItemAdded",      "data": {"productId": "p5", "qty": 2}     },
+  { "seq": 3, "event": "DiscountApplied","data": {"code": "SUMMER20", "pct": 20}   },
+  { "seq": 4, "event": "OrderConfirmed", "data": {"confirmedAt": "2024-11-15T..."}  }
+]
+// Estado actual = aplicar todos los eventos en orden
+// Ventaja: auditoría completa, time-travel, reconstrucción de proyecciones</code></pre>

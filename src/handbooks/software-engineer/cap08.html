@@ -1,0 +1,155 @@
+<p>La regla de oro de la performance es una: <strong>medir antes de optimizar</strong>. La
+optimización
+prematura no es solo un desperdicio de tiempo — activamente empeora el código al añadir
+complejidad para
+resolver problemas que no existen o que no están donde asumes.</p>
+
+<div class="callout danger">
+<div class="callout-icon"></div>
+<p><strong>"Premature optimization is the root of all evil"</strong> — Knuth. El 97% del tiempo,
+la
+performance no importa. El 3% que importa, debes medir para saber dónde está. Casi nunca
+está donde crees
+que está.</p>
+</div>
+
+<h3 id="profiling">Profiling: Encontrar el Cuello de Botella Real</h3>
+
+<pre data-lang="python"><code><span class="cm"># Profiling en Python — encontrar dónde está realmente el tiempo</span>
+<span class="kw">import</span> cProfile, pstats, io
+
+<span class="kw">def</span> <span class="fn">profile</span>(func):
+    <span class="str">"""Decorator para profilear cualquier función"""</span>
+    <span class="kw">def</span> <span class="fn">wrapper</span>(*args, **kwargs):
+        pr = cProfile.Profile()
+        pr.enable()
+        result = func(*args, **kwargs)
+        pr.disable()
+
+        s = io.StringIO()
+        ps = pstats.<span class="fn">Stats</span>(pr, stream=s)
+        ps.sort_stats(<span class="str">'cumulative'</span>)
+        ps.<span class="fn">print_stats</span>(<span class="nm">20</span>)  <span class="cm"># Top 20 funciones por tiempo acumulado</span>
+        print(s.getvalue())
+        <span class="kw">return</span> result
+    <span class="kw">return</span> wrapper
+
+<span class="cm"># Caso real: la app tarda 3s en cargar un dashboard
+# Suposición del dev: "es el query SQL, hay que optimizarlo"
+# Resultado del profiler: el query tarda 50ms
+#                         la serialización JSON tarda 2.8s
+#                         el problema estaba en el serializer, no en SQL</span>
+
+<span class="cm"># ─────────────────────────────────────────────────────────
+# py-spy: profiler de producción sin modificar el código</span>
+<span class="cm"># py-spy top --pid &lt;PID&gt;  → live view de qué hace la app ahora
+# py-spy record -o profile.svg --pid &lt;PID&gt;  → flame graph</span>
+
+<span class="cm"># En Node.js:
+# node --prof app.js → genera isolate-*.log
+# node --prof-process isolate-*.log → análisis del V8 profiler</span>
+
+<span class="cm"># En PostgreSQL: queries lentas en logs
+# log_min_duration_statement = 100   ← logear queries > 100ms
+# pg_stat_statements extension        ← estadísticas de todas las queries</span></code></pre>
+
+<h3 id="caching">Caching: La Complejidad que Nadie Menciona</h3>
+<p>Phil Karlton dijo que hay dos problemas difíciles en CS: invalidación de caché y nombrar cosas.
+El caching
+mejora drásticamente la performance — pero introduce un sistema distribuido adicional con su
+propio conjunto
+de failure modes.</p>
+
+<div class="diagram">
+<pre><code>
+  Estrategias de Caching y Sus Trade-offs
+
+  CACHE-ASIDE (más común):
+  App → Cache hit? → Retornar
+  App → Cache miss → BD → Guardar en cache → Retornar
+  Pros: Solo cachea datos leídos, app controla el cache
+  Cons: Cache miss = latencia extra, cold start lento
+
+  READ-THROUGH:
+  App → Cache (que consulta la BD si necesario) → Retornar
+  Pros: Transparente para la app
+  Cons: Cache debe soportar la lógica de lectura de BD
+
+  WRITE-THROUGH:
+  App → Cache → BD (síncronamente)
+  Pros: Cache siempre actualizado
+  Cons: Latencia de escritura mayor, cachea datos poco leídos
+
+  WRITE-BEHIND (write-back):
+  App → Cache → Retornar inmediatamente
+  BD actualizada en batch asíncronamente
+  Pros: Escrituras ultra-rápidas
+  Cons: Riesgo de pérdida de datos si el cache muere antes del flush
+
+  ┌──────────────────────────────────────────────────────────┐
+  │  Cache Invalidation: las estrategias reales              │
+  │                                                          │
+  │  TTL (Time-To-Live):                                     │
+  │  Simple, predecible. El dato puede ser stale hasta TTL.  │
+  │  Elegir TTL según tolerancia a staleness del negocio.    │
+  │                                                          │
+  │  Event-driven invalidation:                              │
+  │  DELETE cache key cuando el dato cambia.                 │
+  │  Requiere que todas las escrituras invaliden el cache.   │
+  │  Más complejo, más fresco.                               │
+  │                                                          │
+  │  Cache-aside con versión:                                │
+  │  Key incluye versión del dato. Nunca invalidar —         │
+  │  la nueva versión tiene una key diferente.               │
+  └──────────────────────────────────────────────────────────┘
+</code></pre>
+</div>
+
+<h3 id="n1">El Problema N+1: El Bug de Performance más Común</h3>
+
+<pre data-lang="python"><code><span class="cm"># N+1 query: el problema más costoso y más fácil de introducir</span>
+
+<span class="cm"># ❌ N+1: 1 query para los posts + N queries para los autores</span>
+<span class="cm"># Con 100 posts → 101 queries a la BD</span>
+posts = db.<span class="fn">query</span>(<span class="str">"SELECT * FROM posts LIMIT 100"</span>)  <span class="cm"># 1 query</span>
+<span class="kw">for</span> post <span class="kw">in</span> posts:
+    post.author = db.<span class="fn">query</span>(                           <span class="cm"># N queries</span>
+        <span class="str">"SELECT * FROM users WHERE id = ?"</span>, post.author_id
+    )
+
+<span class="cm"># ✓ Eager loading: 2 queries total, independientemente de N</span>
+posts = db.<span class="fn">query</span>(<span class="str">"SELECT * FROM posts LIMIT 100"</span>)
+author_ids = [p.author_id <span class="kw">for</span> p <span class="kw">in</span> posts]
+authors = db.<span class="fn">query</span>(<span class="str">"SELECT * FROM users WHERE id = ANY(?)"</span>, author_ids)
+author_map = {a.id: a <span class="kw">for</span> a <span class="kw">in</span> authors}
+<span class="kw">for</span> post <span class="kw">in</span> posts:
+    post.author = author_map.get(post.author_id)
+
+<span class="cm"># ✓ JOIN: 1 query, lo más eficiente</span>
+posts_with_authors = db.<span class="fn">query</span>(<span class="str">"""
+    SELECT p.*, u.name as author_name, u.email as author_email
+    FROM posts p
+    JOIN users u ON u.id = p.author_id
+    LIMIT 100
+"""</span>)
+
+<span class="cm"># En ORMs: Django → select_related(), prefetch_related()
+#           SQLAlchemy → joinedload(), selectinload()
+#           Hibernate → @ManyToOne(fetch = FetchType.EAGER)
+#           Prisma → include: { author: true }
+#
+# Señal de N+1 en producción: las queries más frecuentes son
+# "SELECT * FROM users WHERE id = ?" con diferentes IDs</span></code></pre>
+
+<div class="arch-rel">
+<span class="arch-rel-lbl">Conexión técnica</span>
+<p>Performance y escalabilidad conectan con todos los niveles del stack. El N+1 se resuelve en
+la capa de
+datos, pero se previene en el diseño de la API (GraphQL DataLoader, REST con fields de
+inclusion). El
+caching implementa los principios de <strong>consistencia eventual</strong> de sistemas
+distribuidos. El
+profiling muestra que la mayoría de problemas de performance están en la <strong>base de
+datos</strong> —
+haciendo el Capítulo 06 el más importante para el performance del sistema.</p>
+</div>

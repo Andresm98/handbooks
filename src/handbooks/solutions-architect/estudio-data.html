@@ -1,0 +1,169 @@
+<article>
+<h3>🔍 SQL vs NoSQL — Cuándo usar cada uno</h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Aspecto</th>
+<th>SQL (Relacional)</th>
+<th>NoSQL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Estructura</td>
+<td>Schema fijo, tablas, relaciones</td>
+<td>Schema flexible (document, key-value, graph, column-family)</td>
+</tr>
+<tr>
+<td>Consistencia</td>
+<td>ACID completo — fuerte</td>
+<td>BASE (Basically Available, Soft state, Eventually consistent)</td>
+</tr>
+<tr>
+<td>Escalado</td>
+<td>Vertical principalmente (horizontal complejo)</td>
+<td>Horizontal nativo (sharding)</td>
+</tr>
+<tr>
+<td>Transacciones</td>
+<td>✅ Transacciones complejas multi-tabla</td>
+<td>❌ Limitado (problema en finanzas)</td>
+</tr>
+<tr>
+<td>Queries</td>
+<td>SQL estándar, JOINs complejos</td>
+<td>APIs propias, sin JOINs (denormalización)</td>
+</tr>
+<tr>
+<td>Latencia NoSQL</td>
+<td>Más latencia en alta escala</td>
+<td>✅ Baja latencia a escala masiva</td>
+</tr>
+<tr>
+<td>Casos de uso</td>
+<td>Finanzas, ERP, CRM, sistemas legacy</td>
+<td>Redes sociales, IoT, catálogos, gaming</td>
+</tr>
+<tr>
+<td>Ejemplos</td>
+<td>PostgreSQL, MySQL, MSSQL, Oracle</td>
+<td>MongoDB, DynamoDB, Cassandra, Redis</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4>Tipos de NoSQL</h4>
+<div class="card-grid">
+<div class="card">
+<h3>📄 Document</h3>
+<p>Datos como documentos JSON/BSON. Flexible, bueno para datos heterogéneos.</p>
+<p><em>MongoDB, Firestore, CouchDB</em></p>
+</div>
+<div class="card">
+<h3>🔑 Key-Value</h3>
+<p>Acceso ultra-rápido por clave. Ideal para caché y sesiones.</p>
+<p><em>Redis, DynamoDB, Memcached</em></p>
+</div>
+<div class="card">
+<h3>📊 Column-Family</h3>
+<p>Datos organizados por columnas. Excelente para series de tiempo y analytics.</p>
+<p><em>Cassandra, HBase, Bigtable</em></p>
+</div>
+<div class="card">
+<h3>🕸️ Graph</h3>
+<p>Nodos y relaciones. Ideal para redes sociales, recomendaciones, fraude.</p>
+<p><em>Neo4j, Amazon Neptune, ArangoDB</em></p>
+</div>
+</div>
+
+<div class="callout callout-warn">
+<span class="callout-icon">⚠️</span>
+<div><strong>Limitación crítica NoSQL en finanzas:</strong> Las bases NoSQL tienen menor rendimiento
+en transacciones complejas y consistencia fuerte. Los sistemas financieros requieren ACID
+completo → preferir PostgreSQL, Aurora, o Spanner.</div>
+</div>
+</article>
+
+<!-- CACHING -->
+<article>
+<h3>⚡ Caching — Estrategias y Tipos</h3>
+<div class="two-col">
+<div>
+<h4>Por qué usar caché</h4>
+<ul>
+<li>✅ Reducir latencia de consultas (evitar round-trip a DB)</li>
+<li>✅ Mejorar responsividad de la aplicación</li>
+<li>✅ Disponibilidad de datos si DB temporalmente no disponible</li>
+<li>✅ Reducir carga en base de datos</li>
+</ul>
+</div>
+<div>
+<h4>Patrones de Caché</h4>
+<ul>
+<li><strong>Cache-Aside:</strong> app gestiona cache manualmente</li>
+<li><strong>Read-Through:</strong> cache delante de DB, transparente</li>
+<li><strong>Write-Through:</strong> escribe en cache + DB sincrónicamente</li>
+<li><strong>Write-Behind:</strong> escribe en cache, DB async (eventual)</li>
+</ul>
+</div>
+</div>
+<p><strong>Distributed Cache</strong> (Redis, Memorystore) es el mecanismo clave para minimizar latencia
+en sistemas distribuidos de alta disponibilidad.</p>
+</article>
+
+<!-- KAFKA / STREAMING -->
+<article>
+<h3>🌊 Data Streaming y Pipelines</h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Herramienta</th>
+<th>Tipo</th>
+<th>Características</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Apache Kafka</strong></td>
+<td>Message Queue + Streaming</td>
+<td>Durabilidad, replay de mensajes, alta throughput, particiones</td>
+<td>Event sourcing, log aggregation, stream processing</td>
+</tr>
+<tr>
+<td><strong>AWS SQS</strong></td>
+<td>Message Queue gestionada</td>
+<td>Garantía de entrega, dead-letter queues, FIFO opcional</td>
+<td>Desacoplamiento de microservicios en AWS</td>
+</tr>
+<tr>
+<td><strong>AWS SNS</strong></td>
+<td>Pub/Sub (NO es queue)</td>
+<td>Fan-out a múltiples subscribers (email, SQS, Lambda, HTTP)</td>
+<td>Notificaciones, fan-out a múltiples destinos</td>
+</tr>
+<tr>
+<td><strong>GCP Pub/Sub</strong></td>
+<td>Pub/Sub gestionado</td>
+<td>Global, serverless, at-least-once delivery</td>
+<td>Integración de servicios en GCP, analytics</td>
+</tr>
+<tr>
+<td><strong>RabbitMQ</strong></td>
+<td>Message Broker</td>
+<td>AMQP, routing flexible, exchanges, bindings</td>
+<td>Microservicios, task queues</td>
+</tr>
+<tr>
+<td><strong>Azure Service Bus</strong></td>
+<td>Enterprise Messaging</td>
+<td>Sessions, dead-lettering, transactions</td>
+<td>Integración enterprise en Azure</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>

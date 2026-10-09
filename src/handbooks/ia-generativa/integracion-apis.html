@@ -1,0 +1,223 @@
+<p>Este es el capítulo más práctico para el AI Software Engineer: cómo se habla con un modelo desde código de producción. Los ejemplos usan el SDK oficial de Python de Anthropic y la API de Messages porque es el stack de referencia del resto del handbook, pero los conceptos (streaming, herramientas, salidas estructuradas, caché, lotes, errores) existen con nombres parecidos en todos los proveedores. Instala con <code>pip install anthropic</code>; el cliente toma la credencial del entorno (<code>ANTHROPIC_API_KEY</code>), nunca la escribas en el código.</p>
+
+<div class="callout beige">
+<span class="callout-label">Vigencia de los ejemplos</span>
+Los identificadores de modelo y algunos parámetros cambian con cada generación. Los ejemplos usan <code>claude-opus-5-5</code>, vigente a la fecha de revisión de este capítulo. Antes de copiar a producción, consulta la lista actual de modelos (la API expone un endpoint <code>models</code>) y la guía de migración del proveedor.
+</div>
+
+<h3>La llamada mínima</h3>
+<pre><code>import anthropic
+
+client = anthropic.Anthropic()  # lee ANTHROPIC_API_KEY del entorno
+
+response = client.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=16000,
+    system="Eres un analista de riesgo operativo. Responde en español, en 3 viñetas.",
+    messages=[{"role": "user", "content": "¿Qué riesgos tiene permitir transferencias 24/7?"}],
+)
+
+# La respuesta es una lista de bloques de contenido: revisa el tipo antes de leer.
+for block in response.content:
+    if block.type == "text":
+        print(block.text)
+
+print(response.stop_reason)            # end_turn | max_tokens | tool_use | refusal ...
+print(response.usage.input_tokens, response.usage.output_tokens)<span class="lang-label">Python</span></code></pre>
+<ul>
+<li>La API es <strong>sin estado</strong>: cada request lleva el historial completo que quieres que el modelo vea.</li>
+<li>Revisa siempre <code>stop_reason</code> antes de usar el contenido: <code>max_tokens</code> significa respuesta cortada; <code>refusal</code> significa que el modelo declinó.</li>
+<li>Registra <code>usage</code> en cada llamada: es la base de tu modelo de costos.</li>
+</ul>
+
+<h3>Streaming</h3>
+<p>Para interfaces de chat y para cualquier respuesta larga, usa streaming: el usuario ve texto desde el primer token y evitas timeouts HTTP en generaciones extensas.</p>
+<pre><code>with client.messages.stream(
+    model="claude-opus-5-5",
+    max_tokens=64000,
+    messages=[{"role": "user", "content": "Redacta el runbook de un incidente de pagos duplicados."}],
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="", flush=True)      # en un backend: reenvía como Server-Sent Events
+    final = stream.get_final_message()       # mensaje completo con usage y stop_reason<span class="lang-label">Python</span></code></pre>
+
+<h3>Salidas estructuradas</h3>
+<p>Cuando la salida la consume código, define el esquema y deja que la API lo garantice. Con Pydantic, el SDK valida y te devuelve el objeto tipado.</p>
+<pre><code>from pydantic import BaseModel
+from typing import Literal
+
+class Reclamo(BaseModel):
+    categoria: Literal["fraude", "cargo_duplicado", "demora", "otro"]
+    monto: float | None
+    urgencia: Literal["baja", "media", "alta"]
+    resumen: str
+
+response = client.messages.parse(
+    model="claude-opus-5-5",
+    max_tokens=16000,
+    messages=[{"role": "user", "content": f"Clasifica este reclamo:\n\n{texto_del_cliente}"}],
+    output_format=Reclamo,
+)
+reclamo = response.parsed_output          # instancia validada de Reclamo
+if reclamo.categoria == "fraude":
+    abrir_caso_prioritario(reclamo)<span class="lang-label">Python</span></code></pre>
+<p>El esquema garantiza la <em>forma</em>; las reglas de negocio (montos válidos, coherencia entre campos) siguen siendo responsabilidad de tu código.</p>
+
+<h3>Herramientas (tool use / function calling)</h3>
+<p>El modelo no ejecuta nada: decide llamar una herramienta y devuelve un bloque <code>tool_use</code> con argumentos. Tu código ejecuta, devuelve un <code>tool_result</code> y repite hasta que el modelo termina. Ese es el loop agéntico en su forma más simple.</p>
+<pre><code>import json
+
+TOOLS = [{
+    "name": "consultar_estado_transferencia",
+    "description": "Devuelve el estado de una transferencia por su ID. Úsala cuando el "
+                   "analista pregunte por una transferencia concreta. Solo lectura.",
+    "strict": True,  # garantiza que los argumentos cumplan el esquema
+    "input_schema": {
+        "type": "object",
+        "properties": {"transfer_id": {"type": "string", "description": "ID con formato TRF-XXXXXXXX"}},
+        "required": ["transfer_id"],
+        "additionalProperties": False,
+    },
+}]
+
+def ejecutar(nombre: str, args: dict) -> str:
+    if nombre == "consultar_estado_transferencia":
+        return json.dumps(core_bancario.estado(args["transfer_id"]))
+    raise ValueError(f"herramienta desconocida: {nombre}")
+
+messages = [{"role": "user", "content": "¿En qué estado está la TRF-00012345?"}]
+for paso in range(10):                                   # loop SIEMPRE acotado
+    response = client.messages.create(
+        model="claude-opus-5-5", max_tokens=16000, tools=TOOLS, messages=messages,
+    )
+    if response.stop_reason != "tool_use":
+        break
+    messages.append({"role": "assistant", "content": response.content})
+    resultados = []
+    for block in response.content:
+        if block.type == "tool_use":
+            try:
+                salida, error = ejecutar(block.name, block.input), False
+            except Exception as e:                       # el error vuelve al modelo, no se oculta
+                salida, error = f"Error: {e}", True
+            resultados.append({"type": "tool_result", "tool_use_id": block.id,
+                               "content": salida, "is_error": error})
+    messages.append({"role": "user", "content": resultados})  # todos los resultados en UN mensaje
+
+print(next(b.text for b in response.content if b.type == "text"))<span class="lang-label">Python</span></code></pre>
+<ul>
+<li>La <strong>descripción</strong> de la herramienta es parte del prompt: di cuándo usarla, qué devuelve y qué no hace.</li>
+<li>Devuelve los errores al modelo con <code>is_error</code>: con un mensaje accionable suele corregirse solo.</li>
+<li>Si el modelo pide varias herramientas en paralelo, ejecútalas y devuelve <strong>todos</strong> los resultados en un único mensaje.</li>
+<li>Para no escribir el loop a mano, el SDK ofrece un <em>tool runner</em> que lo gestiona; el loop manual sigue siendo útil para entender el mecanismo y para controles muy específicos.</li>
+<li>En algunos modelos recientes no se puede <em>forzar</em> el uso de una herramienta concreta: se pide en el prompt y se mantiene <code>strict</code> para garantizar argumentos válidos.</li>
+</ul>
+
+<h3>Caché de prompts</h3>
+<p>Si muchas llamadas comparten un prefijo largo (system prompt, manual de producto, definiciones de herramientas), el caché reutiliza ese procesamiento: la lectura desde caché cuesta una fracción del precio normal de entrada y reduce la latencia del primer token.</p>
+<pre><code>response = client.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=16000,
+    system=[{
+        "type": "text",
+        "text": MANUAL_DE_PRODUCTOS,                 # decenas de miles de tokens, estable
+        "cache_control": {"type": "ephemeral"},      # marca el fin del prefijo cacheable
+    }],
+    messages=[{"role": "user", "content": pregunta}],  # lo variable va DESPUÉS
+)
+print(response.usage.cache_read_input_tokens)       # > 0 en llamadas siguientes = caché funcionando<span class="lang-label">Python</span></code></pre>
+<div class="callout warn">
+<span class="callout-label">Invalidadores silenciosos</span>
+Una fecha u hora en el system prompt, un JSON serializado sin orden de claves fijo, o una lista de herramientas que cambia entre requests rompen la coincidencia de prefijo y el caché nunca acierta. Si <code>cache_read_input_tokens</code> es siempre cero, busca uno de estos.
+</div>
+
+<h3>Procesamiento por lotes</h3>
+<p>Para cargas que no necesitan respuesta inmediata (clasificar el histórico de reclamos, generar resúmenes nocturnos, evals masivas), la API de lotes procesa de forma asíncrona con un descuento significativo frente a las llamadas síncronas.</p>
+<pre><code>from anthropic.types.message_create_params import MessageCreateParamsNonStreaming
+from anthropic.types.messages.batch_create_params import Request
+
+batch = client.messages.batches.create(requests=[
+    Request(custom_id=r.id, params=MessageCreateParamsNonStreaming(
+        model="claude-opus-5-5", max_tokens=1024,
+        messages=[{"role": "user", "content": f"Clasifica: {r.texto}"}],
+    ))
+    for r in reclamos_del_mes
+])
+# ... más tarde, cuando processing_status == "ended":
+for item in client.messages.batches.results(batch.id):
+    if item.result.type == "succeeded":
+        guardar(item.custom_id, item.result.message)   # los resultados llegan en cualquier orden<span class="lang-label">Python</span></code></pre>
+
+<h3>Errores, reintentos y rechazos</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Situación</th><th>Señal</th><th>Qué hacer</th></tr></thead>
+<tbody>
+<tr><td>Límite de tasa</td><td>HTTP 429</td><td>Reintentar con backoff exponencial y jitter respetando <code>retry-after</code>; a nivel de sistema, colas y presupuestos por tenant.</td></tr>
+<tr><td>Sobrecarga o error del servidor</td><td>HTTP 5xx / 529</td><td>Reintentar con backoff; si persiste, fallback a otro modelo o región.</td></tr>
+<tr><td>Request inválido</td><td>HTTP 400</td><td>No reintentar: es un bug. Registrar con el <code>request_id</code>.</td></tr>
+<tr><td>Respuesta cortada</td><td><code>stop_reason = max_tokens</code></td><td>Subir <code>max_tokens</code>, usar streaming o pedir salidas más acotadas.</td></tr>
+<tr><td>Rechazo del modelo</td><td><code>stop_reason = refusal</code></td><td>No leer el contenido como respuesta válida; mostrar mensaje controlado, registrar la categoría o usar fallback.</td></tr>
+<tr><td>Timeout de red</td><td>Error de conexión</td><td>Reintentar si la operación es idempotente; para respuestas largas, streaming.</td></tr>
+</tbody>
+</table>
+</div>
+<pre><code>import anthropic
+
+client = anthropic.Anthropic(max_retries=3, timeout=120.0)  # el SDK ya reintenta 429/5xx
+
+def responder(pregunta: str) -> str:
+    try:
+        # Fallback del lado del servidor: si el modelo declina por política,
+        # la misma llamada se reintenta en otro modelo según la categoría.
+        r = client.beta.messages.create(
+            model="claude-opus-5-5",
+            max_tokens=16000,
+            betas=["server-side-fallback-2026-07-01"],
+            fallbacks="default",
+            messages=[{"role": "user", "content": pregunta}],
+        )
+    except anthropic.RateLimitError:
+        raise ServicioOcupado()                   # el SDK ya agotó sus reintentos
+    except anthropic.APIStatusError as e:
+        log.error("llm_error", status=e.status_code, request_id=e.response.headers.get("request-id"))
+        raise
+    except anthropic.APIConnectionError:
+        raise ServicioNoDisponible()
+
+    if r.stop_reason == "refusal":
+        return "No puedo ayudar con esa solicitud. Un asesor revisará tu caso."
+    if r.stop_reason == "max_tokens":
+        log.warning("respuesta_truncada", request_id=r._request_id)
+    return "".join(b.text for b in r.content if b.type == "text")<span class="lang-label">Python</span></code></pre>
+
+<h3>Diseño independiente del proveedor</h3>
+<p>Trata al modelo como cualquier dependencia externa: detrás de un puerto propio (arquitectura hexagonal), con el adaptador de cada proveedor aislado. Así cambiar de modelo o de nube es cambiar un adaptador, no reescribir el dominio.</p>
+<div class="diagram">  Dominio (casos de uso)
+        │  usa
+        ▼
+  Puerto: Generador / Clasificador / Agente      ← interfaz propia, tipos propios
+        │
+   ┌────┴─────────────────┬───────────────────┐
+   ▼                      ▼                   ▼
+ Adaptador API A     Adaptador nube B     Adaptador self-hosted
+ (SDK oficial)       (Bedrock/Vertex/...)  (vLLM, Ollama)
+        │
+        ▼
+  AI Gateway: auth, cuotas por tenant, caché, trazas, costos, fallback</div>
+<div class="callout">
+<span class="callout-label">Ojo con la abstracción excesiva</span>
+Un "mínimo común denominador" entre proveedores te quita las capacidades diferenciales (caché de prompts, razonamiento, herramientas del servidor, citas). Abstrae en el nivel del caso de uso, no en el de cada parámetro de la API.
+</div>
+
+<h3>Checklist de integración para producción</h3>
+<ul class="checklist">
+<li>Credenciales desde un gestor de secretos o identidad federada, nunca en código ni en el prompt.</li>
+<li>Timeouts y reintentos configurados; operaciones con efectos laterales protegidas con idempotencia.</li>
+<li>Manejo explícito de <code>stop_reason</code> (truncado, herramientas, rechazo).</li>
+<li>Salidas estructuradas para todo lo que consume código.</li>
+<li>Streaming en interfaces de usuario y respuestas largas.</li>
+<li>Caché de prompts verificado con métricas de uso.</li>
+<li>Trazas por llamada: modelo, versión de prompt, tokens, costo, latencia, <code>request_id</code>.</li>
+<li>Límites de gasto y de tasa por tenant o por usuario.</li>
+</ul>

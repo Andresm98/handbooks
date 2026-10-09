@@ -1,0 +1,456 @@
+<div class="callout">
+<span class="mark mono">→</span>
+<p><strong>Cómo está construida esta guía:</strong> cada área técnica se presenta como una escalera de
+tres niveles — Junior, Semi-Senior y Senior. No leas solo el nivel que crees tener: el entrevistador
+del CTO suele probar el límite superior de tu nivel actual, así que vale la pena conocer un peldaño
+por encima de donde estás hoy. La oferta pide 3–5 años, lo que en la práctica ubica el filtro real
+entre el peldaño Semi-Senior y la entrada al Senior.</p>
+</div>
+
+<div class="section-head">
+<span class="section-tag">Mapa de competencias</span>
+<h3 id="fs-competencias">Seis áreas, tres niveles cada una</h3>
+<p>Esto es lo que el equipo técnico y el CTO van a sondear en la entrevista final. No memorices
+respuestas — entiende el criterio detrás de cada nivel y ten un ejemplo propio listo para cada uno.
+</p>
+</div>
+
+<!-- 01 FRONTEND -->
+<article class="panel">
+<div class="panel-head">
+<span class="panel-num mono">01</span>
+<h4>Frontend — React &amp; TypeScript</h4>
+</div>
+<p class="panel-context">La oferta pide "dominio avanzado" y traducir Figma a interfaces píxel-perfect.
+Aquí el filtro no es saber React, es saber dónde poner el estado y por qué.</p>
+<div class="ladder">
+<div class="node jr">
+<span class="node-dot"></span><span class="node-label mono">Junior</span>
+<ul>
+<li>Componentes funcionales con hooks básicos (useState, useEffect)</li>
+<li>Maneja props y estado local sin acoplar lógica de negocio a la UI</li>
+<li>Tipado básico en TS: interfaces, types, props tipadas</li>
+</ul>
+</div>
+<div class="node mid">
+<span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+<ul>
+<li>Estado global con criterio (Context, Zustand/Redux) sin sobre-ingeniería</li>
+<li>Componentes reutilizables y composables; evita prop drilling</li>
+<li>Optimiza renders (memo, useMemo, useCallback) cuando hay evidencia, no por costumbre
+</li>
+<li>Traduce Figma incluyendo estados: hover, focus, loading, error</li>
+</ul>
+</div>
+<div class="node sr">
+<span class="node-dot"></span><span class="node-label mono">Senior</span>
+<ul>
+<li>Define arquitectura de carpetas y patrones (feature-based, atomic design)</li>
+<li>Decide SSR vs CSR según el caso de negocio, no por moda</li>
+<li>Establece estrategia de testing y presupuesto de performance (Core Web Vitals)</li>
+<li>Revisa código de otros con foco en mantenibilidad, no en estilo personal</li>
+</ul>
+</div>
+</div>
+<div class="panel-footer">
+<div class="qbox">
+<span class="lbl mono">Pregunta típica</span>
+<p>"Tienes una lista de 2.000 filas que se re-renderiza completa al escribir en un input de
+búsqueda. ¿Cómo lo diagnosticas y qué cambiarías primero?"</p>
+</div>
+<div class="qbox">
+<span class="lbl mono">Repasa esto</span>
+<p>Reconciliación de React, generics en TypeScript, virtualización de listas, diferencias entre
+Context y un store externo.</p>
+</div>
+</div>
+</article>
+
+<!-- 02 BACKEND -->
+<article class="panel">
+<div class="panel-head">
+<span class="panel-num mono">02</span>
+<h4>Backend — Node.js &amp; APIs</h4>
+</div>
+<p class="panel-context">Piden "foco en seguridad y performance" explícitamente. Esperan que sepas
+defender un endpoint, no solo construirlo.</p>
+<div class="ladder">
+<div class="node jr">
+<span class="node-dot"></span><span class="node-label mono">Junior</span>
+<ul>
+<li>CRUD con Express/Fastify: rutas, controladores, middlewares simples</li>
+<li>Validación de inputs con Zod/Joi</li>
+<li>Entiende códigos de estado HTTP y los usa correctamente</li>
+</ul>
+</div>
+<div class="node mid">
+<span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+<ul>
+<li>Diseña APIs REST consistentes: versionado, paginación, formato de error estándar</li>
+<li>Autenticación con JWT/OAuth, manejo seguro de tokens y refresh</li>
+<li>Rate limiting, sanitización, prevención de inyecciones</li>
+<li>Logging estructurado para depurar en producción</li>
+</ul>
+</div>
+<div class="node sr">
+<span class="node-dot"></span><span class="node-label mono">Senior</span>
+<ul>
+<li>Decide monolito modular vs microservicios según el tamaño real del equipo</li>
+<li>Evalúa REST vs GraphQL con argumentos de costo/beneficio, no preferencia</li>
+<li>Aplica criterio de seguridad en profundidad (referencia: OWASP Top 10)</li>
+<li>Diseña para escalar horizontalmente sin reescritura completa</li>
+</ul>
+</div>
+</div>
+<div class="panel-footer">
+<div class="qbox">
+<span class="lbl mono">Pregunta típica</span>
+<p>"Un cliente reporta que la API se cae bajo carga los lunes a las 9am. ¿Por dónde empiezas a
+investigar?"</p>
+</div>
+<div class="qbox">
+<span class="lbl mono">Repasa esto</span>
+<p>Idempotencia, paginación cursor vs offset, JWT vs sesiones, diseño de mensajes de error
+consistentes.</p>
+</div>
+</div>
+</article>
+
+<!-- 03 DATA -->
+<article class="panel">
+<div class="panel-head">
+<span class="panel-num mono">03</span>
+<h4>Bases de datos — SQL &amp; NoSQL</h4>
+</div>
+<p class="panel-context">Piden gestión "experta" de SQL y manejo de NoSQL. El filtro real está en saber
+cuándo usar cada una, no en la sintaxis.</p>
+<div class="ladder">
+<div class="node jr">
+<span class="node-dot"></span><span class="node-label mono">Junior</span>
+<ul>
+<li>SELECT, JOIN, GROUP BY con soltura</li>
+<li>Entiende qué es un índice y para qué sirve</li>
+<li>Conoce la diferencia conceptual entre SQL y NoSQL</li>
+</ul>
+</div>
+<div class="node mid">
+<span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+<ul>
+<li>Lee un EXPLAIN/ANALYZE y actúa sobre lo que encuentra</li>
+<li>Diseña esquemas normalizados; sabe cuándo desnormalizar y por qué</li>
+<li>Usa Redis para caché o sesiones con estrategia de invalidación clara</li>
+<li>Usa MongoDB cuando el dato es realmente flexible, no por defecto</li>
+</ul>
+</div>
+<div class="node sr">
+<span class="node-dot"></span><span class="node-label mono">Senior</span>
+<ul>
+<li>Diseña para multi-tenant: aislamiento de datos por cliente</li>
+<li>Planifica particionado/sharding antes de que sea una emergencia</li>
+<li>Ejecuta migraciones de esquema sin downtime</li>
+<li>Razona sobre consistencia vs disponibilidad según el caso real</li>
+</ul>
+</div>
+</div>
+<div class="panel-footer">
+<div class="qbox">
+<span class="lbl mono">Pregunta típica</span>
+<p>"Una query que antes corría en 200ms ahora tarda 4 segundos con la misma tabla. ¿Qué revisas
+primero?"</p>
+</div>
+<div class="qbox">
+<span class="lbl mono">Repasa esto</span>
+<p>Índices compuestos, N+1 queries, TTL en Redis, cuándo un documento Mongo se vuelve demasiado
+grande.</p>
+</div>
+</div>
+</article>
+
+<!-- 04 DEVOPS -->
+<article class="panel">
+<div class="panel-head">
+<span class="panel-num mono">04</span>
+<h4>DevOps básico</h4>
+</div>
+<p class="panel-context">Lo llaman "básico" en la oferta — no esperan Kubernetes a fondo, pero sí que no
+te bloquees cuando algo no despliega.</p>
+<div class="ladder">
+<div class="node jr">
+<span class="node-dot"></span><span class="node-label mono">Junior</span>
+<ul>
+<li>Entiende un Dockerfile y docker-compose básico</li>
+<li>Maneja variables de entorno sin hardcodear secretos</li>
+</ul>
+</div>
+<div class="node mid">
+<span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+<ul>
+<li>Construye y mantiene pipelines de CI/CD (GitHub Actions/GitLab CI)</li>
+<li>Despliega en AWS, GCP o Supabase sin asistencia constante</li>
+<li>Gestiona secretos correctamente (nunca en ConfigMap, variables planas o el repo)</li>
+</ul>
+</div>
+<div class="node sr">
+<span class="node-dot"></span><span class="node-label mono">Senior</span>
+<ul>
+<li>Diseña estrategias de rollback y despliegues blue-green/canary</li>
+<li>Define observabilidad: logs, métricas y alertas antes del incidente</li>
+<li>Considera costo cloud como parte de la decisión de arquitectura</li>
+</ul>
+</div>
+</div>
+<div class="panel-footer">
+<div class="qbox">
+<span class="lbl mono">Pregunta típica</span>
+<p>"Tu pipeline pasa en local pero falla en CI con un error de variable de entorno. ¿Cómo lo
+abordas?"</p>
+</div>
+<div class="qbox">
+<span class="lbl mono">Repasa esto</span>
+<p>Diferencia real entre Secret y ConfigMap/variables planas, multi-stage builds, rollback
+manual vs automático.</p>
+</div>
+</div>
+</article>
+
+<!-- 05 PRODUCT & CLIENT -->
+<article class="panel">
+<div class="panel-head">
+<span class="panel-num mono">05</span>
+<h4>Product Thinking &amp; Client Fit</h4>
+</div>
+<p class="panel-context">Esta es la competencia que la oferta menciona dos veces y que la mayoría de
+candidatos técnicos subestima. Se evalúa en la entrevista con People, no en la técnica.</p>
+<div class="ladder">
+<div class="node jr">
+<span class="node-dot"></span><span class="node-label mono">Junior</span>
+<ul>
+<li>Ejecuta el ticket bien y pregunta cuando algo no tiene sentido</li>
+<li>Distingue entre "no entiendo el requisito" y "el requisito está mal"</li>
+</ul>
+</div>
+<div class="node mid">
+<span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+<ul>
+<li>Cuestiona el "por qué" antes de implementar, sin bloquear el avance</li>
+<li>Propone alternativas de UX o de lógica con el impacto en negocio explícito</li>
+<li>Traduce una decisión técnica a lenguaje de impacto (tiempo, costo, conversión)</li>
+</ul>
+</div>
+<div class="node sr">
+<span class="node-dot"></span><span class="node-label mono">Senior</span>
+<ul>
+<li>Lidera conversaciones con cliente sobre trade-offs, no solo sobre estado del ticket</li>
+<li>Prioriza roadmap con criterio de ROI, no solo de complejidad técnica</li>
+<li>Sabe decir "no" a un cliente y sostenerlo con argumentos, no con jerga</li>
+</ul>
+</div>
+</div>
+<div class="panel-footer">
+<div class="qbox">
+<span class="lbl mono">Pregunta típica</span>
+<p>"Cuéntame de una vez que cambiaste un requisito porque viste un problema de fondo que el
+ticket no contemplaba."</p>
+</div>
+<div class="qbox">
+<span class="lbl mono">Prepara esto</span>
+<p>Una historia real en formato situación → decisión → resultado medible. Evita ejemplos
+puramente técnicos sin impacto de negocio.</p>
+</div>
+</div>
+</article>
+
+<!-- 06 AI-ASSISTED OPS -->
+<article class="panel">
+<div class="panel-head">
+<span class="panel-num mono">06</span>
+<h4>IA-Assisted Ops</h4>
+</div>
+<p class="panel-context">Esperan que uses IA para acelerar, no para sustituir tu criterio. La respuesta
+"no la uso" o "le delego todo" son ambas señales de alerta.</p>
+<div class="ladder">
+<div class="node jr">
+<span class="node-dot"></span><span class="node-label mono">Junior</span>
+<ul>
+<li>Usa Copilot para autocompletar y sabe leer/corregir lo que genera</li>
+</ul>
+</div>
+<div class="node mid">
+<span class="node-dot"></span><span class="node-label mono">Semi-Senior</span>
+<ul>
+<li>Usa agentes de código para tareas repetitivas (boilerplate, tests, refactors)</li>
+<li>Identifica cuándo una sugerencia de IA introduce un riesgo de seguridad</li>
+</ul>
+</div>
+<div class="node sr">
+<span class="node-dot"></span><span class="node-label mono">Senior</span>
+<ul>
+<li>Define cómo el equipo integra IA en code review y generación de tests</li>
+<li>Mantiene el criterio arquitectónico aunque la IA proponga una solución plausible pero
+equivocada</li>
+</ul>
+</div>
+</div>
+<div class="panel-footer">
+<div class="qbox">
+<span class="lbl mono">Pregunta típica</span>
+<p>"¿Cuál fue la última vez que rechazaste una sugerencia de Copilot o de un agente de código?
+¿Por qué?"</p>
+</div>
+<div class="qbox">
+<span class="lbl mono">Ten claro</span>
+<p>Una postura propia y articulada — no genérica — sobre dónde la IA acelera y dónde introduce
+deuda técnica si no se revisa.</p>
+</div>
+</div>
+</article>
+
+<div class="section-head">
+<span class="section-tag">Proceso de selección</span>
+<h3 id="fs-proceso">Tres etapas, tres tipos de evaluación distintos</h3>
+<p>Cada etapa filtra algo diferente. Prepararte igual para las tres es el error más común.</p>
+</div>
+<div class="timeline">
+<div class="stage">
+<div class="stage-num mono">01</div>
+<h4>Assessment online</h4>
+<p class="what">Prueba breve de lógica y conducta. Filtra estructura de pensamiento, no profundidad
+de stack.</p>
+<div class="tip">
+<span class="lbl">Cómo prepararte</span>
+Practica explicar tu razonamiento por escrito, paso a paso, no solo llegar a la respuesta
+correcta.
+</div>
+</div>
+<div class="stage">
+<div class="stage-num mono">02</div>
+<h4>Culture &amp; Client Fit</h4>
+<p class="what">Entrevista con People. Evalúa comunicación, gestión y, sobre todo, product thinking
+real.</p>
+<div class="tip">
+<span class="lbl">Cómo prepararte</span>
+Lleva 2–3 historias en formato situación → decisión → resultado. No es una técnica disfrazada.
+</div>
+</div>
+<div class="stage">
+<div class="stage-num mono">03</div>
+<h4>Technical &amp; Final</h4>
+<p class="what">Charla con el equipo de desarrollo y el CTO. Valida arquitectura, trade-offs y
+"músculo" real de código.</p>
+<div class="tip">
+<span class="lbl">Cómo prepararte</span>
+Ten un proyecto propio listo para defender en detalle: por qué elegiste cada pieza del stack, no
+solo qué hiciste.
+</div>
+</div>
+</div>
+
+<div class="section-head">
+<span class="section-tag">Plan de estudio</span>
+<h3 id="fs-plan-estudio">Tres semanas, en orden</h3>
+<p>Pensado para llegar a la entrevista técnica con ejemplos propios listos, no solo teoría repasada.</p>
+</div>
+<div class="weekgrid">
+<div class="week">
+<span class="wk-tag mono">Semana 1</span>
+<h4>Fundamentos bajo presión</h4>
+<ul>
+<li><strong>Frontend:</strong> repasa optimización de renders y generics en TS</li>
+<li><strong>Backend:</strong> diseña en papel una API REST con paginación y manejo de errores
+</li>
+<li><strong>Datos:</strong> practica leer un EXPLAIN en una query real tuya</li>
+</ul>
+</div>
+<div class="week">
+<span class="wk-tag mono">Semana 2</span>
+<h4>Arquitectura y trade-offs</h4>
+<ul>
+<li><strong>DevOps:</strong> repasa tu pipeline de CI/CD más reciente y dónde podría fallar</li>
+<li><strong>Seguridad:</strong> revisa OWASP Top 10 con foco en lo que aplicarías a Node.js</li>
+<li><strong>Datos:</strong> piensa cómo diseñarías un esquema multi-cliente desde cero</li>
+</ul>
+</div>
+<div class="week">
+<span class="wk-tag mono">Semana 3</span>
+<h4>Historias y defensa</h4>
+<ul>
+<li><strong>Product thinking:</strong> escribe 3 historias reales en formato situación →
+decisión → resultado</li>
+<li><strong>Cliente:</strong> practica explicar una decisión técnica a alguien sin contexto
+técnico</li>
+<li><strong>Proyecto propio:</strong> prepárate para defender cada elección de tu stack, no solo
+describirla</li>
+</ul>
+</div>
+</div>
+
+<div class="section-head">
+<span class="section-tag">Preguntas frecuentes</span>
+<h3 id="fs-faq">Lo que probablemente te van a preguntar</h3>
+<p>Organizadas por área. Pensadas para que practiques la respuesta, no para que la memorices.</p>
+</div>
+<div class="faq-list">
+<details>
+<summary><span><span class="faq-area mono">Frontend</span>¿Cómo evitarías un re-render innecesario
+en una lista grande?</span><span class="plus mono">+</span></summary>
+<div class="faq-body">Explica primero cómo confirmarías que el problema es real (profiler de React)
+antes de aplicar memo/useMemo a ciegas. Menciona virtualización si la lista es muy larga.</div>
+</details>
+<details>
+<summary><span><span class="faq-area mono">Backend</span>¿REST o GraphQL para un cliente con
+necesidades cambiantes?</span><span class="plus mono">+</span></summary>
+<div class="faq-body">No hay respuesta única: argumenta según el número de clientes consumiendo la
+API, la variabilidad de los datos que cada uno necesita, y el costo de mantenimiento de un
+esquema GraphQL versus múltiples endpoints REST.</div>
+</details>
+<details>
+<summary><span><span class="faq-area mono">Datos</span>¿Cuándo elegirías MongoDB sobre
+PostgreSQL?</span><span class="plus mono">+</span></summary>
+<div class="faq-body">Cuando el esquema es genuinamente variable entre registros o el caso de uso es
+de lectura/escritura masiva sin relaciones complejas. Evita justificarlo solo por "es más rápido
+de empezar".</div>
+</details>
+<details>
+<summary><span><span class="faq-area mono">DevOps</span>¿Dónde guardas credenciales sensibles en
+Kubernetes?</span><span class="plus mono">+</span></summary>
+<div class="faq-body">En un Secret, nunca en un ConfigMap ni en variables de entorno planas dentro
+del manifiesto. Explica además por qué un ConfigMap no cifra ni restringe el acceso del mismo
+modo.</div>
+</details>
+<details>
+<summary><span><span class="faq-area mono">Product thinking</span>¿Qué haces si el cliente insiste
+en una feature que crees que no aporta valor?</span><span class="plus mono">+</span>
+</summary>
+<div class="faq-body">Muestra que escuchas el objetivo de negocio detrás del pedido, propones una
+alternativa con el mismo objetivo pero menor costo, y solo ejecutas tal cual si el cliente,
+informado, insiste.</div>
+</details>
+<details>
+<summary><span><span class="faq-area mono">IA</span>¿Confías en el código que genera un agente de
+IA?</span><span class="plus mono">+</span></summary>
+<div class="faq-body">Da una respuesta calibrada: lo usas para acelerar tareas mecánicas, pero
+revisas con la misma exigencia que el código de un compañero junior, especialmente en seguridad
+y lógica de negocio.</div>
+</details>
+</div>
+
+<div class="summary-card">
+<h3 id="fs-resumen">Si solo te llevas tres cosas de esta guía</h3>
+<div class="summary-grid">
+<div class="summary-item">
+<span class="num mono">01</span>
+<p>El stack se da por hecho. Lo que diferencia a un candidato es poder defender <strong>por
+qué</strong> elegiste cada pieza, no solo nombrarla.</p>
+</div>
+<div class="summary-item">
+<span class="num mono">02</span>
+<p>Llega con 2–3 historias reales de product thinking listas en formato situación → decisión →
+resultado. La entrevista con People no es informal.</p>
+</div>
+<div class="summary-item">
+<span class="num mono">03</span>
+<p>Practica explicar una decisión técnica a alguien sin contexto técnico. Es una habilidad que
+se entrena, no un talento que se tiene o no.</p>
+</div>
+</div>
+</div>

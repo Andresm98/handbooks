@@ -1,0 +1,50 @@
+<p>La ventana de contexto es la cantidad de tokens (instrucciones + historial + documentos + salida) que el modelo puede "ver" en una sola llamada. Es, en términos de arquitectura, el equivalente a la <u>memoria RAM de un proceso</u>: todo lo que el modelo puede razonar en ese instante tiene que caber ahí.</p>
+
+<h3>Por qué no basta con "ventanas más grandes"</h3>
+<ul>
+<li><strong>Costo lineal (o peor):</strong> más contexto significa más tokens facturados en cada llamada, incluso si el contenido es redundante.</li>
+<li><strong>Degradación por posición:</strong> los modelos tienden a atender mejor el inicio y el final de un contexto largo que su parte media ("lost in the middle").</li>
+<li><strong>Ruido acumulado:</strong> historial de conversación, resultados de herramientas, y documentos RAG compiten por la misma capacidad de atención.</li>
+</ul>
+
+<h3>Estrategias de gestión de contexto</h3>
+<table>
+<tr><th>Estrategia</th><th>Cuándo usarla</th><th>Trade-off</th></tr>
+<tr><td>Truncado / ventana deslizante</td><td>Conversaciones largas sin necesidad de todo el historial</td><td>Se pierde contexto antiguo relevante</td></tr>
+<tr><td>Resumen progresivo (rolling summary)</td><td>Agentes de larga duración, sesiones extensas</td><td>Costo extra de una llamada de resumen; pérdida de detalle</td></tr>
+<tr><td>RAG como memoria externa</td><td>Conocimiento que excede la ventana o cambia con frecuencia</td><td>Complejidad de indexado y de calidad de recuperación</td></tr>
+<tr><td>Sub-agentes con contexto aislado</td><td>Tareas independientes que no necesitan compartir todo el estado</td><td>Coordinación y agregación de resultados</td></tr>
+<tr><td>Structured scratchpad / archivo de estado</td><td>Agentes que ejecutan planes largos (tipo Claude Code)</td><td>Requiere diseño explícito del formato de estado</td></tr>
+</table>
+
+<div class="callout beige">
+<div class="callout-label">Regla práctica</div>
+Si el contexto necesario para una tarea crece de forma no acotada con el tiempo o el volumen de datos, no es un problema de "ventana más grande": es un problema de arquitectura de recuperación (RAG) o de descomposición (multiagente).
+</div>
+
+<h3>Context engineering: qué entra en cada llamada</h3>
+<p>En un sistema agéntico, la calidad depende menos de redactar la instrucción perfecta y más de <strong>qué información está en la ventana en cada paso</strong>: qué se recupera, qué se resume, qué se descarta y en qué orden aparece. A esa disciplina se le llama <em>context engineering</em>.</p>
+<div class="diagram">┌──────────────────────────────────────────────────────┐
+│ 1. Herramientas (definiciones)          ── estable    │
+│ 2. System prompt: rol, reglas, formato  ── estable    │  ← prefijo cacheable
+│ 3. Documentos de referencia largos      ── estable    │
+├──────────────────────────────────────────────────────┤
+│ 4. Memoria resumida / estado de la tarea ── cambia    │
+│ 5. Contexto recuperado (RAG, tools)     ── por turno  │
+│ 6. Historial reciente                   ── por turno  │
+│ 7. Mensaje actual del usuario           ── por turno  │
+└──────────────────────────────────────────────────────┘</div>
+<ul>
+<li><strong>Estable primero, variable al final:</strong> el caché de prompts funciona por coincidencia exacta de prefijo. Una fecha o un ID generado al inicio del system prompt invalida todo lo que viene después.</li>
+<li><strong>Menos es más:</strong> agregar contexto irrelevante degrada la respuesta. Mejor 5 fragmentos bien re-rankeados que 40 "por si acaso".</li>
+<li><strong>Posición:</strong> lo crítico al inicio o al final; la pregunta del usuario después de los documentos, no antes.</li>
+<li><strong>Aislamiento:</strong> delegar subtareas a sub-agentes con su propia ventana evita que los resultados intermedios contaminen el contexto principal.</li>
+<li><strong>Compactación:</strong> en sesiones largas, resumir o limpiar resultados de herramientas antiguos (varios proveedores lo ofrecen del lado del servidor).</li>
+</ul>
+
+<h3>Cuánto cabe realmente</h3>
+<p>Los modelos de frontera ofrecen ventanas de cientos de miles a un millón de tokens. Que quepa no significa que convenga: el costo de cada llamada crece con el contexto, la latencia del primer token también, y la precisión sobre información enterrada en medio de un contexto enorme no es uniforme. Mide con tus propios documentos antes de diseñar alrededor de "meter todo".</p>
+<div class="callout tip">
+<span class="callout-label">Prueba rápida de "aguja en el pajar"</span>
+Inserta un dato verificable en distintas posiciones de un contexto representativo de tu caso y pregunta por él. Repite con el volumen real de tus documentos. El resultado te dice si puedes usar contexto largo directo o necesitas recuperación.
+</div>

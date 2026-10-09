@@ -1,0 +1,131 @@
+<p>Sin evaluación no hay ingeniería, solo opiniones sobre demos. Las <strong>evals</strong> son el equivalente de las pruebas automatizadas para sistemas con LLM: permiten saber si un cambio de prompt, de modelo, de chunking o de herramienta mejoró o empeoró el sistema, y bloquear regresiones antes de producción.</p>
+
+<h3>Tipos de evaluación</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Tipo</th><th>Qué mide</th><th>Cómo se califica</th><th>Costo</th></tr></thead>
+<tbody>
+<tr><td><strong>Basada en código</strong></td><td>Formato, esquema, coincidencia exacta, presencia de citas, llamadas a la herramienta correcta</td><td>Asserts deterministas</td><td>Muy bajo: corre en cada commit</td></tr>
+<tr><td><strong>Con referencia</strong></td><td>Cercanía a una respuesta esperada</td><td>Métricas de similitud o un juez LLM con la respuesta de referencia</td><td>Bajo–medio</td></tr>
+<tr><td><strong>LLM como juez</strong></td><td>Criterios abiertos: fidelidad a la fuente, utilidad, tono, seguridad</td><td>Un modelo con una rúbrica explícita</td><td>Medio</td></tr>
+<tr><td><strong>Humana</strong></td><td>Calidad percibida, casos ambiguos, calibración de los jueces</td><td>Expertos del dominio con guía de etiquetado</td><td>Alto: muestreo</td></tr>
+<tr><td><strong>En producción (online)</strong></td><td>Comportamiento real: feedback, escalamientos, tasa de abstención</td><td>Señales implícitas y explícitas de usuarios</td><td>Continuo</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Golden dataset: cómo construirlo</h3>
+<ol>
+<li><strong>Fuentes:</strong> preguntas reales de usuarios (anonimizadas), casos que fallaron en producción, casos difíciles escritos por expertos, y casos adversarios (fuera de alcance, intentos de manipulación).</li>
+<li><strong>Tamaño:</strong> empieza con 50–100 casos bien elegidos; crece con cada incidente. Más importante que el tamaño es la cobertura de categorías.</li>
+<li><strong>Etiquetas:</strong> respuesta esperada o criterios de aceptación, documentos que deberían recuperarse, herramientas que deberían llamarse.</li>
+<li><strong>Particiones:</strong> un conjunto de desarrollo para iterar y uno de prueba que no se mira mientras se ajusta.</li>
+<li><strong>Versionado:</strong> el dataset vive en el repositorio y sus cambios se revisan como código.</li>
+</ol>
+
+<h3>El triángulo RAG</h3>
+<p>RAGAS (RAG Assessment) define tres métricas fundamentales que juntos capturan la calidad del sistema:
+</p>
+
+<div class="metrics">
+<div class="metric">
+<div class="metric-value">Faithfulness</div>
+<div class="metric-label">¿el output está soportado por el contexto?</div>
+</div>
+<div class="metric">
+<div class="metric-value">Answer Relevancy</div>
+<div class="metric-label">¿responde realmente la pregunta?</div>
+</div>
+<div class="metric">
+<div class="metric-value">Context Recall</div>
+<div class="metric-label">¿se recuperó la info necesaria?</div>
+</div>
+<div class="metric">
+<div class="metric-value">Context Precision</div>
+<div class="metric-label">¿cuánto ruido hay en el contexto?</div>
+</div>
+</div>
+
+<h3>Métricas de retrieval</h3>
+<table>
+<tr>
+<th>Métrica</th>
+<th>Fórmula</th>
+<th>Mide</th>
+</tr>
+<tr>
+<td><strong>Precision@k</strong></td>
+<td><code>|relevantes en top-k| / k</code></td>
+<td>¿Qué fracción de los recuperados es relevante?</td>
+</tr>
+<tr>
+<td><strong>Recall@k</strong></td>
+<td><code>|relevantes en top-k| / |total relevantes|</code></td>
+<td>¿Qué fracción de los relevantes se recuperó?</td>
+</tr>
+<tr>
+<td><strong>MRR</strong></td>
+<td><code>1/N Σ 1/rankᵢ</code></td>
+<td>¿Qué tan arriba aparece el primer resultado relevante?</td>
+</tr>
+<tr>
+<td><strong>NDCG@k</strong></td>
+<td>DCG normalizado</td>
+<td>Ranking con pesos por posición y relevancia</td>
+</tr>
+</table>
+
+<h3>LLM-as-Judge</h3>
+<p>Para evaluar calidad de generación sin ground truth humano, se usa un LLM (típicamente GPT-4 o Claude
+Opus)
+como juez. El juez recibe la pregunta, el contexto, y la respuesta, y da un score y justificación.
+Es un proxy
+imperfecto pero escalable.</p>
+
+<div class="callout warn">
+<div class="callout-label">Sesgo de LLM-as-Judge</div>
+<p>Los LLMs como jueces exhiben preference bias (prefieren respuestas largas), self-enhancement bias
+(prefieren outputs de su mismo modelo), y position bias (prefieren la primera opción en
+comparaciones).
+Mitiga con múltiples jueces, juicios ciegos, y calibración contra evaluaciones humanas.</p>
+</div>
+
+<h3>Evaluar agentes</h3>
+<p>En un agente no basta con mirar la respuesta final: importa el <strong>camino</strong>. Una respuesta correcta tras 40 llamadas innecesarias, o tras ejecutar una acción que no debía, es un fallo.</p>
+<div class="card-grid">
+<div class="card accent-blue"><div class="card-title">Éxito de la tarea</div><p class="card-body">¿Se logró el objetivo? Verificable por estado final (el ticket quedó creado, las pruebas pasan).</p></div>
+<div class="card accent-blue"><div class="card-title">Trayectoria</div><p class="card-body">¿Llamó a las herramientas correctas, en orden razonable, con argumentos válidos? ¿Evitó acciones prohibidas?</p></div>
+<div class="card accent-blue"><div class="card-title">Eficiencia</div><p class="card-body">Pasos, tokens, costo y tiempo por tarea completada.</p></div>
+<div class="card accent-blue"><div class="card-title">Seguridad</div><p class="card-body">¿Respetó la aprobación humana? ¿Resistió instrucciones inyectadas en los resultados de herramientas?</p></div>
+</div>
+<p>Los agentes son no deterministas: corre cada caso varias veces y reporta la tasa de éxito (por ejemplo "éxito en al menos 1 de k intentos" frente a "éxito en los k intentos"), no un único resultado.</p>
+
+<h3>Evals como gate de CI</h3>
+<pre><code># tests/test_evals.py — corre en CI con cada cambio de prompt, modelo o retrieval
+import json, pytest
+from app.asistente import responder
+from evals.jueces import juez_fidelidad      # LLM-as-judge con rúbrica versionada
+
+CASOS = [json.loads(l) for l in open("evals/golden_dev.jsonl", encoding="utf-8")]
+
+@pytest.mark.parametrize("caso", CASOS, ids=lambda c: c["id"])
+def test_caso(caso):
+    r = responder(caso["pregunta"], usuario=caso["usuario"])
+    if caso.get("fuera_de_alcance"):
+        assert r.abstuvo, "debía abstenerse"
+        return
+    assert set(caso["docs_esperados"]) &lt;= set(r.docs_recuperados), "retrieval incompleto"
+    assert r.citas, "respuesta sin citas"
+    assert juez_fidelidad(caso["pregunta"], r.contexto, r.texto) &gt;= 4  # escala 1-5
+
+def test_umbral_global(resultados_agregados):
+    # además de los casos individuales: la tasa global no puede bajar del baseline
+    assert resultados_agregados.tasa_exito &gt;= 0.90<span class="lang-label">Python · pytest</span></code></pre>
+
+<div class="callout warn">
+<span class="callout-label">Calibra a tus jueces</span>
+Un juez LLM es un modelo con sesgos. Antes de confiar en él, compara sus notas con las de expertos humanos en una muestra (por ejemplo 50 casos) y ajusta la rúbrica hasta que coincidan razonablemente. Usa escalas cortas y criterios observables ("cada afirmación tiene soporte en el contexto") en lugar de "¿es buena la respuesta?".
+</div>
+
+<h3>Herramientas</h3>
+<p>Frameworks de evaluación como RAGAS, DeepEval, promptfoo u OpenAI Evals, y plataformas de observabilidad con evals integradas (Langfuse, LangSmith, Arize Phoenix, Braintrust) aceleran el trabajo. Lo esencial no es la herramienta: es tener el dataset, la rúbrica y el gate en el pipeline.</p>

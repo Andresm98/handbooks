@@ -1,0 +1,228 @@
+<p>El backend es el sistema nervioso de cualquier aplicación. Diseñarlo bien significa entender el
+protocolo
+sobre el que opera, gestionar el estado de forma predecible, manejar la concurrencia sin race
+conditions, y
+fallar de maneras informativas y recuperables.</p>
+
+<h3 id="http-deep">HTTP: El Protocolo que Todo Backend Habla</h3>
+
+<div class="diagram">
+<pre><code>
+  HTTP Request-Response: Lo que realmente ocurre
+
+  Cliente                              Servidor
+    │                                     │
+    │──DNS lookup (¿dónde está host?)─────►│
+    │◄─IP address──────────────────────────│
+    │                                     │
+    │──TCP handshake (SYN/SYN-ACK/ACK)───►│
+    │                                     │
+    │──TLS handshake (HTTPS)──────────────►│
+    │  (certificados, cipher suite, keys) │
+    │                                     │
+    │──HTTP Request───────────────────────►│
+    │  GET /users/123 HTTP/1.1            │
+    │  Host: api.company.com              │
+    │  Authorization: Bearer eyJ...       │
+    │  Accept: application/json           │
+    │  Connection: keep-alive             │
+    │                                     │
+    │◄─HTTP Response───────────────────────│
+    │  HTTP/1.1 200 OK                    │
+    │  Content-Type: application/json     │
+    │  Cache-Control: max-age=300         │
+    │  ETag: "abc123"                     │
+    │  X-Request-Id: uuid-v4             │
+    │                                     │
+    │  { "id": "123", "name": "..." }     │
+
+  Lo que muchos backends ignoran:
+  • Connection: keep-alive — reutilizar conexiones TCP (HTTP/1.1 default)
+  • ETag — permitir conditional requests (304 Not Modified)
+  • X-Request-Id — tracing de requests entre servicios
+  • Cache-Control — qué puede cachear el cliente/CDN
+</code></pre>
+</div>
+
+<h4>STATUS CODES: USARLOS CORRECTAMENTE IMPORTA</h4>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Código</th>
+<th>Cuándo usarlo</th>
+<th>Error común</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="g"><strong>200 OK</strong></td>
+<td>Request exitoso con respuesta</td>
+<td>Usarlo para errores de negocio con body de error</td>
+</tr>
+<tr>
+<td class="g"><strong>201 Created</strong></td>
+<td>Recurso creado exitosamente (POST)</td>
+<td>Retornar 200 en vez de 201 para creaciones</td>
+</tr>
+<tr>
+<td class="g"><strong>204 No Content</strong></td>
+<td>Éxito sin cuerpo de respuesta (DELETE)</td>
+<td>Retornar 200 con body vacío</td>
+</tr>
+<tr>
+<td class="b"><strong>400 Bad Request</strong></td>
+<td>Error de validación del cliente</td>
+<td>Usarlo para errores de servidor</td>
+</tr>
+<tr>
+<td class="b"><strong>401 Unauthorized</strong></td>
+<td>No autenticado (sin token o token inválido)</td>
+<td>Confundirlo con 403</td>
+</tr>
+<tr>
+<td class="b"><strong>403 Forbidden</strong></td>
+<td>Autenticado pero sin permiso</td>
+<td>Retornar 404 para ocultar que el recurso existe</td>
+</tr>
+<tr>
+<td class="b"><strong>404 Not Found</strong></td>
+<td>Recurso no encontrado</td>
+<td>Retornar 400 cuando es realmente un 404</td>
+</tr>
+<tr>
+<td class="b"><strong>409 Conflict</strong></td>
+<td>Estado del recurso en conflicto con el request</td>
+<td>No usarlo para duplicados — es exactamente para eso</td>
+</tr>
+<tr>
+<td class="b"><strong>422 Unprocessable</strong></td>
+<td>Validación semántica fallida (campos válidos pero inconsistentes)</td>
+<td>Confundirlo con 400</td>
+</tr>
+<tr>
+<td class="y"><strong>429 Too Many Requests</strong></td>
+<td>Rate limit excedido</td>
+<td>Retornar 503 cuando es un rate limit del cliente</td>
+</tr>
+<tr>
+<td class="r"><strong>500 Internal Error</strong></td>
+<td>Error inesperado del servidor</td>
+<td>Exponer detalles del error interno al cliente</td>
+</tr>
+<tr>
+<td class="r"><strong>503 Unavailable</strong></td>
+<td>Servicio temporalmente no disponible</td>
+<td>Retornar 500 cuando el servicio está en mantenimiento planificado</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="auth">Autenticación y Autorización: Conceptos Diferentes</h3>
+<p><strong>Autenticación</strong> responde "¿quién eres?". <strong>Autorización</strong> responde
+"¿qué puedes
+hacer?". Confundirlos es uno de los errores de seguridad más comunes.</p>
+
+<pre data-lang="python"><code><span class="cm"># Implementación completa de JWT auth en FastAPI</span>
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta, timezone
+<span class="kw">from</span> jose <span class="kw">import</span> jwt, JWTError
+<span class="kw">import</span> bcrypt
+
+SECRET_KEY = <span class="str">"env-variable-never-hardcoded"</span>
+ALGORITHM  = <span class="str">"HS256"</span>
+
+<span class="kw">def</span> <span class="fn">hash_password</span>(plain: str) -> str:
+    <span class="cm"># bcrypt: auto-salted, trabajo configurable, resistente a rainbow tables</span>
+    <span class="kw">return</span> bcrypt.hashpw(plain.encode(), bcrypt.gensalt(rounds=<span class="nm">12</span>)).decode()
+
+<span class="kw">def</span> <span class="fn">verify_password</span>(plain: str, hashed: str) -> bool:
+    <span class="kw">return</span> bcrypt.checkpw(plain.encode(), hashed.encode())
+    <span class="cm"># bcrypt es timing-safe por diseño — evita timing attacks</span>
+
+<span class="kw">def</span> <span class="fn">create_access_token</span>(user_id: str, roles: list[str]) -> str:
+    payload = {
+        <span class="str">"sub"</span>:   user_id,
+        <span class="str">"roles"</span>: roles,
+        <span class="str">"iat"</span>:   datetime.now(timezone.utc),
+        <span class="str">"exp"</span>:   datetime.now(timezone.utc) + timedelta(minutes=<span class="nm">15</span>),
+        <span class="cm"># Access token corto (15 min). Refresh token largo en httpOnly cookie.</span>
+    }
+    <span class="kw">return</span> jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+<span class="kw">def</span> <span class="fn">require_permission</span>(permission: str):
+    <span class="str">"""Decorator de autorización basado en permisos"""</span>
+    <span class="kw">def</span> <span class="fn">decorator</span>(func):
+        <span class="k2">@wraps</span>(func)
+        <span class="kw">async def</span> <span class="fn">wrapper</span>(*args, current_user: User = Depends(get_current_user), **kwargs):
+            <span class="cm"># AUTENTICACIÓN: get_current_user valida el JWT</span>
+            <span class="cm"># AUTORIZACIÓN: verificar si tiene el permiso específico</span>
+            <span class="kw">if</span> permission <span class="kw">not in</span> current_user.permissions:
+                <span class="kw">raise</span> HTTPException(
+                    status_code=<span class="nm">403</span>,
+                    detail=<span class="str">f"Permission '{permission}' required"</span>
+                )
+            <span class="kw">return await</span> func(*args, current_user=current_user, **kwargs)
+        <span class="kw">return</span> wrapper
+    <span class="kw">return</span> decorator
+
+<span class="cm"># Uso: separación clara entre autenticación y autorización</span>
+<span class="k2">@router.delete</span>(<span class="str">"/users/{user_id}"</span>)
+<span class="k2">@require_permission</span>(<span class="str">"users:delete"</span>)
+<span class="kw">async def</span> <span class="fn">delete_user</span>(user_id: str, current_user: User = Depends()):
+    <span class="kw">await</span> user_service.<span class="fn">delete</span>(user_id)</code></pre>
+
+<h3 id="concurrency">Concurrencia: Los Problemas que Solo Aparecen en Producción</h3>
+
+<pre data-lang="python"><code><span class="cm"># Race condition clásica — el problema más silencioso del backend</span>
+
+<span class="cm"># ❌ Race condition en actualización de inventario</span>
+<span class="kw">async def</span> <span class="fn">reserve_item</span>(item_id: str, quantity: int):
+    item = <span class="kw">await</span> db.<span class="fn">get_item</span>(item_id)        <span class="cm"># Lee stock = 5</span>
+    <span class="cm"># ← Otro request también lee stock = 5 AQUÍ</span>
+    <span class="kw">if</span> item.stock &lt; quantity:
+        <span class="kw">raise</span> InsufficientStockError()
+    <span class="kw">await</span> db.<span class="fn">update_stock</span>(item_id, item.stock - quantity)
+    <span class="cm"># Ambos requests reservan 3 unidades, stock final = -1 🐛</span>
+
+<span class="cm"># ✓ Solución 1: Optimistic locking — detectar conflicto, reintentar</span>
+<span class="kw">async def</span> <span class="fn">reserve_item_optimistic</span>(item_id: str, quantity: int):
+    <span class="kw">for</span> attempt <span class="kw">in</span> range(<span class="nm">3</span>):  <span class="cm"># Max 3 reintentos</span>
+        item = <span class="kw">await</span> db.<span class="fn">get_item</span>(item_id)
+        <span class="kw">if</span> item.stock &lt; quantity:
+            <span class="kw">raise</span> InsufficientStockError()
+        updated = <span class="kw">await</span> db.<span class="fn">update_stock_if_version_matches</span>(
+            item_id,
+            new_stock=item.stock - quantity,
+            expected_version=item.version  <span class="cm"># Falla si otro lo modificó</span>
+        )
+        <span class="kw">if</span> updated:
+            <span class="kw">return</span>  <span class="cm"># Éxito</span>
+    <span class="kw">raise</span> ConcurrentModificationError()
+
+<span class="cm"># ✓ Solución 2: Pessimistic locking — SELECT FOR UPDATE</span>
+<span class="kw">async def</span> <span class="fn">reserve_item_pessimistic</span>(item_id: str, quantity: int):
+    <span class="kw">async with</span> db.<span class="fn">transaction</span>():
+        <span class="cm"># Bloquea la fila — otros requests esperan hasta que esta TX termine</span>
+        item = <span class="kw">await</span> db.<span class="fn">get_item_for_update</span>(item_id)  <span class="cm"># SELECT FOR UPDATE</span>
+        <span class="kw">if</span> item.stock &lt; quantity:
+            <span class="kw">raise</span> InsufficientStockError()
+        <span class="kw">await</span> db.<span class="fn">update_stock</span>(item_id, item.stock - quantity)
+        <span class="cm"># Lock liberado al terminar la transacción</span>
+
+<span class="cm"># ✓ Solución 3: Atomic operation — sin locks, más escalable</span>
+<span class="cm"># UPDATE items SET stock = stock - :qty
+#   WHERE id = :id AND stock >= :qty
+# Retorna rows_affected: si es 0, no había stock suficiente</span></code></pre>
+
+<div class="arch-rel">
+<span class="arch-rel-lbl">Conexión técnica</span>
+<p>El backend engineering implementa los patrones de la arquitectura de sistemas: las race
+conditions se
+resuelven con los mismos principios de ACID que definen las bases de datos relacionales, la
+autenticación
+con JWT conecta con <strong>Zero Trust</strong> y la gestión de identidad, y el diseño de
+APIs bien
+versionadas es la base del <strong>Strangler Fig Pattern</strong> para migraciones
+incrementales.</p>
+</div>

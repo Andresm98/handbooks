@@ -1,0 +1,50 @@
+<p>Elegir modelo es una decisión de arquitectura con fecha de caducidad: cada pocos meses aparecen modelos más capaces o más baratos. Por eso la habilidad clave no es saber "cuál es el mejor modelo hoy", sino tener un <strong>método</strong> para decidir y re-decidir rápido con tus propios datos.</p>
+
+<h3>Las dimensiones de la decisión</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Dimensión</th><th>Preguntas</th></tr></thead>
+<tbody>
+<tr><td><strong>Calidad en tu tarea</strong></td><td>¿Qué tasa de éxito obtiene en tu golden dataset? ¿Dónde falla?</td></tr>
+<tr><td><strong>Latencia</strong></td><td>¿Cuál es el TTFT y el tiempo total en el p95 con tu tamaño de prompt? ¿Es interactivo o batch?</td></tr>
+<tr><td><strong>Costo</strong></td><td>¿Cuánto cuesta por <em>tarea completada</em> (no por llamada), incluyendo reintentos y pasos del agente?</td></tr>
+<tr><td><strong>Contexto y modalidades</strong></td><td>¿Cuánto contexto necesita el caso? ¿Imágenes, PDFs, audio?</td></tr>
+<tr><td><strong>Capacidades de API</strong></td><td>Herramientas, salidas estructuradas, caché, lotes, razonamiento ajustable, citas.</td></tr>
+<tr><td><strong>Datos y cumplimiento</strong></td><td>¿Dónde se procesa? ¿Retención de datos? ¿Disponible en tu nube y región? ¿Requisitos de residencia?</td></tr>
+<tr><td><strong>Operación</strong></td><td>Límites de tasa, SLA, historial de disponibilidad, política de deprecación de versiones.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Benchmarks públicos: útiles y engañosos</h3>
+<p>Los benchmarks miden capacidades generales: conocimiento (tipo MMLU y sus variantes más difíciles), razonamiento científico (GPQA), matemáticas, programación sobre repositorios reales (SWE-bench), uso de herramientas y agentes (benchmarks de tareas en terminal o con APIs simuladas), y preferencias humanas en comparaciones a ciegas (arenas de votación).</p>
+<div class="callout warn">
+<span class="callout-label">Por qué no decidir solo con benchmarks</span>
+<strong>Contaminación:</strong> preguntas del benchmark pueden haber aparecido en los datos de entrenamiento. <strong>Saturación:</strong> cuando todos los modelos de frontera superan el 90%, las diferencias ya no discriminan. <strong>Distancia al caso real:</strong> tu dominio, idioma y formato no están en el benchmark. Úsalos para hacer la lista corta; decide con evals propias.
+</div>
+
+<h3>Proceso recomendado</h3>
+<ol>
+<li><strong>Define la tarea y la métrica</strong> con negocio: qué es una respuesta correcta y cuánto vale un error de cada tipo.</li>
+<li><strong>Construye un golden dataset</strong> de 50–200 casos representativos, incluyendo casos difíciles y adversarios.</li>
+<li><strong>Prueba primero el modelo más capaz</strong> para establecer el techo de calidad alcanzable.</li>
+<li><strong>Baja de costo</strong> (modelo más pequeño, menos esfuerzo de razonamiento, menos contexto) mientras la calidad se sostenga.</li>
+<li><strong>Mide costo por tarea completada</strong> y latencia p95, no solo precisión.</li>
+<li><strong>Documenta en un ADR</strong> con condición de revisión (nuevo modelo, cambio de precio, cambio de volumen).</li>
+</ol>
+
+<h3>Routing, cascadas y fallback</h3>
+<div class="card-grid">
+<div class="card accent-blue"><div class="card-title">Routing por tarea</div><p class="card-body">Un clasificador barato decide qué modelo atiende cada request: extracción simple al modelo pequeño, análisis complejo al grande.</p></div>
+<div class="card accent-blue"><div class="card-title">Cascada</div><p class="card-body">Intenta con el modelo barato y escala al caro solo si la confianza o la validación fallan. Ahorra si la mayoría de casos son fáciles; añade latencia en los difíciles.</p></div>
+<div class="card accent-blue"><div class="card-title">Fallback</div><p class="card-body">Si el proveedor principal falla o declina, otro modelo atiende. Requiere evals del modelo secundario: un fallback no probado es un incidente esperando.</p></div>
+<div class="card accent-blue"><div class="card-title">Mismo modelo, menos esfuerzo</div><p class="card-body">Antes de montar una cascada entre modelos, mide el modelo capaz con menor nivel de razonamiento: a veces iguala calidad con menos complejidad y conserva el caché.</p></div>
+</div>
+
+<h3>Ciclo de vida de versiones</h3>
+<p>Los proveedores retiran versiones de modelos con aviso. Fija la versión exacta en producción, suscríbete a los avisos de deprecación, y ten un procedimiento de migración: correr el golden dataset con el modelo nuevo, revisar prompts (lo que funcionaba con uno puede sobrar o estorbar con otro), comparar costo y latencia, y desplegar con canario.</p>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Para el arquitecto</span>
+<p>La consistencia con la plataforma existente (identidad, red, observabilidad, contratos) suele pesar más que una ventaja marginal de benchmark. Un modelo ligeramente mejor en otra nube puede costar meses de integración de seguridad.</p>
+</div>

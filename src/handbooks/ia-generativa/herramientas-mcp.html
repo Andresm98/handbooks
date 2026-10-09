@@ -1,0 +1,96 @@
+<p>Las <strong>herramientas</strong> (tools) son funciones que el LLM puede invocar para interactuar con
+el
+mundo externo. El modelo no ejecuta la herramienta directamente: genera una llamada estructurada
+(<em>tool
+call</em>) que el sistema de orquestación ejecuta y devuelve el resultado.</p>
+
+<h3>Anatomía de una herramienta</h3>
+<pre>{
+  <span class="str">"name"</span>: <span class="str">"search_documents"</span>,
+  <span class="str">"description"</span>: <span class="str">"Busca en la base de conocimiento interna. Úsala cuando
+    necesites información específica de los documentos de la empresa."</span>,
+  <span class="str">"input_schema"</span>: {
+    <span class="str">"type"</span>: <span class="str">"object"</span>,
+    <span class="str">"properties"</span>: {
+      <span class="str">"query"</span>: {
+        <span class="str">"type"</span>: <span class="str">"string"</span>,
+        <span class="str">"description"</span>: <span class="str">"La consulta de búsqueda en lenguaje natural"</span>
+      },
+      <span class="str">"top_k"</span>: {
+        <span class="str">"type"</span>: <span class="str">"integer"</span>,
+        <span class="str">"default"</span>: <span class="num">5</span>,
+        <span class="str">"description"</span>: <span class="str">"Número de resultados a retornar"</span>
+      }
+    },
+    <span class="str">"required"</span>: [<span class="str">"query"</span>]
+  }
+}
+<span class="lang-label">JSON Schema</span></pre>
+
+<div class="callout def">
+<div class="callout-label">Principio clave</div>
+<p>La <code>description</code> de una herramienta es literalmente parte del prompt. El modelo la lee
+para
+decidir si usar la herramienta. Una descripción ambigua lleva a un uso incorrecto o a no usar la
+herramienta
+cuando se necesita.</p>
+</div>
+
+<h3>Diseñar herramientas para un modelo</h3>
+<p>Una herramienta es una interfaz cuyo usuario es un modelo. Las reglas de buen diseño de APIs siguen valiendo, con matices:</p>
+<div class="card-grid">
+<div class="card"><h4>Pocas y con propósito claro</h4><p>Diez herramientas bien delimitadas superan a cuarenta que se solapan. Si dos herramientas sirven para lo mismo, el modelo dudará.</p></div>
+<div class="card"><h4>Orientadas a la tarea</h4><p>Mejor <code>buscar_cliente_por_documento</code> que exponer un SQL genérico. Menos pasos, menos errores, menos superficie de ataque.</p></div>
+<div class="card"><h4>Respuestas compactas</h4><p>Devuelve lo que el modelo necesita, no el JSON completo de 400 campos. Cada token de resultado ocupa contexto en todos los pasos siguientes.</p></div>
+<div class="card"><h4>Errores accionables</h4><p>"Formato inválido: el ID debe ser TRF- seguido de 8 dígitos" permite corregir; "Error 500" no.</p></div>
+<div class="card"><h4>Idempotentes cuando escriben</h4><p>Acepta una clave de idempotencia: el modelo o el loop pueden reintentar una llamada.</p></div>
+<div class="card"><h4>Mínimo privilegio</h4><p>Cada herramienta con su propia credencial y alcance. Separa las de lectura de las de escritura y marca las irreversibles para aprobación humana.</p></div>
+</div>
+
+<h3>Model Context Protocol (MCP)</h3>
+<p><strong>Model Context Protocol (MCP)</strong> es un estándar abierto para conectar modelos con herramientas y fuentes de datos externas, de forma similar a como REST estandarizó la comunicación entre servicios web. En vez de escribir un integrador distinto por cada combinación de modelo y herramienta, MCP define una interfaz común.</p>
+
+<p>MCP define una arquitectura cliente–servidor: la aplicación que usa el modelo (el <em>host</em>, por ejemplo un IDE, un asistente de escritorio o tu backend) abre un cliente MCP por cada servidor; cada servidor expone capacidades de un sistema (un gestor de tickets, una base de datos, un repositorio).</p>
+<div class="arch-box">
+<div class="arch-layer"><span class="arch-layer-label">Primitivas del servidor</span><div class="arch-chips"><span class="chip blue">Tools: acciones que el modelo invoca</span><span class="chip green">Resources: datos que la aplicación puede leer</span><span class="chip gold">Prompts: plantillas reutilizables</span></div></div>
+<div class="arch-layer"><span class="arch-layer-label">Capacidades del cliente</span><div class="arch-chips"><span class="chip">Sampling: el servidor pide una generación al modelo del host</span><span class="chip">Elicitation: el servidor pide datos al usuario</span><span class="chip">Roots: límites del sistema de archivos</span></div></div>
+<div class="arch-layer"><span class="arch-layer-label">Transporte</span><div class="arch-chips"><span class="chip">stdio: servidor local como proceso hijo</span><span class="chip">Streamable HTTP: servidor remoto</span></div></div>
+<div class="arch-layer"><span class="arch-layer-label">Autorización</span><div class="arch-chips"><span class="chip">OAuth 2.1 para servidores remotos</span><span class="chip">Credenciales por usuario, no compartidas</span></div></div>
+</div>
+<p class="muted">Vigente a la fecha de revisión. La especificación de MCP evoluciona por versiones fechadas; el transporte remoto original basado en HTTP + SSE fue reemplazado por Streamable HTTP. Consulta la versión de la especificación que soportan tu cliente y tus servidores.</p>
+<h3>Por qué importa arquitectónicamente</h3>
+<ul>
+<li><strong>Desacoplamiento:</strong> el proveedor de la herramienta (ej. un sistema interno bancario) expone un servidor MCP una sola vez, y cualquier cliente compatible (Claude, otros LLMs) puede consumirlo.</li>
+<li><strong>Reutilización entre agentes:</strong> el mismo servidor MCP puede ser consumido por múltiples agentes o aplicaciones sin duplicar lógica de integración.</li>
+<li><strong>Seguridad centralizada:</strong> autenticación y control de acceso se implementan una vez en el servidor MCP, en lugar de en cada prompt o integración ad-hoc.</li>
+</ul>
+
+<div class="diagram">┌───────────┐        MCP         ┌────────────────┐
+│  Agente   │ ◄────────────────► │  Servidor MCP   │
+│  (Cliente)│    (protocolo      │  (ej. Jira,     │
+│           │     estándar)      │   Salesforce,   │
+└───────────┘                    │   BD interna)   │
+└────────────────┘</div>
+
+<p class="muted">En tu contexto: si Banco Pichincha expone sistemas internos vía MCP, cualquier agente autorizado (interno o de terceros) puede integrarse sin reconstruir la capa de conexión cada vez — el mismo principio que ya aplicaste con el servidor Structurizr en Docker.</p>
+
+<h3>Riesgos específicos de MCP</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Riesgo</th><th>Descripción</th><th>Mitigación</th></tr></thead>
+<tbody>
+<tr><td>Servidores no confiables</td><td>Un servidor de terceros puede devolver contenido con instrucciones maliciosas o cambiar su comportamiento tras ser aprobado.</td><td>Catálogo interno de servidores aprobados, versiones fijadas, revisión de código, ejecución aislada.</td></tr>
+<tr><td>Descripciones envenenadas</td><td>Texto oculto en la descripción de una herramienta que instruye al modelo.</td><td>Revisar descripciones, alertar si cambian, no exponer herramientas no revisadas.</td></tr>
+<tr><td>Diputado confundido</td><td>El servidor actúa con sus propios privilegios en nombre de un usuario que no los tiene.</td><td>Delegar la identidad del usuario final (OAuth por usuario) y autorizar en el servidor.</td></tr>
+<tr><td>Combinación peligrosa</td><td>Un agente con datos privados, contenido no confiable y canal de salida puede ser inducido a exfiltrar.</td><td>No combinar las tres capacidades sin aprobación humana en el canal de salida (ver capítulo de seguridad).</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>A2A: comunicación entre agentes</h3>
+<p>Mientras MCP conecta un agente con herramientas y datos, el protocolo <strong>Agent2Agent (A2A)</strong> busca estandarizar la comunicación entre agentes de distintos proveedores o equipos: cada agente publica una "tarjeta" con sus capacidades, y otros le delegan tareas con un ciclo de vida (enviada, en curso, completada) y artefactos de resultado. Es relevante cuando agentes de distintos dominios o empresas deben colaborar sin compartir implementación. Dentro de un mismo sistema, una llamada a sub-agente vía tu orquestador suele ser más simple.</p>
+
+<div class="callout tip">
+<span class="callout-label">Patrón empresarial</span>
+Trata los servidores MCP internos como productos de plataforma: un equipo dueño, versionado semántico, autenticación centralizada, logs de auditoría por llamada y un catálogo donde los equipos descubren qué capacidades existen. Es la misma disciplina que un API Gateway, aplicada a herramientas para agentes.
+</div>

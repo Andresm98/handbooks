@@ -1,0 +1,154 @@
+<article>
+<h3>🔐 Criptografía — Servicios de Seguridad</h3>
+<p>Los servicios de seguridad criptográficos son:</p>
+<div class="card-grid">
+<div class="card">
+<h3>🔒 Confidentiality</h3>
+<p>Proteger datos de acceso no autorizado. Implementado con cifrado simétrico (AES) y asimétrico
+(RSA).</p>
+</div>
+<div class="card">
+<h3>✅ Integrity</h3>
+<p>Garantizar que datos no fueron alterados. Implementado con hashes (SHA-256) y MACs.</p>
+</div>
+<div class="card">
+<h3>👤 Authentication</h3>
+<p>Verificar la identidad del comunicante. Implementado con firmas digitales, certificados
+X.509.</p>
+</div>
+<div class="card">
+<h3>📝 Non-Repudiation</h3>
+<p>Garantizar que el emisor no puede negar haber enviado el mensaje. Firmas digitales.</p>
+</div>
+</div>
+<div class="callout callout-warn">
+<span class="callout-icon">⚠️</span>
+<div><strong>Disponibilidad (Availability)</strong> NO es un servicio criptográfico. Es parte del
+CIA Triad general de seguridad, pero la criptografía no la garantiza directamente.</div>
+</div>
+</article>
+
+<article>
+<h3>🛡️ Zero Trust Architecture</h3>
+<p>Principio: <strong>"Never trust, always verify."</strong> No asumas confianza basada en ubicación de
+red (ni dentro del datacenter).</p>
+<div class="two-col">
+<div>
+<h4>Principios Zero Trust</h4>
+<ul>
+<li>Verificar explícitamente (identidad, device, contexto)</li>
+<li>Least-privilege access</li>
+<li>Assume breach (diseña como si ya estuvieras comprometido)</li>
+<li>Microsegmentación de red</li>
+<li>mTLS entre servicios</li>
+</ul>
+</div>
+<div>
+<h4>Implementación</h4>
+<ul>
+<li>Identity Provider (Azure AD, Okta)</li>
+<li>MFA obligatorio</li>
+<li>Service Mesh con mTLS (Istio)</li>
+<li>SIEM para detección de anomalías</li>
+<li>PAM (Privileged Access Management)</li>
+</ul>
+</div>
+</div>
+</article>
+
+<article>
+<h3>🗝️ Gestión de Secretos</h3>
+<p>Best practice en microservicios: usar un <strong>gestor de secretos dedicado</strong>. NUNCA
+almacenar credenciales en código o archivos de configuración.</p>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Práctica</th>
+<th>Estado</th>
+<th>Razón</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Variables de entorno en código fuente</td>
+<td style="color:var(--accent4)">❌ Riesgo alto</td>
+<td>Expuestas en repositorio, logs</td>
+</tr>
+<tr>
+<td>Credenciales en archivos de configuración</td>
+<td style="color:var(--accent4)">❌ Riesgo alto</td>
+<td>Versionadas en git, accesibles a todos</td>
+</tr>
+<tr>
+<td>Secretos en logs (aunque encriptados)</td>
+<td style="color:var(--accent4)">❌ Anti-patrón</td>
+<td>Logs tienen retención larga, múltiples accesos</td>
+</tr>
+<tr>
+<td>Azure Key Vault / AWS Secrets Manager</td>
+<td style="color:var(--accent3)">✅ Best Practice</td>
+<td>Centralizado, auditado, rotación automática, RBAC</td>
+</tr>
+<tr>
+<td>HashiCorp Vault</td>
+<td style="color:var(--accent3)">✅ Best Practice</td>
+<td>Open-source, multi-cloud, dynamic secrets</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>
+
+<article>
+<h3>🚨 Tipos de Amenazas y Fraude</h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Categoría</th>
+<th>Descripción</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Espionaje / Trespass</strong></td>
+<td>Acceso no autorizado para obtener información</td>
+<td>Interceptación de comunicaciones, keyloggers</td>
+</tr>
+<tr>
+<td><strong>Sabotaje / Vandalismo</strong></td>
+<td>Destrucción deliberada de sistemas o datos</td>
+<td>Ransomware, borrado de datos, DDoS destructivo</td>
+</tr>
+<tr>
+<td><strong>Extorsión de información</strong></td>
+<td>Robo de datos para pedir rescate</td>
+<td>Ransomware, blackmail de datos robados</td>
+</tr>
+<tr>
+<td><strong>Robo</strong></td>
+<td>Sustracción de activos digitales o físicos</td>
+<td>Robo de propiedad intelectual, credenciales</td>
+</tr>
+<tr>
+<td><strong>Ataques de software</strong></td>
+<td>Exploits, malware, vulnerabilidades</td>
+<td>SQL injection, XSS, buffer overflow</td>
+</tr>
+<tr>
+<td><strong>Skimming</strong></td>
+<td>Captura datos de pago durante transacción legítima</td>
+<td>Clonar tarjetas en terminal falso o web fraudulenta</td>
+</tr>
+<tr>
+<td><strong>Friendly Fraud</strong></td>
+<td>El propio cliente reclama devolución de compra legítima</td>
+<td>Chargeback fraudulento</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>

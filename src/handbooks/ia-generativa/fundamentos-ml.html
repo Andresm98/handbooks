@@ -1,0 +1,86 @@
+<p>Un LLM es un caso particular de Machine Learning. Muchos errores de diseño en sistemas de IA generativa —evaluar con los mismos ejemplos con los que se ajustó un prompt, confiar en un porcentaje de "precisión" sin mirar la clase minoritaria, usar un LLM donde un modelo clásico de 2 MB resolvía el problema— vienen de saltarse estos fundamentos. No necesitas derivar backpropagation a mano; sí necesitas el vocabulario y los reflejos.</p>
+
+<h3>Qué es "aprender" para una máquina</h3>
+<p>Un modelo de ML es una función con parámetros ajustables. <strong>Entrenar</strong> es buscar los valores de esos parámetros que minimizan una <strong>función de pérdida</strong> (loss) sobre datos de ejemplo. <strong>Inferir</strong> es usar la función ya ajustada sobre datos nuevos. Esta separación es la más importante de todo el capítulo: el entrenamiento es caro, lento y se hace pocas veces; la inferencia es lo que tu sistema ejecuta millones de veces y lo que pagas por request.</p>
+
+<div class="formula">
+<div class="formula-label">La idea central del entrenamiento</div>
+θ* = argmin<sub>θ</sub> 𝔼<sub>(x,y)∼datos</sub> [ L( f<sub>θ</sub>(x), y ) ] &nbsp;&nbsp;— se aproxima con descenso de gradiente: θ ← θ − η · ∇<sub>θ</sub>L
+</div>
+
+<h3>Los tres paradigmas</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Paradigma</th><th>Datos</th><th>Ejemplos de uso</th><th>Relación con LLMs</th></tr></thead>
+<tbody>
+<tr><td><strong>Supervisado</strong></td><td>Pares entrada → etiqueta</td><td>Detección de fraude, scoring crediticio, clasificación de tickets</td><td>El fine-tuning supervisado (SFT) de un LLM es aprendizaje supervisado sobre pares instrucción → respuesta.</td></tr>
+<tr><td><strong>No supervisado / auto-supervisado</strong></td><td>Datos sin etiqueta</td><td>Clustering de clientes, detección de anomalías, embeddings</td><td>El pre-entrenamiento de un LLM es auto-supervisado: la "etiqueta" es el siguiente token del propio texto.</td></tr>
+<tr><td><strong>Por refuerzo</strong></td><td>Acciones y recompensas</td><td>Robótica, juegos, optimización de políticas</td><td>RLHF y el entrenamiento de modelos de razonamiento usan refuerzo para alinear y mejorar el comportamiento.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Datos: entrenamiento, validación y prueba</h3>
+<p>Los datos se dividen en tres conjuntos con funciones distintas. El de <strong>entrenamiento</strong> ajusta parámetros; el de <strong>validación</strong> ajusta decisiones humanas (hiperparámetros, prompts, umbrales); el de <strong>prueba</strong> se toca una sola vez para estimar el rendimiento real. Si iteras sobre el conjunto de prueba, deja de medir generalización y empieza a medir cuánto te has adaptado a él.</p>
+<div class="callout warn">
+<span class="callout-label">El mismo error, versión LLM</span>
+Ajustar un prompt durante semanas mirando siempre las mismas 30 preguntas y luego reportar "92% de acierto" sobre esas 30 es sobreajuste del prompt al conjunto de validación. Separa un conjunto de prueba que nadie mira mientras itera (ver capítulo de evaluación).
+</div>
+
+<h3>Overfitting, underfitting y el trade-off sesgo–varianza</h3>
+<div class="two-col">
+<div class="card"><h4>Underfitting (alto sesgo)</h4><p>El modelo es demasiado simple para el patrón: falla en entrenamiento y en prueba. Solución: más capacidad, mejores features, más entrenamiento.</p></div>
+<div class="card"><h4>Overfitting (alta varianza)</h4><p>El modelo memoriza el ruido del entrenamiento: brilla en entrenamiento y falla en datos nuevos. Solución: más datos, regularización, early stopping, modelos más simples.</p></div>
+</div>
+<p><strong>Fuga de datos (data leakage)</strong> es el primo peligroso del overfitting: información del futuro o de la etiqueta se cuela en las features (por ejemplo, usar "fecha de cierre de la cuenta" para predecir abandono). El modelo parece excelente en pruebas y es inútil en producción.</p>
+
+<h3>Métricas de clasificación que hay que saber leer</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Métrica</th><th>Fórmula</th><th>Pregunta que responde</th><th>Cuándo importa</th></tr></thead>
+<tbody>
+<tr><td><strong>Accuracy</strong></td><td><code>(TP+TN)/total</code></td><td>¿Qué fracción acerté?</td><td>Solo con clases balanceadas. Con 1% de fraude, un modelo que dice "nunca fraude" tiene 99%.</td></tr>
+<tr><td><strong>Precision</strong></td><td><code>TP/(TP+FP)</code></td><td>De lo que marqué positivo, ¿cuánto lo era?</td><td>Cuando el falso positivo es caro (bloquear una transferencia legítima).</td></tr>
+<tr><td><strong>Recall</strong></td><td><code>TP/(TP+FN)</code></td><td>De los positivos reales, ¿cuántos encontré?</td><td>Cuando el falso negativo es caro (fraude no detectado, diagnóstico perdido).</td></tr>
+<tr><td><strong>F1</strong></td><td><code>2·P·R/(P+R)</code></td><td>Balance entre precision y recall</td><td>Comparar modelos con un solo número cuando ambos errores importan.</td></tr>
+<tr><td><strong>AUC-ROC / AUC-PR</strong></td><td>Área bajo la curva</td><td>¿Qué tan bien ordena positivos sobre negativos a cualquier umbral?</td><td>AUC-PR es más informativa con clases muy desbalanceadas.</td></tr>
+</tbody>
+</table>
+</div>
+<p>El <strong>umbral de decisión</strong> es una decisión de negocio, no del modelo: mover el umbral cambia la proporción entre falsos positivos y falsos negativos. La matriz de confusión con costos asociados a cada celda es la herramienta para esa conversación.</p>
+
+<h3>Métricas de regresión y de ranking</h3>
+<ul>
+<li><strong>MAE</strong> (error absoluto medio) es interpretable en las unidades del problema; <strong>RMSE</strong> castiga más los errores grandes.</li>
+<li>Para búsqueda y RAG se usan métricas de ranking: <strong>Precision@k, Recall@k, MRR y NDCG</strong> (detalladas en el capítulo de evaluación).</li>
+</ul>
+
+<h3>Familias de modelos clásicos que siguen ganando</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Modelo</th><th>Fortaleza</th><th>Caso típico</th></tr></thead>
+<tbody>
+<tr><td>Regresión logística / lineal</td><td>Interpretable, rápida, auditable</td><td>Scoring regulado donde hay que explicar cada factor.</td></tr>
+<tr><td>Árboles y gradient boosting (XGBoost, LightGBM)</td><td>Estado del arte en datos tabulares</td><td>Fraude, riesgo, churn, pricing.</td></tr>
+<tr><td>Clustering (k-means, DBSCAN)</td><td>Segmentar sin etiquetas</td><td>Segmentación de clientes, agrupación de tickets.</td></tr>
+<tr><td>Isolation Forest, autoencoders</td><td>Detección de anomalías</td><td>Transacciones atípicas, monitoreo de infraestructura.</td></tr>
+<tr><td>Series de tiempo (ARIMA, Prophet, modelos de gradient boosting con lags)</td><td>Pronóstico</td><td>Demanda de efectivo en cajeros, capacidad.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout axiom">
+<span class="callout-label">Regla de selección</span>
+Si el problema es tabular, con etiquetas y requiere explicabilidad o latencia de milisegundos, un modelo clásico casi siempre gana a un LLM en costo, velocidad y auditabilidad. El LLM brilla con lenguaje no estructurado, tareas abiertas y cuando no tienes datos etiquetados. Los mejores sistemas combinan ambos: el modelo clásico decide, el LLM explica o extrae features del texto.
+</div>
+
+<h3>Explicabilidad y sesgo</h3>
+<p>En dominios regulados (crédito, seguros, empleo) hay que poder explicar por qué el sistema tomó una decisión. Técnicas como <strong>SHAP</strong> y <strong>LIME</strong> atribuyen la predicción a las features. El <strong>sesgo</strong> aparece cuando el desempeño difiere entre grupos (género, edad, región): se mide comparando métricas por segmento, no solo el promedio global. Esto conecta directamente con el capítulo de gobernanza.</p>
+
+<h3>MLOps en una página</h3>
+<p>MLOps aplica CI/CD a modelos: versionado de datos y modelos, pipelines de entrenamiento reproducibles, registro de modelos, despliegue gradual y monitoreo de <strong>data drift</strong> (cambia la distribución de entrada) y <strong>concept drift</strong> (cambia la relación entre entrada y salida). LLMOps hereda todo esto y añade prompts, índices vectoriales y evaluaciones con jueces como nuevos artefactos versionables.</p>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Matemáticas mínimas útiles</span>
+<p>Álgebra lineal (vectores, producto punto, matrices: base de embeddings y atención), probabilidad (distribuciones, muestreo: base de temperature y top-p), y cálculo a nivel de "el gradiente indica hacia dónde baja la pérdida". Con eso se entiende el resto del handbook.</p>
+</div>

@@ -1,0 +1,113 @@
+<p>Conviene distinguir dos familias. En los <strong>workflows</strong>, el código define el camino y el LLM resuelve pasos dentro de él: son predecibles, baratos de probar y suficientes para la mayoría de casos. En los <strong>agentes</strong>, el LLM decide el camino. Los patrones de abajo van de más determinista a más autónomo; empieza siempre por el más simple que resuelva el problema.</p>
+
+<h3>Patrones de workflow</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Patrón</th><th>Cómo funciona</th><th>Cuándo</th></tr></thead>
+<tbody>
+<tr><td><strong>Encadenamiento (prompt chaining)</strong></td><td>La salida de un paso es la entrada del siguiente, con validaciones intermedias</td><td>Tareas descomponibles en etapas fijas: extraer → validar → redactar.</td></tr>
+<tr><td><strong>Routing</strong></td><td>Un clasificador envía cada entrada al flujo especializado</td><td>Entradas heterogéneas: consultas de saldo, reclamos, preguntas de producto.</td></tr>
+<tr><td><strong>Paralelización</strong></td><td>Subtareas independientes en paralelo (sectioning) o la misma tarea varias veces para votar (voting)</td><td>Latencia o confiabilidad: revisar un contrato por cláusulas, o tres evaluaciones independientes de riesgo.</td></tr>
+<tr><td><strong>Orquestador–trabajadores</strong></td><td>Un LLM divide dinámicamente la tarea y delega</td><td>Las subtareas no se conocen de antemano (cambios en varios archivos, investigación).</td></tr>
+<tr><td><strong>Evaluador–optimizador</strong></td><td>Un paso genera, otro evalúa con criterios explícitos e itera</td><td>Hay criterios claros de calidad y la iteración mejora de forma medible.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Patrones de agente</h3>
+<h3>ReAct (Reason + Act)</h3>
+<p>El agente alterna explícitamente entre razonar en texto y ejecutar una acción, observando el resultado antes del siguiente razonamiento. Es el patrón base de casi todos los frameworks actuales.</p>
+
+<h3>Plan-and-Execute</h3>
+<p>El agente genera primero un plan completo de pasos, y luego lo ejecuta (con posibilidad de replanificar si un paso falla). Reduce el número de llamadas al modelo comparado con ReAct puro, a costa de menos adaptabilidad paso a paso.</p>
+
+<h3>Reflection / Self-critique</h3>
+<p>Después de producir una salida, un segundo paso (a veces el mismo modelo, a veces otro) la evalúa contra criterios explícitos y decide si iterar. Mejora calidad en tareas de generación de código o contenido, al costo de más latencia y tokens.</p>
+
+<h3>Orchestrator-Worker</h3>
+<p>Un agente orquestador descompone la tarea y delega sub-tareas a agentes "worker" especializados, agregando después sus resultados. Es la base conceptual de casi todos los sistemas multiagente.</p>
+
+<div class="card-grid">
+<div class="card">
+<h4>Cuándo usar ReAct</h4>
+<p>Tareas exploratorias donde el siguiente paso depende fuertemente del resultado anterior (debugging, investigación).</p>
+</div>
+<div class="card">
+<h4>Cuándo usar Plan-and-Execute</h4>
+<p>Tareas con estructura predecible donde el costo de replanificar constantemente no se justifica (pipelines conocidos).</p>
+</div>
+</div>
+
+<h3>Multi-Agent Systems: Patrones Reales</h3>
+
+<div class="diagram">
+<pre><code>
+  Patrón 1: Orchestrator-Workers (el más confiable)
+  
+  ┌──────────────────────────────────────────────────────────────┐
+  │  User Request                                                 │
+  │      │                                                       │
+  │      ▼                                                       │
+  │  ┌──────────────────────────────┐                            │
+  │  │  Orchestrator Agent (LLM)    │                            │
+  │  │  • Descompone la tarea       │                            │
+  │  │  • Decide qué tools usar     │                            │
+  │  │  • Recopila resultados       │                            │
+  │  │  • Sintetiza respuesta final │                            │
+  │  └──┬──────────┬───────────┬───┘                            │
+  │     │          │           │                                │
+  │     ▼          ▼           ▼                                │
+  │  ┌──────┐  ┌──────┐  ┌──────────┐                          │
+  │  │Search│  │Code  │  │Database  │  ← Workers/Tools         │
+  │  │Agent │  │Agent │  │Agent     │    (deterministas        │
+  │  └──────┘  └──────┘  └──────────┘     o LLM-based)        │
+  └──────────────────────────────────────────────────────────────┘
+
+  Patrón 2: Agentic Loop (ReAct)
+  
+  Thought → Action → Observation → Thought → Action → ...
+  
+  LLM razona qué hacer, ejecuta una herramienta, observa el resultado,
+  razona de nuevo. Loop hasta completar la tarea o alcanzar max_steps.
+  
+  Riesgo principal: loops infinitos, costos no acotados, acciones irreversibles.
+  Mitigación: max_steps, budget limits, human-in-the-loop checkpoints.
+</code></pre>
+</div>
+
+<h3>Patrones de flujo</h3>
+<div class="card-grid">
+<div class="card accent-green">
+<div class="card-num">PATRÓN 1</div>
+<div class="card-title">Map-reduce</div>
+<p class="card-body">Procesar N documentos en paralelo (map) y agregar los resultados (reduce).
+Ideal para
+resumir grandes volúmenes de información.</p>
+</div>
+<div class="card accent-green">
+<div class="card-num">PATRÓN 2</div>
+<div class="card-title">Parallelization</div>
+<p class="card-body">Ejecutar múltiples sub-agentes concurrentemente para distintas sub-tareas.
+LangGraph
+soporta branches paralelas nativas.</p>
+</div>
+<div class="card accent-green">
+<div class="card-num">PATRÓN 3</div>
+<div class="card-title">Evaluator-optimizer</div>
+<p class="card-body">Un agente genera, otro evalúa la calidad. Si no pasa el umbral, el
+generador itera.
+Loop de mejora automática.</p>
+</div>
+<div class="card accent-green">
+<div class="card-num">PATRÓN 4</div>
+<div class="card-title">Subgraph</div>
+<p class="card-body">Grafos anidados donde un nodo padre delega a un subgrafo completo. Permite
+composición
+y reutilización de flujos.</p>
+</div>
+</div>
+
+<div class="callout axiom">
+<span class="callout-label">Regla de diseño</span>
+Envuelve los pasos no deterministas del LLM en una estructura determinista: estados explícitos, límites de pasos, validación entre etapas y puntos de aprobación. La libertad del agente debe ser la mínima necesaria para la tarea.
+</div>

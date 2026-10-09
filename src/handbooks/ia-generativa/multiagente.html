@@ -1,0 +1,61 @@
+<p>Un sistema multiagente descompone un problema complejo en agentes especializados que colaboran, en lugar de forzar a un único agente generalista a manejar todo el contexto y todas las herramientas. Es, en esencia, el mismo principio de <u>separación de responsabilidades</u> que ya aplicas en microservicios.</p>
+
+<h3>Topologías comunes</h3>
+<table>
+<tr><th>Topología</th><th>Descripción</th><th>Cuándo conviene</th></tr>
+<tr><td>Orquestador central</td><td>Un agente coordinador delega y agrega resultados de agentes especializados</td><td>Tareas con sub-dominios claros (ej. uno investiga, otro escribe, otro valida)</td></tr>
+<tr><td>Peer-to-peer / debate</td><td>Agentes intercambian propuestas y se critican entre sí antes de converger</td><td>Tareas de razonamiento donde el consenso mejora la calidad (revisión de código, análisis)</td></tr>
+<tr><td>Pipeline secuencial</td><td>Cada agente procesa la salida del anterior en una cadena fija</td><td>Procesos con etapas bien definidas (extracción → transformación → validación)</td></tr>
+<tr><td>Jerárquico (manager de managers)</td><td>Orquestadores de orquestadores, replicando estructura organizacional</td><td>Sistemas de gran escala con múltiples dominios de negocio</td></tr>
+</table>
+
+<h3>El costo real de multiagente</h3>
+<ul>
+<li><strong>Más tokens y latencia:</strong> cada agente adicional multiplica llamadas al modelo.</li>
+<li><strong>Coordinación de estado:</strong> decidir qué comparten los agentes y qué mantienen aislado es la decisión de diseño más difícil.</li>
+<li><strong>Fallos en cascada:</strong> un agente que alucina puede propagar ese error a los agentes que dependen de su salida.</li>
+<li><strong>Debugging más difícil:</strong> trazar por qué un sistema de 5 agentes llegó a una respuesta incorrecta requiere observabilidad seria (ver <a href="#observabilidad">Observabilidad y LLMOps</a>).</li>
+</ul>
+
+<div class="callout">
+<div class="callout-label">Principio de diseño</div>
+No uses multiagente por defecto. Úsalo cuando el problema tiene sub-dominios genuinamente distintos (con distintas herramientas, distinto conocimiento, o distinto "rol" conceptual) y un solo agente generalista degradaría la calidad por sobrecarga de contexto o de instrucciones contradictorias.
+</div>
+
+<h3>Paralelismo y coordinación</h3>
+<p>Ejecutar agentes en paralelo ataca <u>latencia</u> (varias sub-tareas independientes al mismo tiempo) y <u>cobertura</u> (varios agentes exploran distintas hipótesis y se comparan resultados). No todo problema se beneficia de paralelismo: solo aquellos donde las sub-tareas son genuinamente independientes.</p>
+
+<h3>Patrones de paralelismo</h3>
+<div class="card-grid">
+<div class="card">
+<h4>Fan-out / Fan-in</h4>
+<p>Se lanzan N agentes en paralelo sobre sub-tareas independientes, y un paso final agrega o sintetiza los resultados.</p>
+</div>
+<div class="card">
+<h4>Best-of-N / Voting</h4>
+<p>Varios agentes resuelven el mismo problema de forma independiente; se selecciona o combina la mejor respuesta según un criterio.</p>
+</div>
+<div class="card">
+<h4>Speculative execution</h4>
+<p>Se ejecutan en paralelo caminos alternativos antes de saber cuál será necesario, descartando los que no se usan.</p>
+</div>
+<div class="card">
+<h4>Map-Reduce sobre documentos</h4>
+<p>Cada agente procesa un subconjunto de un corpus grande (map); un agente final consolida (reduce). Común en RAG sobre corpus extensos.</p>
+</div>
+</div>
+
+<h3>Riesgos de coordinación</h3>
+<ul>
+<li><strong>Condiciones de carrera sobre estado compartido:</strong> si varios agentes escriben al mismo store, hace falta el mismo cuidado que en concurrencia clásica.</li>
+<li><strong>Costo no lineal:</strong> N agentes en paralelo no cuestan N veces menos tiempo si además hay un paso de agregación costoso.</li>
+<li><strong>Inconsistencia semántica:</strong> agentes paralelos pueden llegar a conclusiones contradictorias sobre el mismo dato si no comparten una fuente de verdad común.</li>
+</ul>
+
+<h3>Contexto compartido frente a contexto aislado</h3>
+<p>La decisión más difícil en multiagente es qué ve cada agente. Dos estrategias:</p>
+<div class="two-col">
+<div class="card"><h4>Sub-agentes con contexto aislado</h4><p>Cada sub-agente recibe solo su tarea y devuelve un resultado condensado. Protege el contexto del orquestador y permite paralelizar; el riesgo es que un sub-agente tome decisiones incompatibles por falta de contexto global.</p></div>
+<div class="card"><h4>Contexto compartido</h4><p>Todos ven el mismo estado o historial. Más coherencia, pero más tokens y más riesgo de que el error de uno contamine a todos.</p></div>
+</div>
+<p>Una heurística útil: paraleliza tareas de <em>lectura</em> e investigación (se combinan bien), y mantén secuenciales o bajo un solo agente las tareas de <em>escritura</em> que deben ser coherentes entre sí (cambios de código interdependientes, un documento único).</p>

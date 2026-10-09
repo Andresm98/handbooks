@@ -1,0 +1,207 @@
+<p>El código que escribes solo representa una fracción de tu impacto como ingeniero senior. La otra
+fracción —
+frecuentemente la más grande — viene de cómo trabajas con otros: qué feedback das, cómo
+comunicas problemas
+técnicos, cómo estimas con honestidad, cómo documentas decisiones que otros necesitarán entender
+en dos
+años.</p>
+
+<h3 id="code-review">Code Reviews que Elevan al Equipo</h3>
+<p>Un code review tiene dos objetivos simultáneos: mejorar el código del PR y desarrollar al
+ingeniero que lo
+escribió. Los reviews que solo logran el primero son revisiones de código. Los que logran ambos
+son
+inversiones en el equipo.</p>
+
+<div class="diagram">
+<pre><code>
+  Anatomía de un Code Review Efectivo
+
+  QUÉ REVISAR (por prioridad):
+  ┌────────────────────────────────────────────────────────────┐
+  │ 1. CORRECCIÓN: ¿Hace lo que debe hacer?                    │
+  │    Bugs, edge cases no manejados, errores de lógica        │
+  │                                                            │
+  │ 2. DISEÑO: ¿Es el approach correcto?                       │
+  │    ¿Hay una solución más simple? ¿Introduce acoplamiento?  │
+  │    ¿Se puede testear? ¿Respeta los contratos existentes?   │
+  │                                                            │
+  │ 3. SEGURIDAD: ¿Introduce vulnerabilidades?                 │
+  │    Input validation, autorización, secrets hardcodeados    │
+  │                                                            │
+  │ 4. PERFORMANCE: ¿Hay problemas obvios?                     │
+  │    N+1 queries, algoritmos O(n²) innecesarios              │
+  │                                                            │
+  │ 5. LEGIBILIDAD: ¿Es claro para el siguiente lector?        │
+  │    Nombres, estructura, comentarios donde añaden valor     │
+  └────────────────────────────────────────────────────────────┘
+
+  Convenciones para claridad (prefix en comentarios):
+  [BLOQUEANTE]   → Debe cambiar antes de merge (bug, seguridad)
+  [SUGERENCIA]   → Mejora recomendada, no obligatoria
+  [PREGUNTA]     → No entiendo esto, ayúdame a entender
+  [NIL]          → Observación, no requiere acción (nitpick)
+  [APRENDIZAJE]  → Explicación o recurso para el autor
+</code></pre>
+</div>
+
+<pre data-lang="markdown"><code><span class="cm"><!-- ❌ Review que critica sin enseñar --></span>
+Esto está mal. Deberías usar una lista aquí.
+
+<span class="cm"><!-- ❌ Review demasiado vago para ser accionable --></span>
+Este código no me parece correcto.
+
+<span class="cm"><!-- ✓ Review que explica, enseña, y propone alternativa --></span>
+[BLOQUEANTE] Este loop tiene un N+1 query: por cada `user` en la lista
+se hace un query separado para obtener su `profile`. Con 1000 usuarios
+esto son 1001 queries a la BD.
+
+Sugerencia:
+```python
+# En vez de:
+for user in users:
+    user.profile = db.get_profile(user.id)  # N queries
+
+# Cargar todos los profiles en una sola query:
+user_ids = [u.id for u in users]
+profiles = db.get_profiles_by_ids(user_ids)  # 1 query
+profile_map = {p.user_id: p for p in profiles}
+for user in users:
+    user.profile = profile_map.get(user.id)
+```
+
+Referencia: https://wiki.company.com/patterns/n-plus-one
+
+<span class="cm"><!-- ✓ Para sugerencias de estilo: no bloquear --></span>
+[NIL] Prefiero nombres más descriptivos aquí (`user_profiles_by_id`
+en vez de `pm`), pero es estético — merge si quieres.
+</code></pre>
+
+<h3 id="estimations">Estimaciones Honestas: La Habilidad más Política</h3>
+<p>Estimar mal destruye la confianza entre ingenieros y stakeholders. Sobre-estimar crea slack
+artificial.
+Sub-estimar produce promesas rotas. La meta no es estimar perfectamente — es ser honesto sobre
+la
+incertidumbre.</p>
+
+<div class="diagram">
+<pre><code>
+  Por qué los ingenieros siempre sub-estiman: El Planning Fallacy
+
+  Lo que los ingenieros asumen al estimar:
+  • Todo va a funcionar según el plan
+  • Las dependencias estarán listas
+  • No habrá bugs inesperados
+  • No habrá interrupciones (meetings, reviews, preguntas)
+  • El código existente es como lo recuerdo
+  • Los requerimientos no van a cambiar
+
+  Lo que realmente ocurre:
+  • La API de terceros tiene un comportamiento no documentado
+  • El schema de BD necesita una migración no anticipada
+  • Los requirements cambian a mitad de implementación
+  • Los code reviews piden cambios significativos
+  • Hay un bug en producción que requiere atención urgente
+
+  Técnica de estimación honesta: Three-Point Estimation
+  ┌─────────────────────────────────────────────────────────┐
+  │  O = Optimista: todo sale perfecto (10%)               │
+  │  M = Más probable: condiciones normales (60%)          │
+  │  P = Pesimista: murphy's law activo (30%)              │
+  │                                                         │
+  │  Estimación = (O + 4M + P) / 6                         │
+  │                                                         │
+  │  Ejemplo: "Integrar el sistema de pagos"               │
+  │  O = 3 días, M = 8 días, P = 20 días                   │
+  │  Estimación = (3 + 32 + 20) / 6 = 9.2 días            │
+  │                                                         │
+  │  Comunicar como rango: "Entre 8 y 15 días, más         │
+  │  probable cerca de 9. El riesgo principal es la        │
+  │  documentación incompleta del proveedor de pagos."     │
+  └─────────────────────────────────────────────────────────┘
+</code></pre>
+</div>
+
+<h4>CÓMO COMUNICAR RETRASOS: LA CONVERSACIÓN DIFÍCIL</h4>
+<pre data-lang="markdown"><code><span class="cm"><!-- Plantilla para comunicar que una estimación fue incorrecta --></span>
+
+**Contexto:** [Qué se está construyendo y para cuándo se prometió]
+
+**Situación actual:** Al investigar el sistema de pagos más en profundidad,
+encontramos que [problema específico]. Esto añade trabajo no anticipado.
+
+**Nueva estimación:** La fecha original era [fecha]. La nueva estimación
+más probable es [nueva fecha], con [X días de delta].
+
+**Por qué cambia:** [Causa específica y honesta — no excusas vagas]
+- La API de Stripe tiene rate limits que requieren implementar backoff
+- El modelo de datos existente necesita una migración adicional
+
+**Opciones:** Para mantener la fecha original, podemos:
+1. Reducir el scope: [qué feature podemos cortar sin impacto crítico]
+2. Añadir recurso: [qué persona adicional podría ayudar con qué parte]
+3. Aceptar el retraso: [impacto real en el negocio de esperar X días más]
+
+¿Cuál prefieren?
+
+<span class="cm"><!-- La clave: comunicar PRONTO (no el día antes del deadline),
+     proponer opciones (no dejar el problema sin solucionar),
+     y dar contexto del impacto real (no solo el delay técnico) --></span>
+</code></pre>
+
+<h3>Documentación que se Lee</h3>
+<p>La documentación que nadie lee no existe. La documentación que produce valor tiene tres
+características:
+está cerca del código que describe, responde preguntas que alguien realmente tiene, y tiene un
+dueño que la
+mantiene actualizada.</p>
+
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="dot d-gn"></span>README: La puerta de entrada</div>
+<p>Qué hace este proyecto en una línea. Cómo correrlo en 5 minutos. Las decisiones de
+arquitectura
+principales. Los links a la documentación extendida. Si el README no está actualizado,
+nada lo estará.
+</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot d-gn"></span>ADRs: Por qué las cosas son como son
+</div>
+<p>Architecture Decision Records documentan el razonamiento de las decisiones importantes.
+"¿Por qué
+usamos MongoDB aquí?" La respuesta está en el ADR, con el contexto del momento en que se
+tomó la
+decisión.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot d-gn"></span>Comentarios de código: El por qué, no
+el qué</div>
+<p>El código dice qué hace. Los comentarios dicen por qué. Si el código necesita un
+comentario para
+explicar qué hace, probablemente necesita un refactor. Si necesita explicar por qué hace
+algo no obvio,
+el comentario es invaluable.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot d-rd"></span>Anti-pattern: Wiki graveyard</div>
+<p>Una wiki con 500 páginas donde el 80% está desactualizado. Peor que no tener
+documentación: da
+respuestas incorrectas con apariencia de corrección. Mejor: menos documentación, toda
+actualizada.</p>
+</div>
+</div>
+
+<div class="arch-rel">
+<span class="arch-rel-lbl">Conexión técnica</span>
+<p>Las habilidades de equipo son las que determinan si las buenas prácticas técnicas —
+<strong>Clean
+Code</strong>, <strong>TDD</strong>, <strong>diseño de API</strong> — se adoptan
+consistentemente o solo
+cuando el autor tiene tiempo. Los code reviews son el mecanismo de difusión de conocimiento
+técnico. Las
+estimaciones honestas son la interface entre el equipo técnico y las decisiones de negocio.
+Sin estas
+habilidades, el conocimiento técnico queda atrapado en silos.
+</p>
+</div>

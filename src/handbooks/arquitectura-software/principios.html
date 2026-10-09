@@ -1,0 +1,262 @@
+<!-- CAP -->
+<h3 id="cap">Teorema CAP</h3>
+<p>Un sistema distribuido solo puede garantizar <strong>dos de tres propiedades</strong>
+simultáneamente:</p>
+
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="dot dot-blue"></span>Consistency (C)</div>
+<p>Todos los nodos ven los mismos datos al mismo tiempo. Una lectura siempre retorna el dato
+más reciente.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot dot-green"></span>Availability (A)</div>
+<p>Todo request recibe una respuesta (no necesariamente el dato más reciente). El sistema
+sigue respondiendo.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot dot-orange"></span>Partition Tolerance (P)</div>
+<p>El sistema funciona aunque haya fallas de red entre nodos. En sistemas distribuidos, P es
+obligatorio.</p>
+</div>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Elección</th>
+<th>Garantiza</th>
+<th>Sacrifica</th>
+<th>Ejemplos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="blue"><strong>CP</strong></td>
+<td>Consistencia + Particiones</td>
+<td class="red">Disponibilidad (responde error si hay partición)</td>
+<td>HBase, Zookeeper, etcd, MongoDB (w:majority)</td>
+</tr>
+<tr>
+<td class="green"><strong>AP</strong></td>
+<td>Disponibilidad + Particiones</td>
+<td class="yellow">Consistencia eventual</td>
+<td>DynamoDB, Cassandra, CouchDB, Riak</td>
+</tr>
+<tr>
+<td class="orange"><strong>CA</strong></td>
+<td>Consistencia + Disponibilidad</td>
+<td class="red">Tolerancia a particiones (imposible en distribuido)</td>
+<td>PostgreSQL, MySQL (single node)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout info">
+<div class="callout-icon"></div>
+<p>En sistemas distribuidos reales, las particiones de red son inevitables. Por tanto, la
+elección real es siempre entre <strong>CP o AP</strong>. La categoría CA solo aplica en
+sistemas de un único nodo.</p>
+</div>
+
+<!-- ACID vs BASE -->
+<hr class="divider">
+<h3 id="acid-base">ACID vs BASE</h3>
+
+<div class="pros-cons">
+<div class="pros">
+<h4>ACID (Bases de datos tradicionales)</h4>
+<ul>
+<li><strong>Atomicity:</strong> Transacción completa o ninguna</li>
+<li><strong>Consistency:</strong> Datos siempre en estado válido</li>
+<li><strong>Isolation:</strong> Transacciones no se interfieren</li>
+<li><strong>Durability:</strong> Datos persisten tras commit</li>
+<li>Ejemplos: PostgreSQL, MySQL, Oracle</li>
+<li>Ideal para: banca, e-commerce, inventario</li>
+</ul>
+</div>
+<div class="cons">
+<h4>BASE (NoSQL, distribuidos)</h4>
+<ul>
+<li><strong>Basically Available:</strong> Siempre responde</li>
+<li><strong>Soft State:</strong> Estado puede cambiar sin input</li>
+<li><strong>Eventually Consistent:</strong> Convergencia eventual</li>
+<li>Ejemplos: DynamoDB, Cassandra, MongoDB</li>
+<li>Ideal para: redes sociales, analytics, IoT</li>
+<li>Prioriza escala sobre consistencia estricta</li>
+</ul>
+</div>
+</div>
+
+<!-- TWELVE FACTOR -->
+<hr class="divider">
+<h3 id="twelve-factor">The Twelve-Factor App</h3>
+<p>Metodología para construir aplicaciones cloud-native portables, escalables y mantenibles.
+Publicada originalmente por Heroku.</p>
+
+<div class="principle-grid">
+<div class="principle-item">
+<strong>I. Codebase</strong>
+<p>Un repositorio, múltiples despliegues. Sin código compartido entre apps via copy-paste.
+</p>
+</div>
+<div class="principle-item">
+<strong>II. Dependencies</strong>
+<p>Declarar y aislar dependencias explícitamente (requirements.txt, package.json, go.mod).
+</p>
+</div>
+<div class="principle-item">
+<strong>III. Config</strong>
+<p>Configuración en variables de entorno, nunca en código fuente ni archivos versionados.
+</p>
+</div>
+<div class="principle-item">
+<strong>IV. Backing Services</strong>
+<p>Tratar BD, caches, brokers como recursos adjuntos intercambiables via URL/config.</p>
+</div>
+<div class="principle-item">
+<strong>V. Build/Release/Run</strong>
+<p>Separar estrictamente las etapas de build, release (config) y runtime.</p>
+</div>
+<div class="principle-item">
+<strong>VI. Processes</strong>
+<p>Ejecutar la app como procesos stateless. Estado en backing services externos.</p>
+</div>
+<div class="principle-item">
+<strong>VII. Port Binding</strong>
+<p>Exponer servicios via binding de puertos, sin depender de servidores web externos.</p>
+</div>
+<div class="principle-item">
+<strong>VIII. Concurrency</strong>
+<p>Escalar horizontalmente via procesos, no con threads dentro del mismo proceso.</p>
+</div>
+<div class="principle-item">
+<strong>IX. Disposability</strong>
+<p>Arranque rápido y apagado graceful. Tolerar fallas repentinas sin corrupción.</p>
+</div>
+<div class="principle-item">
+<strong>X. Dev/Prod Parity</strong>
+<p>Mantener dev, staging y prod lo más similares posible. Evitar "works on my machine".</p>
+</div>
+<div class="principle-item">
+<strong>XI. Logs</strong>
+<p>Tratar logs como streams de eventos. La app escribe a stdout, no gestiona archivos.</p>
+</div>
+<div class="principle-item">
+<strong>XII. Admin Processes</strong>
+<p>Ejecutar tareas administrativas (migraciones, scripts) como procesos one-off.</p>
+</div>
+</div>
+
+<!-- DDD -->
+<hr class="divider">
+<h3 id="ddd">Domain-Driven Design (DDD)</h3>
+<p>Metodología que pone el <strong>dominio de negocio</strong> en el centro del diseño. El código
+debe reflejar el lenguaje y los conceptos del dominio, modelados de forma colaborativa con
+expertos de negocio.</p>
+
+<h4>CONCEPTOS CLAVE</h4>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Concepto</th>
+<th>Descripción</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="blue"><strong>Ubiquitous Language</strong></td>
+<td>Vocabulario compartido entre devs y negocio</td>
+<td>"Order", "Shipment", "SKU" en lugar de "record", "row"</td>
+</tr>
+<tr>
+<td class="green"><strong>Bounded Context</strong></td>
+<td>Límite explícito donde un modelo es válido</td>
+<td>"Order" en ventas ≠ "Order" en almacén</td>
+</tr>
+<tr>
+<td class="orange"><strong>Aggregate</strong></td>
+<td>Cluster de objetos con raíz de consistencia</td>
+<td>Order + OrderItems (raíz: Order)</td>
+</tr>
+<tr>
+<td class="blue"><strong>Domain Event</strong></td>
+<td>Algo significativo que ocurrió en el dominio</td>
+<td>OrderPlaced, PaymentReceived</td>
+</tr>
+<tr>
+<td class="green"><strong>Repository</strong></td>
+<td>Abstracción de persistencia del aggregate</td>
+<td>OrderRepository.findById()</td>
+</tr>
+<tr>
+<td class="orange"><strong>Value Object</strong></td>
+<td>Objeto sin identidad, definido por su valor</td>
+<td>Money(100, "USD"), Address, Email</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- SOLID / DRY / KISS -->
+<hr class="divider">
+<h3 id="solid">SOLID, DRY, KISS y YAGNI</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Principio</th>
+<th>Significado</th>
+<th>Impacto arquitectónico</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="blue"><strong>S — SRP</strong></td>
+<td>Single Responsibility Principle</td>
+<td>Un servicio/clase tiene una sola razón para cambiar → base de microservicios
+</td>
+</tr>
+<tr>
+<td class="blue"><strong>O — OCP</strong></td>
+<td>Open/Closed Principle</td>
+<td>Abierto a extensión, cerrado a modificación → plugins, event handlers</td>
+</tr>
+<tr>
+<td class="blue"><strong>L — LSP</strong></td>
+<td>Liskov Substitution</td>
+<td>Subtipos sustituibles → contratos de API robustos</td>
+</tr>
+<tr>
+<td class="blue"><strong>I — ISP</strong></td>
+<td>Interface Segregation</td>
+<td>Interfaces pequeñas y focalizadas → APIs cohesivas</td>
+</tr>
+<tr>
+<td class="blue"><strong>D — DIP</strong></td>
+<td>Dependency Inversion</td>
+<td>Depender de abstracciones → hexagonal, testabilidad</td>
+</tr>
+<tr>
+<td class="green"><strong>DRY</strong></td>
+<td>Don't Repeat Yourself</td>
+<td>Cuidado: en microservicios, algo de duplicación es mejor que acoplamiento</td>
+</tr>
+<tr>
+<td class="orange"><strong>KISS</strong></td>
+<td>Keep It Simple, Stupid</td>
+<td>Solución más simple que funcione; evitar sobreingeniería</td>
+</tr>
+<tr>
+<td class="orange"><strong>YAGNI</strong></td>
+<td>You Aren't Gonna Need It</td>
+<td>No construir funcionalidades hasta que sean necesarias</td>
+</tr>
+</tbody>
+</table>
+</div>

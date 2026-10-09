@@ -1,0 +1,98 @@
+<p>Panorama por patrón arquitectónico, no por industria, para reconocer qué combinación de bloques (RAG, agente, multiagente) resuelve cada tipo de problema antes de entrar al detalle sectorial de banca.</p>
+
+<table>
+<tr><th>Caso de uso</th><th>Patrón dominante</th><th>Complejidad</th></tr>
+<tr><td>Búsqueda conversacional sobre documentación interna</td><td>RAG simple</td><td>Baja</td></tr>
+<tr><td>Copiloto de atención al cliente con acceso a sistemas</td><td>Agente + RAG + tool use vía MCP</td><td>Media</td></tr>
+<tr><td>Generación y revisión automática de código</td><td>Agente con herramientas de filesystem/bash + reflection</td><td>Media-Alta</td></tr>
+<tr><td>Procesamiento de documentos no estructurados a escala</td><td>Map-Reduce paralelo + RAG</td><td>Media</td></tr>
+<tr><td>Investigación y síntesis multi-fuente</td><td>Orquestador-worker con fan-out/fan-in</td><td>Alta</td></tr>
+<tr><td>Automatización de procesos de negocio de varios pasos</td><td>Multiagente con saga orchestrator</td><td>Alta</td></tr>
+<tr><td>Detección de anomalías con explicación en lenguaje natural</td><td>Agente analítico + herramientas de consulta a datos</td><td>Media-Alta</td></tr>
+</table>
+
+<h3>Casos de uso en banca</h3>
+<p>Los casos de uso en banca comparten un rasgo estructural: casi todos requieren <u>trazabilidad completa de la decisión</u> del agente, no solo la respuesta final. Esto empuja el diseño hacia los patrones de <a href="#eventos">eventos</a>, <a href="#seguridad">seguridad</a> y <a href="#costos">costos</a> desde el primer ADR.</p>
+
+<h3>Atención al cliente y banca digital</h3>
+<div class="card-grid">
+<div class="card">
+<h4>Copiloto de banca personal</h4>
+<p>Responde preguntas sobre productos y estado de cuenta, con RAG sobre manuales de producto y tool use de solo lectura sobre el core bancario vía MCP. Escala a asesor humano ante baja confianza de clasificación.</p>
+</div>
+<div class="card">
+<h4>Asistente de onboarding / KYC</h4>
+<p>Agente que guía la apertura de cuenta, valida documentos con un paso de extracción estructurada, y solo dispara la creación real de la cuenta tras aprobación humana explícita — nunca autonomía plena en el paso de alta.</p>
+</div>
+<div class="card">
+<h4>Triage de reclamos y disputas</h4>
+<p>Clasifica y prioriza reclamos entrantes (RAG sobre políticas internas), genera un resumen para el analista humano, y arma un borrador de respuesta que el analista aprueba antes de enviar.</p>
+</div>
+<div class="card">
+<h4>Asistente de cobranza</h4>
+<p>Agente que analiza el historial de un cliente en mora y sugiere la estrategia de contacto según política interna, con un humano siempre en el paso de comunicación final por razones regulatorias.</p>
+</div>
+</div>
+
+<h3>Riesgo, cumplimiento y back office</h3>
+<div class="card-grid">
+<div class="card">
+<h4>Copiloto de análisis de crédito</h4>
+<p>Agrega información de múltiples fuentes (buró, transaccional, documental) y produce un resumen de riesgo para el analista humano; la decisión de aprobación permanece fuera del agente por diseño.</p>
+</div>
+<div class="card">
+<h4>Monitoreo AML / detección de patrones sospechosos</h4>
+<p>Agente analítico que explica en lenguaje natural por qué una transacción fue marcada por el motor de reglas existente, reduciendo el tiempo de investigación del analista de cumplimiento sin reemplazar el motor de decisión.</p>
+</div>
+<div class="card">
+<h4>Generación de reportes regulatorios</h4>
+<p>Multiagente tipo pipeline: un agente extrae datos de sistemas fuente, otro los valida contra reglas normativas, otro redacta el reporte narrativo — cada paso auditable de forma independiente vía CQRS.</p>
+</div>
+<div class="card">
+<h4>Revisión de contratos y políticas internas</h4>
+<p>RAG sobre el corpus normativo interno con citación obligatoria de fuente, usado para acelerar la revisión legal sin sustituir el criterio del abogado revisor.</p>
+</div>
+</div>
+
+<h3>Ingeniería, plataforma y gobernanza técnica</h3>
+<div class="card-grid">
+<div class="card">
+<h4>Gobernanza de agentes de IA internos</h4>
+<p>Plataforma que audita el comportamiento de otros agentes desplegados en el banco: registra decisiones, corre evals periódicas, y aplica gates de calidad antes de promover un agente a producción — el propio patrón de tu plataforma de gobernanza para Banco Pichincha.</p>
+</div>
+<div class="card">
+<h4>Análisis estático y revisión de código con IA</h4>
+<p>Scanner que orquesta un pipeline de análisis semántico de repositorios como sagas de varios pasos, correlacionadas por <code>AGENT_RUN_ID</code> — el patrón que ya aplicas en CodeGuardian, trasladable a auditoría de código bancario interno.</p>
+</div>
+<div class="card">
+<h4>Documentación arquitectónica asistida</h4>
+<p>Agente que mantiene sincronizados diagramas C4 y ADRs con el estado real del código, señalando divergencias entre lo documentado y lo desplegado.</p>
+</div>
+<div class="card">
+<h4>Copiloto de soporte de plataforma (SRE/DevOps)</h4>
+<p>Agente con acceso de solo lectura a logs, métricas y trazas que diagnostica incidentes y propone runbooks, con ejecución de remediación siempre detrás de aprobación humana.</p>
+</div>
+</div>
+
+<div class="callout beige">
+<div class="callout-label">Patrón que se repite en banca</div>
+En casi todos estos casos el agente <em>recomienda</em> y un humano <em>decide</em> — el nivel de autonomía plena (ejecución sin aprobación) queda reservado a acciones de solo lectura o de bajo impacto. Esto no es una limitación temporal por inmadurez de la tecnología: en un entorno regulado, es el diseño correcto incluso a largo plazo para las acciones de mayor impacto financiero o reputacional.
+</div>
+
+<h3>Caso de referencia detallado: asistente bancario interno</h3>
+<p>Como ejemplo integrador — sin código, solo la forma de la arquitectura — para un asistente que responde preguntas sobre productos, consulta el estado de una solicitud, y puede escalar a un asesor humano:</p>
+
+<ol>
+<li><strong>Capa de entrada:</strong> el mensaje del usuario llega a un orquestador central (no un LLM libre, sino un paso de clasificación de intención).</li>
+<li><strong>Clasificación de intención:</strong> determina si la pregunta es de conocimiento general (→ RAG sobre manuales de producto), de estado transaccional (→ agente con tool use sobre el core bancario vía MCP), o requiere escalamiento humano.</li>
+<li><strong>RAG especializado:</strong> índice vectorial sobre documentación de productos, con metadata de control de acceso heredada del sistema origen (no solo del índice).</li>
+<li><strong>Agente transaccional:</strong> con herramientas MCP acotadas (solo lectura de estado, nunca escritura directa sin aprobación), y guardrails explícitos para operaciones sensibles.</li>
+<li><strong>Observabilidad:</strong> cada interacción trazada con el documento recuperado, la herramienta invocada, y el resultado — auditable por cumplimiento.</li>
+<li><strong>Punto de escalamiento humano:</strong> cualquier solicitud fuera del alcance definido, o con baja confianza de clasificación, se enruta a un asesor sin intentar "forzar" una respuesta del agente.</li>
+</ol>
+
+<div class="callout beige">
+<div class="callout-label">La lección de arquitectura central</div>
+El valor no está en usar el patrón más sofisticado (multiagente, paralelismo, RAG avanzado) sino en mapear correctamente cada sub-problema al patrón mínimo que lo resuelve bien. Un solo agente bien acotado con RAG y buenas herramientas suele superar en confiabilidad a un sistema multiagente mal delimitado.
+</div>
+

@@ -1,0 +1,245 @@
+<p>Las bases de datos son el componente más crítico y más mal entendido del stack. Un modelo de
+datos
+incorrecto, un índice que falta, o una transacción mal diseñada pueden hacer que un sistema que
+funciona
+perfectamente con 1,000 usuarios colapse con 100,000. El conocimiento de bases de datos es lo
+que más
+distingue a un senior de un mid engineer.</p>
+
+<h3 id="indexing">Indexing Real: Más Allá de "Añadir un Índice"</h3>
+
+<div class="diagram">
+<pre><code>
+  Cómo funciona un B-Tree Index (el más común)
+
+  Tabla: users (10M filas)
+  Columna: email (sin índice)
+
+  SELECT * FROM users WHERE email = 'john@example.com'
+  → Full table scan: leer las 10M filas = ~5-10 segundos
+
+  Con índice B-Tree en email:
+  → O(log n) lookups: ~3-4 niveles de árbol = microsegundos
+
+  Estructura B-Tree:
+                    [M-S]
+                   /     \
+            [E-J]           [T-Z]
+           /     \           /    \
+       [A-D]   [F-I]    [J-P]   [U-Z]
+         │       │         │       │
+      leaf     leaf      leaf    leaf
+    pages     pages     pages   pages
+      │         │         │       │
+    ROWIDs    ROWIDs    ROWIDs  ROWIDs
+  (punteros a las filas reales en el heap)
+
+  B-Tree es eficiente para: =, >, <, >=, <=, BETWEEN, LIKE 'prefix%'
+  B-Tree NO ayuda para: LIKE '%suffix', funciones sobre la columna
+</code></pre>
+</div>
+
+<pre data-lang="sql"><code><span class="cm">-- Índices que realmente marcan la diferencia</span>
+
+<span class="cm">-- 1. Índice compuesto: el orden importa enormemente</span>
+<span class="cm">-- Query: WHERE user_id = 123 AND status = 'active' ORDER BY created_at DESC</span>
+<span class="cm">-- Índice correcto: (user_id, status, created_at)</span>
+<span class="cm">-- Regla: columnas de equality primero, range/sort al final</span>
+<span class="kw">CREATE INDEX</span> idx_orders_user_status_date
+    <span class="kw">ON</span> orders (user_id, status, created_at <span class="kw">DESC</span>);
+
+<span class="cm">-- 2. Índice parcial: indexar solo las filas relevantes</span>
+<span class="cm">-- Si el 95% de las órdenes están 'completed', solo indexar 'pending'</span>
+<span class="kw">CREATE INDEX</span> idx_orders_pending
+    <span class="kw">ON</span> orders (created_at)
+    <span class="kw">WHERE</span> status = <span class="str">'pending'</span>;
+<span class="cm">-- 20x más pequeño y más rápido que indexar toda la tabla</span>
+
+<span class="cm">-- 3. Covering index: el índice contiene todo lo que la query necesita</span>
+<span class="cm">-- La query NO necesita ir al heap (Index Only Scan)</span>
+<span class="kw">CREATE INDEX</span> idx_users_email_covering
+    <span class="kw">ON</span> users (email) <span class="kw">INCLUDE</span> (id, name, plan);
+<span class="cm">-- SELECT id, name, plan FROM users WHERE email = ?
+-- → Resuelto completamente desde el índice, sin tocar la tabla</span>
+
+<span class="cm">-- 4. EXPLAIN ANALYZE: siempre antes de añadir/eliminar un índice</span>
+<span class="kw">EXPLAIN</span> (ANALYZE, BUFFERS, FORMAT TEXT)
+<span class="kw">SELECT</span> o.id, o.total, u.email
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> users u <span class="kw">ON</span> u.id = o.user_id
+<span class="kw">WHERE</span> o.status = <span class="str">'pending'</span>
+  <span class="kw">AND</span> o.created_at > NOW() - <span class="str">'24 hours'</span>::interval;
+
+<span class="cm">-- Buscar en el output:
+-- "Seq Scan" en tabla grande → candidato a índice
+-- "Rows Removed by Filter" alto → el índice no es selectivo
+-- "Buffers: shared hit=X read=Y" → X en caché, Y leyó disco (malo si Y alto)
+-- "actual time" vs "estimated rows" → si muy diferente, falta ANALYZE</span></code></pre>
+
+<h3 id="transactions">Transacciones: Isolation Levels que Importan</h3>
+<p>Las transacciones no son solo "ACID o no ACID". Los isolation levels permiten elegir el nivel de
+protección
+según el caso de uso — con el trade-off entre consistencia y concurrencia.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Isolation Level</th>
+<th>Dirty Read</th>
+<th>Non-Repeatable Read</th>
+<th>Phantom Read</th>
+<th>Cuándo usar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>READ UNCOMMITTED</strong></td>
+<td class="r">Posible</td>
+<td class="r">Posible</td>
+<td class="r">Posible</td>
+<td>Casi nunca — solo dashboards de analytics aproximados</td>
+</tr>
+<tr>
+<td><strong>READ COMMITTED</strong></td>
+<td class="g">No</td>
+<td class="r">Posible</td>
+<td class="r">Posible</td>
+<td>Default en PostgreSQL — adecuado para la mayoría de operaciones</td>
+</tr>
+<tr>
+<td><strong>REPEATABLE READ</strong></td>
+<td class="g">No</td>
+<td class="g">No</td>
+<td class="r">Posible</td>
+<td>Reportes financieros que necesitan snapshot consistente</td>
+</tr>
+<tr>
+<td><strong>SERIALIZABLE</strong></td>
+<td class="g">No</td>
+<td class="g">No</td>
+<td class="g">No</td>
+<td>Transferencias bancarias, inventario con stock crítico</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<pre data-lang="sql"><code><span class="cm">-- Caso real: transferencia bancaria que requiere SERIALIZABLE</span>
+<span class="kw">BEGIN</span> TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+<span class="cm">-- Leer saldo actual</span>
+<span class="kw">SELECT</span> balance <span class="kw">FROM</span> accounts <span class="kw">WHERE</span> id = :from_account;
+<span class="cm">-- En READ COMMITTED: otro TX podría cambiar el saldo AQUÍ</span>
+<span class="cm">-- y este TX no lo sabría hasta el COMMIT</span>
+<span class="cm">-- En SERIALIZABLE: se detecta el conflicto y se hace rollback</span>
+
+<span class="kw">UPDATE</span> accounts <span class="kw">SET</span> balance = balance - :amount <span class="kw">WHERE</span> id = :from_account;
+<span class="kw">UPDATE</span> accounts <span class="kw">SET</span> balance = balance + :amount <span class="kw">WHERE</span> id = :to_account;
+
+<span class="kw">COMMIT</span>; <span class="cm">-- Si hay conflicto serializable → ERROR, el cliente reintenta</span>
+
+<span class="cm">-- ─────────────────────────────────────────────────────────
+-- Deadlocks: cómo evitarlos sistemáticamente</span>
+<span class="cm">-- TX1: UPDATE accounts WHERE id = 1, luego WHERE id = 2
+-- TX2: UPDATE accounts WHERE id = 2, luego WHERE id = 1
+-- → Deadlock garantizado si ocurren concurrentemente
+
+-- Solución: SIEMPRE acceder a recursos en el mismo orden</span>
+<span class="cm">-- Ordenar los IDs antes de la transacción:</span>
+<span class="cm">-- ids = sorted([from_id, to_id])  → siempre en el mismo orden</span>
+<span class="cm">-- UPDATE accounts WHERE id = ids[0] ... WHERE id = ids[1]</span>
+<span class="cm">-- → Deadlock matemáticamente imposible</span></code></pre>
+
+<h3 id="migrations">Migraciones sin Downtime: La Habilidad que Más Importa en Producción</h3>
+
+<div class="diagram">
+<pre><code>
+  Expand-Contract Pattern: El único patrón seguro
+
+  OBJETIVO: Renombrar columna 'user_name' a 'full_name' en 50M filas
+
+  ❌ Forma naive (causa downtime):
+  ALTER TABLE users RENAME COLUMN user_name TO full_name;
+  → Bloquea la tabla durante la migración
+  → En 50M filas: puede tomar minutos → downtime total
+
+  ✓ Expand-Contract (zero downtime):
+
+  FASE 1 — EXPAND (añadir nueva columna):
+  ALTER TABLE users ADD COLUMN full_name VARCHAR(255);
+  → No bloquea. La columna empieza NULL.
+  → Deploy del código que escribe en AMBAS columnas
+     (user_name Y full_name simultáneamente)
+
+  FASE 2 — BACKFILL (migrar datos existentes):
+  UPDATE users SET full_name = user_name
+    WHERE full_name IS NULL
+    LIMIT 1000;  ← en batches, no todo de una vez
+  → Ejecutar en background, sin bloquear la tabla
+
+  FASE 3 — SWITCH (el código lee de full_name):
+  → Deploy del código que solo lee full_name
+  → Verificar que nada usa user_name ya
+
+  FASE 4 — CONTRACT (eliminar la columna vieja):
+  ALTER TABLE users DROP COLUMN user_name;
+  → Ahora sí es seguro — nadie la usa
+
+  Total de downtime: CERO
+  Tiempo total: días o semanas, pero sin impacto en usuarios
+</code></pre>
+</div>
+
+<pre
+                        data-lang="python"><code><span class="cm"># Backfill en batches — nunca migrar millones de filas de una vez</span>
+<span class="kw">async def</span> <span class="fn">backfill_full_name</span>(batch_size: int = <span class="nm">1000</span>):
+    <span class="str">"""
+    Migra datos en batches pequeños para:
+    - No bloquear la tabla
+    - Poder pausar y reanudar
+    - No llenar el WAL de PostgreSQL
+    - No causar spike de carga en la BD
+    """</span>
+    last_id = <span class="nm">0</span>
+    total_migrated = <span class="nm">0</span>
+
+    <span class="kw">while</span> True:
+        <span class="cm"># Batch: solo filas pendientes (full_name NULL) y en orden</span>
+        rows = <span class="kw">await</span> db.<span class="fn">fetch</span>(
+            <span class="str">"""UPDATE users
+               SET full_name = user_name
+               WHERE id IN (
+                 SELECT id FROM users
+                 WHERE full_name IS NULL AND id > $1
+                 ORDER BY id LIMIT $2
+               )
+               RETURNING id"""</span>,
+            last_id, batch_size
+        )
+        <span class="kw">if not</span> rows:
+            <span class="kw">break</span>  <span class="cm"># Backfill completo</span>
+
+        last_id = max(row[<span class="str">'id'</span>] <span class="kw">for</span> row <span class="kw">in</span> rows)
+        total_migrated += len(rows)
+
+        <span class="cm"># Pausa entre batches: dar respiro a la BD</span>
+        <span class="kw">await</span> asyncio.sleep(<span class="nm">0.05</span>)
+
+        logger.<span class="fn">info</span>(f<span class="str">"Migrated {total_migrated} rows, last_id={last_id}"</span>)
+
+    logger.<span class="fn">info</span>(f<span class="str">"Backfill complete: {total_migrated} total rows"</span>)</code></pre>
+
+<div class="arch-rel">
+<span class="arch-rel-lbl">Conexión técnica</span>
+<p>El conocimiento de bases de datos es transversal a toda la arquitectura. Los isolation levels
+implementan
+los principios de <strong>ACID</strong> que distinguen bases relacionales de NoSQL. El
+Expand-Contract
+pattern es la materialización técnica del principio <strong>Open/Closed</strong> aplicado al
+schema. Los
+índices compuestos implementan la lógica de acceso que define el diseño de las
+<strong>queries
+CQRS</strong>.
+</p>
+</div>

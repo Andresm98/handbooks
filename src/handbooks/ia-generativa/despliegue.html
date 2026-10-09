@@ -1,0 +1,40 @@
+<p>Un agente no es solo un prompt: en producción es un <u>proceso con ciclo de vida</u> que necesita cómputo, aislamiento y un patrón de ejecución. La decisión de dónde y cómo correrlo es tan arquitectónica como la elección del framework de orquestación.</p>
+
+<h3>El patrón "runner" para ejecución de agentes</h3>
+<p>Igual que en un pipeline CI/CD, conviene abstraer <em>dónde</em> corre un agente de <em>qué</em> hace. Un runner pattern típico soporta múltiples backends de ejecución intercambiables:</p>
+<table>
+<tr><th>Runner</th><th>Aislamiento</th><th>Cuándo conviene</th></tr>
+<tr><td>Inline (mismo proceso)</td><td>Ninguno</td><td>Desarrollo local, agentes de bajo riesgo y corta duración</td></tr>
+<tr><td>Contenedor Docker efímero</td><td>Proceso + filesystem aislado</td><td>Agentes que ejecutan código arbitrario o necesitan dependencias propias</td></tr>
+<tr><td>Kubernetes Job efímero</td><td>Completo (namespace, red, recursos)</td><td>Cargas variables, necesidad de límites de CPU/memoria estrictos, multi-tenant</td></tr>
+<tr><td>Función serverless (Lambda/Azure Functions)</td><td>Completo, sin gestión de infraestructura</td><td>Agentes de vida corta, invocación esporádica, escalado a cero</td></tr>
+</table>
+
+<h3>Autoescalado dirigido por eventos</h3>
+<p>Para cargas de trabajo agénticas asíncronas (colas de tareas, jobs en batch), el autoescalado tradicional basado en CPU no siempre refleja la carga real. <strong>KEDA</strong> (Kubernetes Event-Driven Autoscaling) permite escalar el número de pods/Jobs según la profundidad de una cola (Kafka, SQS, Service Bus) en vez de métricas de cómputo, lo que encaja mejor con el patrón de "un agente por mensaje".</p>
+
+<div class="diagram">Cola de tareas (Kafka / SQS / Service Bus)
+│
+▼   profundidad de cola como métrica
+┌─────────┐
+│  KEDA   │──► escala Jobs/pods de 0 a N
+└─────────┘
+│
+▼
+┌───────────────────────────────┐
+│ K8s Job efímero (por ejecución)│
+│  · imagen con agent runtime    │
+│  · AGENT_RUN_ID de correlación │
+│  · límites de recursos propios │
+└───────────────────────────────┘</div>
+
+<div class="callout beige">
+<div class="callout-label">Trade-off central</div>
+Contenedores/Jobs efímeros dan aislamiento fuerte y facturación por uso real, pero añaden latencia de arranque (cold start) frente a un pool de workers ya activos. Para agentes conversacionales de baja latencia, un pool "warm" con colas internas suele ganarle al Job efímero puro; para cargas batch o de análisis profundo, el Job efímero es preferible por aislamiento y costo.
+</div>
+
+<h3>Correlación transversal</h3>
+<p>En cualquier ejecución distribuida de agentes, es indispensable propagar un identificador de correlación (tipo <code>AGENT_RUN_ID</code>) y, si el agente tiene múltiples fases, un identificador de paso (tipo <code>WORKFLOW_STEP_KEY</code>) a través de todos los servicios involucrados — mensajes de Kafka, logs, spans de tracing y llamadas al LLM — para poder reconstruir la ejecución completa en observabilidad.</p>
+
+<h3>Aislamiento de agentes que ejecutan código</h3>
+<p>Un agente que ejecuta código o comandos debe correr en un entorno desechable: contenedor o microVM efímera, sistema de archivos aislado, sin credenciales de larga duración, egress de red restringido a una lista permitida, y límites de CPU, memoria y tiempo. Si el agente es manipulado, el radio de impacto es el sandbox, no tu red.</p>

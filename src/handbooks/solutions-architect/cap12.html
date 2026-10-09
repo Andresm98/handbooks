@@ -1,0 +1,208 @@
+<p>Los casos reales son la mejor fuente de aprendizaje arquitectónico porque muestran no solo qué
+funcionó, sino <strong>por qué fallaron las decisiones previas</strong> y cómo evolucionó el
+diseño bajo presión real de negocio y escala.</p>
+
+<div class="case-study" id="netflix-case">
+<div class="cs-header">
+<span class="cs-badge">NETFLIX</span>
+<h4>De monolito a 1,000+ microservicios: lecciones reales</h4>
+</div>
+<p><strong>El contexto:</strong> En 2008, Netflix sufrió una corrupción de base de datos que
+dejó sin servicio a todos los usuarios durante 3 días. Ese incidente fue el catalizador de
+la migración completa a AWS y microservicios — una decisión que tardó 7 años en completarse.
+</p>
+<p><strong>Decisiones arquitectónicas clave:</strong></p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Decisión</th>
+<th>Razón real</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cassandra para viewing history</td>
+<td>PostgreSQL no escalaba a 300M usuarios × historial completo</td>
+<td class="g">Escriben 1M+ eventos/segundo, latencia sub-ms</td>
+</tr>
+<tr>
+<td>Chaos Monkey</td>
+<td>Producción tenía fallos que staging no capturaba</td>
+<td class="g">Netflix opera con resiliencia fault-tolerant probada</td>
+</tr>
+<tr>
+<td>EVCache (Redis)</td>
+<td>Cassandra tenía latencia alta para datos calientes</td>
+<td class="g">Hit rate 99%+, latencia &lt;1ms para contenido popular</td>
+</tr>
+<tr>
+<td>Open Connect CDN propio</td>
+<td>Costos de Akamai insostenibles con el volumen</td>
+<td class="g">60% del internet en USA en horario pico desde CDN propio</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Lección crítica:</strong> Netflix no migró a microservicios por pureza técnica — lo
+hizo porque necesitaba que diferentes equipos pudieran desplegar independientemente. La
+organización (1,000+ ingenieros) fue el driver real, no la tecnología.</p>
+<div class="tags">
+<span class="tag blue">Microservicios</span><span class="tag green">Event-Driven</span><span
+class="tag red">Chaos Engineering</span><span class="tag gold">Cassandra
+(AP)</span><span class="tag purple">Cloud-Native AWS</span>
+</div>
+</div>
+
+<div class="case-study" id="stripe-case">
+<div class="cs-header">
+<span class="cs-badge">STRIPE</span>
+<h4>Consistencia fuerte a escala: la decisión arquitectónica de los pagos</h4>
+</div>
+<p><strong>El contexto:</strong> Stripe procesa cientos de miles de millones de dólares anuales.
+Cualquier inconsistencia de datos es dinero real perdido o duplicado. Sus decisiones
+arquitectónicas priorizan consistencia sobre todo.</p>
+<p><strong>Decisiones que definen su arquitectura:</strong></p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Decisión</th>
+<th>Alternativa descartada</th>
+<th>Por qué importa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Idempotency keys en todas las APIs</td>
+<td>Esperar que los clientes no reintenten</td>
+<td class="g">Elimina pagos duplicados por retries de red — crítico para fintech
+</td>
+</tr>
+<tr>
+<td>Consistent hashing para routing de requests</td>
+<td>Round-robin load balancing</td>
+<td class="g">El mismo request de retry llega al mismo servidor — mejor hit rate
+en caché in-memory</td>
+</tr>
+<tr>
+<td>Eventos como fuente de verdad + webhook</td>
+<td>Solo respuesta síncrona de API</td>
+<td class="g">Los sistemas de los clientes se sincronizan aunque estén caídos
+durante el evento</td>
+</tr>
+<tr>
+<td>Despliegues graduales con feature flags</td>
+<td>Deploy big-bang a todos</td>
+<td class="g">Un bug en procesamiento de pagos que afecta al 0.1% del tráfico es
+detectado antes de afectar a todos</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Lección crítica:</strong> Stripe usa PostgreSQL para su core de pagos. No Cassandra,
+no DynamoDB. La elección de ACID estricto sobre AP no fue un error de ingeniería — fue la
+decisión correcta para un dominio donde la consistencia es más valiosa que la escala
+horizontal infinita.</p>
+<div class="tags">
+<span class="tag blue">PostgreSQL ACID</span><span class="tag green">Idempotency</span><span
+class="tag red">Event-Driven</span><span class="tag gold">Feature Flags</span>
+</div>
+</div>
+
+<div class="case-study" id="discord-case">
+<div class="cs-header">
+<span class="cs-badge">DISCORD</span>
+<h4>De Python a Rust: cuándo el rewrite sí fue la respuesta correcta</h4>
+</div>
+<p><strong>El contexto:</strong> Discord almacena billones de mensajes y sirve millones de
+usuarios concurrentes. En 2020, su servicio de "Read States" (qué mensajes has leído) estaba
+causando problemas de GC (garbage collection) en Go que producían latencia en spikes de
+hasta 2 minutos.</p>
+<p><strong>La decisión:</strong> Reescribieron el servicio de Read States en
+<strong>Rust</strong>, eliminando el garbage collector por completo.
+</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Métrica</th>
+<th>Go (antes)</th>
+<th>Rust (después)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Latencia p99</td>
+<td class="r">~2 minutos en picos de GC</td>
+<td class="g">&lt;1ms consistente</td>
+</tr>
+<tr>
+<td>Latencia media</td>
+<td class="y">~500µs</td>
+<td class="g">~40µs</td>
+</tr>
+<tr>
+<td>Uso de CPU</td>
+<td class="r">Base alto</td>
+<td class="g">30% menor</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Por qué este rewrite sí funcionó:</strong> Era un servicio aislado (bounded context
+claro), el problema estaba bien diagnosticado (GC pauses documentadas), la nueva
+implementación era 1:1 en interfaz (mismo contrato de API), y el equipo tenía experiencia en
+Rust. Todos los criterios que hacen un rewrite viable estaban presentes.</p>
+<p><strong>También:</strong> Discord migró de MongoDB a Cassandra cuando sus mensajes superaron
+los 100M/día — MongoDB no podía manejar los hot partitions en canales populares.</p>
+<div class="tags">
+<span class="tag blue">Rust</span><span class="tag green">Cassandra (AP)</span><span
+class="tag red">Microservicio aislado</span><span class="tag gold">Bounded Context
+claro</span>
+</div>
+</div>
+
+<div class="case-study">
+<div class="cs-header">
+<span class="cs-badge">UBER</span>
+<h4>DOMA: Domain-Oriented Microservice Architecture</h4>
+</div>
+<p><strong>El problema:</strong> Después de crecer a más de 2,000 microservicios, Uber se
+encontró con un sistema que nadie podía entender completamente. La complejidad
+organizacional superaba los beneficios técnicos.</p>
+<p><strong>La solución — DOMA:</strong> Agrupa microservicios en "layers" (capas de abstracción)
+y "domains" (grupos de servicios con ownership claro). Un servicio de capa superior no puede
+llamar a uno de capa inferior del mismo dominio — elimina dependencias circulares. Los
+dominios exponen "gateways" que son la única interfaz pública.</p>
+<p><strong>Lección crítica:</strong> Más microservicios no siempre es mejor. La granularidad
+debe estar calibrada a la capacidad organizacional de gestionarlos — no al número de
+features.</p>
+<div class="tags">
+<span class="tag blue">DOMA</span><span class="tag green">Domain-Driven Design</span><span
+class="tag red">Conway's Law</span>
+</div>
+</div>
+
+<div class="case-study">
+<div class="cs-header">
+<span class="cs-badge">CLOUDFLARE</span>
+<h4>Edge Architecture: llevando compute al usuario</h4>
+</div>
+<p><strong>La apuesta arquitectónica:</strong> Cloudflare construyó una red de 300+ puntos de
+presencia globales donde corre Workers (serverless en el edge) con latencia de ~0ms al
+usuario. La decisión de usar V8 isolates en lugar de contenedores fue revolucionaria:
+arranque en microsegundos vs milisegundos, miles de isolates por servidor.</p>
+<p><strong>Implicación para SA:</strong> La arquitectura de edge es el modelo que hace obsoleta
+la pregunta "¿en qué región despliego?". El código se ejecuta en la región más cercana al
+usuario automáticamente. Cambia radicalmente el modelo de latencia para aplicaciones
+globales.</p>
+<p><strong>KV distribuido global:</strong> Cloudflare KV usa un modelo AP extremo — eventual
+consistency en minutos a nivel global. Diseñado explícitamente para datos de configuración y
+caché, no para datos transaccionales.</p>
+<div class="tags">
+<span class="tag blue">Edge Computing</span><span class="tag green">V8 Isolates</span><span
+class="tag red">AP Consistency</span><span class="tag gold">Serverless</span>
+</div>
+</div>

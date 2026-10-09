@@ -1,0 +1,190 @@
+<h3 id="layered">Layered Architecture / MVC / MVVM</h3>
+
+<div class="compare-row">
+<div class="compare-col">
+<h4>MVC – Model View Controller</h4>
+<ul>
+<li>Model: lógica de negocio y datos</li>
+<li>View: presentación (HTML, plantillas)</li>
+<li>Controller: maneja requests, orquesta</li>
+<li>Usado en: Rails, Django, Laravel, Spring MVC</li>
+<li>Bidireccional: View puede observar Model</li>
+</ul>
+</div>
+<div class="compare-col">
+<h4>MVVM – Model View ViewModel</h4>
+<ul>
+<li>Model: datos y lógica de negocio</li>
+<li>View: solo presentación (declarativa)</li>
+<li>ViewModel: estado de la UI, comandos</li>
+<li>Usado en: Angular, Vue, SwiftUI, WPF</li>
+<li>Data binding bidireccional automático</li>
+</ul>
+</div>
+</div>
+
+<!-- CIRCUIT BREAKER -->
+<hr class="divider">
+<h3 id="resiliencia">Circuit Breaker, Retry, Timeout y Bulkhead</h3>
+<p>Patrones de <strong>resiliencia</strong> para sistemas distribuidos donde los fallos parciales
+son inevitables.</p>
+
+<div class="diagram">
+<pre><code>
+  CIRCUIT BREAKER — Estados
+  
+  ┌──────────┐  failures > threshold   ┌──────────┐
+  │  CLOSED  │─────────────────────────►  OPEN    │
+  │ (normal) │                         │ (fail    │
+  │          │◄────────────────────────│  fast)   │
+  └──────────┘   success               └─────┬────┘
+                                             │ timeout expires
+                                      ┌──────▼──────┐
+                                      │ HALF-OPEN   │
+                                      │ (test call) │
+                                      └─────────────┘
+  
+  BULKHEAD — Aislamiento de recursos (como mamparos de barco)
+  ┌─────────────────────────────────────────────────────┐
+  │  Thread Pool A (30 threads) │ Thread Pool B (20)    │
+  │  → Servicio de Pagos        │ → Servicio de Notif.  │
+  │  Si Pagos se satura:        │ Notificaciones sigue  │
+  │  no afecta a Notificaciones │ funcionando ✓         │
+  └─────────────────────────────┴───────────────────────┘
+</code></pre>
+</div>
+
+<pre data-lang="python"><code>
+# Implementación con Resilience4j-style (Python / tenacity)
+from tenacity import retry, stop_after_attempt, wait_exponential, CircuitBreaker
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=1, max=10),  # Backoff exponencial
+    reraise=True
+)
+async def call_payment_service(order_id: str) -> dict:
+    async with asyncio.timeout(5.0):          # Timeout: 5 segundos máximo
+        return await payment_client.charge(order_id)
+
+# Circuit Breaker: Abre si >50% de llamadas fallan en 60s
+circuit_breaker = CircuitBreaker(
+    failure_rate_threshold=50,
+    slow_call_rate_threshold=80,
+    wait_duration_in_open_state=30,
+    permitted_calls_in_half_open_state=3
+)</code></pre>
+
+<!-- API GATEWAY -->
+<hr class="divider">
+<h3 id="gateway">API Gateway</h3>
+<p>Punto de entrada único para todos los clientes. Centraliza cross-cutting concerns: autenticación,
+rate limiting, SSL termination, routing, logging y transformación de requests.</p>
+
+<div class="diagram">
+<pre><code>
+         Clientes
+  ┌──────┬──────┬──────┐
+  │ Web  │ iOS  │ 3rd  │
+  │ App  │ App  │ Party│
+  └──┬───┴──┬───┴───┬──┘
+     └──────┼───────┘
+            ▼
+  ┌─────────────────────────────────────────────────┐
+  │                API GATEWAY                       │
+  │  Auth → Rate Limit → SSL Termination →           │
+  │  Request Transformation → Load Balance →         │
+  │  Circuit Breaker → Logging → Routing             │
+  └──────┬────────┬──────────┬──────────┬────────────┘
+         │        │          │          │
+         ▼        ▼          ▼          ▼
+     User Svc  Order Svc  Product Svc  Payment Svc
+</code></pre>
+</div>
+
+<!-- SAGA -->
+<hr class="divider">
+<h3 id="saga">Saga Pattern</h3>
+<p>Gestiona <strong>transacciones distribuidas</strong> sin bloqueos de dos fases. Define una
+secuencia de transacciones locales donde cada paso publica un evento, y si falla, ejecuta
+transacciones compensatorias.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Tipo</th>
+<th>Descripción</th>
+<th>Ventaja</th>
+<th>Desventaja</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="blue"><strong>Choreography</strong></td>
+<td>Cada servicio reacciona a eventos y publica los suyos</td>
+<td class="green">Sin punto central de fallo</td>
+<td class="red">Difícil de rastrear el flujo</td>
+</tr>
+<tr>
+<td class="orange"><strong>Orchestration</strong></td>
+<td>Un orquestador central coordina los pasos</td>
+<td class="green">Flujo explícito y trazable</td>
+<td class="red">El orquestador es punto de fallo</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- STRANGLER FIG -->
+<hr class="divider">
+<h3 id="strangler">Strangler Fig Pattern</h3>
+<p>Estrategia para <strong>migrar sistemas legacy</strong> de forma incremental. Nuevas
+funcionalidades se construyen como microservicios modernos mientras el monolito va siendo
+"estrangulado" gradualmente.</p>
+
+<div class="diagram">
+<pre><code>
+  FASE 1: Interceptar         FASE 2: Migrar           FASE 3: Eliminar
+  ┌────────────────┐          ┌───────────────┐         ┌──────────────┐
+  │   Facade/Proxy  │         │  Facade/Proxy  │         │ New Services │
+  │                 │         │       │        │         │ completos    │
+  │  Monolito       │         │  New  │Legacy  │         │              │
+  │  (todo)     ◄───┤         │  Svc  │(parte) │         │ Monolito     │
+  └────────────────┘         └───────────────┘         │ eliminado ✓  │
+                                                         └──────────────┘
+  Tiempo de migración: meses o años, sin big-bang rewrite
+</code></pre>
+</div>
+
+<!-- PUB/SUB & SIDECAR -->
+<hr class="divider">
+<h3 id="pubsub">Pub/Sub y Sidecar Pattern</h3>
+
+<h4>PUB/SUB</h4>
+<p>Los publicadores emiten mensajes a <strong>topics</strong> sin conocer a los suscriptores. Los
+suscriptores reciben solo los mensajes de los topics que les interesan. Implementaciones: Kafka,
+Google Pub/Sub, AWS SNS/SQS.</p>
+
+<h4>SIDECAR PATTERN</h4>
+<p>Desplegar un proceso auxiliar junto al servicio principal en el mismo pod/host. El sidecar
+gestiona preocupaciones transversales: logging, mTLS, service mesh (Envoy en Istio),
+configuración dinámica.</p>
+
+<div class="diagram">
+<pre><code>
+  POD (Kubernetes)
+  ┌──────────────────────────────────────────────┐
+  │  ┌─────────────────┐   ┌───────────────────┐ │
+  │  │  Main Container  │   │  Sidecar (Envoy)  │ │
+  │  │                  │   │                   │ │
+  │  │  App Business    │◄─►│  mTLS             │ │
+  │  │  Logic           │   │  Load Balancing   │ │
+  │  │  :8080           │   │  Observability    │ │
+  │  └─────────────────┘   │  :9090            │ │
+  │                         └───────────────────┘ │
+  │  Comparten: red localhost, volúmenes           │
+  └──────────────────────────────────────────────┘
+  Ventaja: La app no necesita lógica de red/seguridad
+</code></pre>
+</div>

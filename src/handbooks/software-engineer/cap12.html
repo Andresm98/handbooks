@@ -1,0 +1,172 @@
+<p>La carrera de un ingeniero de software es una serie de aprendizajes que, si se hacen bien,
+produce
+compuesto. Cada tecnología aprendida transfiere conocimiento a la siguiente. Cada sistema
+construido calibra
+mejor el juicio para el siguiente. Pero esto solo ocurre con intencionalidad — no por el simple
+paso del
+tiempo.</p>
+
+<h3>Cómo Aprender Tecnologías Nuevas sin Perderse</h3>
+
+<div class="diagram">
+<pre><code>
+  El Framework de Aprendizaje de Tecnologías
+
+  NIVEL 1 — CONCEPTUAL (1-2 horas):
+  ¿Qué problema resuelve esta tecnología?
+  ¿Por qué existe? ¿Qué hacía la gente antes?
+  ¿Cuáles son sus trade-offs fundamentales?
+  → Leer el README oficial, el "Why we built X" del autor
+
+  NIVEL 2 — TUTORIAL (1 día):
+  Seguir el tutorial oficial de principio a fin.
+  No saltar secciones. No adaptar a tu caso de uso todavía.
+  El objetivo: entender la forma de pensar de la tecnología,
+  no construir algo útil.
+
+  NIVEL 3 — PROYECTO PEQUEÑO (1 semana):
+  Construir algo pequeño pero completo con la tecnología.
+  Un proyecto que resuelva un problema real (aunque trivial).
+  Encuentras los edge cases que el tutorial no muestra.
+  El debugging te enseña más que el tutorial.
+
+  NIVEL 4 — PRODUCCIÓN (meses):
+  Operar la tecnología bajo carga real.
+  Incidentes, migraciones, degradaciones de performance.
+  Este nivel tarda años en acumularse para una tecnología.
+  La mayoría de los "expertos" reales están en este nivel.
+
+  Trampa común: confundir Nivel 2 con Nivel 4.
+  "Hice el tutorial de Kubernetes" ≠ "sé Kubernetes"
+</code></pre>
+</div>
+
+<h3>La Diferencia entre Experiencia y Antigüedad</h3>
+
+<div class="compare-row">
+<div class="compare-col">
+<h4>Antigüedad (tiempo sin aprendizaje)</h4>
+<ul>
+<li>5 años haciendo el mismo tipo de trabajo</li>
+<li>Soluciones basadas en "siempre lo hicimos así"</li>
+<li>Resistencia a tecnologías o patrones nuevos</li>
+<li>Conocimiento profundo de una tecnología específica</li>
+<li>No puede explicar el "por qué" de sus decisiones</li>
+<li>Su valor es el contexto histórico del sistema</li>
+</ul>
+</div>
+<div class="compare-col">
+<h4>Experiencia (ciclos de aprendizaje deliberado)</h4>
+<ul>
+<li>Múltiples tecnologías, dominios, y tipos de sistema</li>
+<li>Decisiones basadas en trade-offs documentados</li>
+<li>Adopta lo nuevo cuando el contexto lo justifica</li>
+<li>Conocimiento transferible entre tecnologías</li>
+<li>Puede defender sus decisiones con razonamiento</li>
+<li>Su valor es el criterio aplicable a problemas nuevos</li>
+</ul>
+</div>
+</div>
+
+<h3>Cómo Evaluar si una Empresa Tiene Cultura Técnica Real</h3>
+<p>Antes de aceptar una oferta, hay preguntas que revelan la cultura técnica real de una empresa —
+no la que
+describen en la página de careers.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Pregunta a hacer</th>
+<th>Respuesta que indica cultura sana</th>
+<th>Red flag</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"¿Cuándo fue el último incidente de producción significativo y qué aprendieron?"
+</td>
+<td class="g">Describen el incidente con detalle, mencionan el postmortem y las
+acciones tomadas</td>
+<td class="r">"No tenemos muchos incidentes" o respuesta vaga sin postmortem</td>
+</tr>
+<tr>
+<td>"¿Cómo se toman las decisiones técnicas importantes?"</td>
+<td class="g">ADRs, RFCs, discusiones técnicas abiertas, consenso del equipo</td>
+<td class="r">"El arquitecto principal decide" o "el CTO decide"</td>
+</tr>
+<tr>
+<td>"¿Con qué frecuencia hacen deploys a producción?"</td>
+<td class="g">Daily o múltiples veces al día con feature flags</td>
+<td class="r">"Tenemos una release mensual" o "el deploy es complejo"</td>
+</tr>
+<tr>
+<td>"¿Cómo manejan la deuda técnica?"</td>
+<td class="g">Parte del sprint, refinamiento continuo, backlog priorizado</td>
+<td class="r">"La vamos a limpiar en el próximo sprint" (desde hace 2 años)</td>
+</tr>
+<tr>
+<td>"¿Puedo hablar con alguien del equipo fuera del proceso formal?"</td>
+<td class="g">Sí, conectan con un IC (Individual Contributor) sin filtros</td>
+<td class="r">No, o solo con el manager/líder técnico presente</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>Entrevistas Técnicas: Desde Ambos Lados</h3>
+
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="dot d-bl"></span>Como candidato: mostrar el proceso
+</div>
+<p>Los entrevistadores no evalúan si llegas a la solución correcta — evalúan cómo piensas.
+Preguntar sobre
+constraints, mencionar trade-offs en voz alta, y explicar por qué eliges un approach
+sobre otro es más
+valioso que la solución óptima en silencio.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot d-bl"></span>Como candidato: preguntar es una señal
+de fortaleza
+</div>
+<p>"¿Qué escala de datos estamos asumiendo?" y "¿Cuáles son los requerimientos de
+consistencia?" son
+preguntas que hacen los seniors antes de escribir código. Si el entrevistador las ve
+como debilidad, eso
+dice más sobre el entrevistador que sobre el candidato.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot d-gn"></span>Como entrevistador: evaluar lo que
+importa</div>
+<p>La capacidad de memorizar algoritmos es un proxy pobre de la ingeniería real. Mejores
+señales: cómo
+descompone problemas ambiguos, cómo maneja el feedback durante la entrevista, cómo
+razona sobre
+trade-offs, y si puede comunicar sus ideas con claridad.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot d-rd"></span>Anti-pattern como entrevistador:
+gotcha questions
+</div>
+<p>Preguntas de trivia que solo alguien que memorizó la respuesta puede responder. Revelan
+si el candidato
+leyó ese artículo específico — no si puede pensar bien bajo presión. Producen falsos
+negativos en
+candidatos excelentes y falsos positivos en quienes memorizaron las preguntas de
+Glassdoor.</p>
+</div>
+</div>
+
+<div class="arch-rel">
+<span class="arch-rel-lbl">Conexión técnica</span>
+<p>El desarrollo profesional es lo que hace que todos los capítulos anteriores sean
+transferibles. Un
+ingeniero que aprendió <strong>principios</strong> (SOLID, trade-offs, diseño de sistemas)
+puede
+aplicarlos a tecnologías nuevas. Uno que solo aprendió <strong>herramientas</strong>
+específicas necesita
+empezar de cero con cada nueva tecnología. La inversión en fundamentos tiene el mayor
+retorno compuesto en
+una carrera de ingeniería.</p>
+</div>

@@ -1,0 +1,180 @@
+{
+  "revised": "octubre 2026",
+  "handbooks": [
+    {
+      "id": "ia-generativa",
+      "href": "docs/ia-generativa.html",
+      "title": "IA Generativa, RAG y Sistemas Agénticos",
+      "kicker": "IA · AI Engineer · AI Architect",
+      "badge": "Ampliado",
+      "tagline": "LLMs, RAG, agentes, MCP, evals y gobernanza",
+      "description": "Fundamentos de ML y Transformers, integración de LLMs, RAG, agentes, MCP, evals, seguridad, gobernanza, costos y arquitectura de plataforma. Con mapa de competencias por rol.",
+      "color": "#8b5cf6",
+      "icon": "AI"
+    },
+    {
+      "id": "software-engineer",
+      "href": "docs/software-engineer.html",
+      "title": "Software Engineering — Handbook Senior",
+      "kicker": "Ingeniería",
+      "tagline": "Oficio, diseño, stack .NET/SQL/Angular",
+      "description": "El oficio del código, diseño, backend, frontend, datos, testing, performance y seguridad, con el stack .NET, SQL Server y Angular de Junior a Lead.",
+      "color": "#10b981",
+      "icon": "SE"
+    },
+    {
+      "id": "arquitectura-software",
+      "href": "docs/arquitectura-software.html",
+      "title": "Arquitectura de Software",
+      "kicker": "Arquitectura",
+      "tagline": "Principios, estilos y patrones",
+      "description": "La referencia única de patrones: principios, paradigmas, estilos como decisión, patrones distribuidos, frontend y casos reales.",
+      "color": "#0ea5e9",
+      "icon": "AR"
+    },
+    {
+      "id": "solutions-architect",
+      "href": "docs/solutions-architect.html",
+      "title": "Solutions Architecture",
+      "kicker": "Solutions Architect",
+      "tagline": "Rol, cloud, datos, seguridad, operación",
+      "description": "El rol del SA, modelos mentales, sistemas distribuidos, multi-cloud, redes, datos, seguridad, DevOps/SRE, modernización y casos reales.",
+      "color": "#f59e0b",
+      "icon": "SA"
+    },
+    {
+      "id": "roadmap",
+      "href": "docs/roadmap.html",
+      "title": "Roadmap interactivo de Ingeniería de Software (Banca)",
+      "kicker": "Aplicación · Práctica",
+      "tagline": "Niveles, checklist, entrevistas y proyectos",
+      "meta": "23 temas · checklist y favoritos · offline",
+      "description": "Ruta Junior → Arquitecto con dependencias entre temas, matriz de prioridad, preguntas de entrevista por nivel, proyectos prácticos y progreso guardado.",
+      "color": "#f43f5e",
+      "icon": "RM"
+    }
+  ],
+  "paths": [
+    {
+      "role": "Software Engineer",
+      "summary": "Del oficio del código a operar sistemas en producción.",
+      "steps": [
+        {
+          "label": "Qué es un ingeniero senior",
+          "href": "docs/software-engineer.html#cap01"
+        },
+        {
+          "label": "Oficio del código y diseño",
+          "href": "docs/software-engineer.html#cap02"
+        },
+        {
+          "label": "Backend, frontend y datos con el stack de referencia",
+          "href": "docs/software-engineer.html#cap04"
+        },
+        {
+          "label": "Testing, performance y seguridad",
+          "href": "docs/software-engineer.html#cap07"
+        },
+        {
+          "label": "Patrones de arquitectura",
+          "href": "docs/arquitectura-software.html#patrones"
+        },
+        {
+          "label": "Practicar con el roadmap",
+          "href": "docs/roadmap.html",
+          "note": "checklist y entrevistas por nivel"
+        }
+      ]
+    },
+    {
+      "role": "AI Software Engineer",
+      "summary": "Construir, medir y operar sistemas con LLMs.",
+      "steps": [
+        {
+          "label": "Mapa de competencias",
+          "href": "docs/ia-generativa.html#competencias"
+        },
+        {
+          "label": "Fundamentos: ML, Transformers, LLMs",
+          "href": "docs/ia-generativa.html#fundamentos-ml"
+        },
+        {
+          "label": "Integrar LLMs en software",
+          "href": "docs/ia-generativa.html#integracion-apis"
+        },
+        {
+          "label": "RAG de punta a punta",
+          "href": "docs/ia-generativa.html#rag"
+        },
+        {
+          "label": "Agentes, herramientas y MCP",
+          "href": "docs/ia-generativa.html#agentes"
+        },
+        {
+          "label": "Evals y LLMOps",
+          "href": "docs/ia-generativa.html#evaluacion"
+        }
+      ]
+    },
+    {
+      "role": "Solutions Architect",
+      "summary": "Decidir qué se construye, con qué y a qué costo.",
+      "steps": [
+        {
+          "label": "El rol y los modelos mentales",
+          "href": "docs/solutions-architect.html#cap01"
+        },
+        {
+          "label": "Estilos como herramientas de decisión",
+          "href": "docs/arquitectura-software.html#estilos-decision"
+        },
+        {
+          "label": "Cloud, redes y costos",
+          "href": "docs/solutions-architect.html#cap06"
+        },
+        {
+          "label": "Datos y seguridad",
+          "href": "docs/solutions-architect.html#cap07"
+        },
+        {
+          "label": "Operación y modernización",
+          "href": "docs/solutions-architect.html#cap09"
+        },
+        {
+          "label": "Casos y trade-offs para entrevistas",
+          "href": "docs/solutions-architect.html#estudio-casos"
+        }
+      ]
+    },
+    {
+      "role": "AI Solutions Architect",
+      "summary": "Arquitectura, riesgo y estrategia de sistemas con IA.",
+      "steps": [
+        {
+          "label": "Mapa de competencias",
+          "href": "docs/ia-generativa.html#competencias"
+        },
+        {
+          "label": "Selección de modelos e inferencia",
+          "href": "docs/ia-generativa.html#seleccion-modelos"
+        },
+        {
+          "label": "RAG en producción",
+          "href": "docs/ia-generativa.html#rag-produccion"
+        },
+        {
+          "label": "Seguridad y gobernanza",
+          "href": "docs/ia-generativa.html#seguridad"
+        },
+        {
+          "label": "Plataformas, ADRs y estrategia",
+          "href": "docs/ia-generativa.html#plataformas"
+        },
+        {
+          "label": "System design de IA",
+          "href": "docs/ia-generativa.html#system-design-ia"
+        }
+      ]
+    }
+  ]
+}

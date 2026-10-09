@@ -1,0 +1,65 @@
+<p>Consumir un modelo vía API es la opción por defecto. Servirlo tú mismo se justifica por privacidad o soberanía de datos, despliegues aislados (on-premise, entornos sin Internet), costo a muy alto volumen sostenido o necesidad de un modelo abierto ajustado. Este capítulo da los números y conceptos para tomar esa decisión con criterio.</p>
+
+<h3>API gestionada frente a self-hosting</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Criterio</th><th>API gestionada</th><th>Self-hosted</th></tr></thead>
+<tbody>
+<tr><td>Capacidad máxima disponible</td><td class="g">Modelos de frontera</td><td class="y">Modelos abiertos, normalmente un paso por detrás</td></tr>
+<tr><td>Costo</td><td>Variable por token; cero con tráfico cero</td><td>Fijo por GPU encendida; conviene solo con utilización alta y sostenida</td></tr>
+<tr><td>Datos</td><td>Salen al proveedor (mitigable con nube privada, región y contratos)</td><td class="g">Quedan en tu perímetro</td></tr>
+<tr><td>Operación</td><td class="g">Ninguna</td><td class="r">GPUs, drivers, escalado, actualizaciones, guardia</td></tr>
+<tr><td>Elasticidad</td><td class="g">Inmediata (dentro de límites de tasa)</td><td class="y">Limitada por la disponibilidad de GPUs</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Cuánta memoria necesita un modelo</h3>
+<div class="formula">
+<div class="formula-label">Regla de bolsillo para los pesos</div>
+VRAM(pesos) ≈ parámetros × bytes por parámetro &nbsp;→&nbsp; 8B en FP16 ≈ 8×10⁹ × 2 B ≈ 16 GB · en INT4 ≈ 4–5 GB
+</div>
+<p>A eso se suma el <strong>KV cache</strong>, que crece con la longitud del contexto y con el número de requests concurrentes, más el overhead del runtime. En producción, el KV cache suele ser lo que limita la concurrencia, no los pesos.</p>
+
+<h3>Cuantización</h3>
+<p>Representar los pesos con menos bits (FP16 → INT8 → INT4) reduce memoria y acelera la inferencia a cambio de una pérdida de calidad que suele ser pequeña en 8 bits y variable en 4 bits según el modelo y la tarea. Formatos y métodos comunes: GGUF (ecosistema llama.cpp / Ollama), GPTQ y AWQ (GPU), FP8 en hardware reciente. Evalúa siempre la versión cuantizada con tu golden dataset; no asumas la calidad del modelo original.</p>
+
+<h3>Runtimes de serving</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Herramienta</th><th>Enfoque</th><th>Cuándo usarla</th></tr></thead>
+<tbody>
+<tr><td><strong>vLLM</strong></td><td>Servidor de alto throughput con PagedAttention y batching continuo; API compatible con OpenAI</td><td>Producción en GPU con muchos usuarios concurrentes.</td></tr>
+<tr><td><strong>SGLang</strong>, <strong>TensorRT-LLM</strong>, <strong>TGI</strong></td><td>Servidores optimizados para throughput y latencia en GPU</td><td>Alternativas según hardware y ecosistema; compara con tu carga.</td></tr>
+<tr><td><strong>llama.cpp / Ollama</strong></td><td>Inferencia eficiente en CPU, Mac y GPUs de consumo, modelos GGUF</td><td>Desarrollo local, prototipos, edge, entornos aislados de bajo volumen.</td></tr>
+<tr><td>Plataformas gestionadas de modelos abiertos</td><td>Endpoints serverless o dedicados en la nube</td><td>Modelos abiertos sin operar GPUs.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Optimizaciones que hay que conocer por nombre</h3>
+<div class="card-grid">
+<div class="card"><h4>Batching continuo</h4><p>Mezcla requests en vuelo a nivel de token en lugar de esperar lotes completos: multiplica el throughput.</p></div>
+<div class="card"><h4>PagedAttention</h4><p>Gestiona el KV cache en páginas como la memoria virtual de un sistema operativo, reduciendo la fragmentación.</p></div>
+<div class="card"><h4>Prefix caching</h4><p>Reutiliza el KV cache de prefijos compartidos (system prompts) entre requests: el mismo principio que el caché de prompts de las APIs.</p></div>
+<div class="card"><h4>Decodificación especulativa</h4><p>Un modelo pequeño propone varios tokens y el grande los verifica en una pasada: menos latencia con la misma salida.</p></div>
+<div class="card"><h4>Paralelismo de tensores</h4><p>Reparte un modelo que no cabe en una GPU entre varias GPUs del mismo nodo.</p></div>
+<div class="card"><h4>Autoescalado por cola</h4><p>Escalar réplicas por profundidad de cola o tokens pendientes, no por CPU (ver capítulo de despliegue).</p></div>
+</div>
+
+<h3>Métricas de serving</h3>
+<ul>
+<li><strong>TTFT</strong> (time to first token): percepción de respuesta en interfaces interactivas.</li>
+<li><strong>TPOT / ITL</strong> (tiempo por token de salida): fluidez del streaming.</li>
+<li><strong>Throughput</strong> (tokens/segundo totales): costo por token en self-hosting.</li>
+<li><strong>Utilización de GPU</strong> y <strong>memoria de KV cache</strong>: saturación real del servidor.</li>
+</ul>
+<div class="callout axiom">
+<span class="callout-label">Latencia frente a throughput</span>
+Batches grandes maximizan el throughput (y bajan el costo por token) pero suben la latencia de cada request. Un servicio interactivo y un pipeline batch con el mismo modelo pueden necesitar configuraciones de serving distintas.
+</div>
+
+<div class="callout beige">
+<span class="callout-label">Cálculo de punto de equilibrio</span>
+Compara: <em>(tokens/mes × precio por token de la API)</em> contra <em>(GPUs necesarias para el pico × costo por hora × 730) + operación</em>. Con tráfico irregular la API suele ganar; con tráfico alto, constante y un modelo abierto suficiente para la tarea, el self-hosting puede ganar. Incluye siempre el costo de las personas que lo operan.
+</div>

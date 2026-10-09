@@ -1,0 +1,290 @@
+<p>La diferencia entre un arquitecto técnico y un solutions architect se manifiesta más claramente
+aquí: en la capacidad de <strong>traducir problemas de negocio a decisiones técnicas</strong>, y
+de comunicar las implicaciones técnicas en lenguaje de negocio. Esta traducción bidireccional es
+la habilidad más valiosa y la más difícil de desarrollar.</p>
+
+<h3 id="stakeholders">Stakeholder Mapping y Gestión de Restricciones</h3>
+<p>Cada arquitectura tiene múltiples stakeholders con intereses parcialmente en conflicto. El SA
+debe identificarlos, entender sus prioridades, y diseñar una solución que sea "suficientemente
+buena" para todos — no perfecta para ninguno.</p>
+
+<div class="diagram">
+<pre><code>
+  Mapa de Stakeholders Típico: Proyecto de Plataforma de Pagos
+  
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  Alta influencia, Alto interés (Gestionar activamente)           │
+  │  ┌────────────────┐  ┌────────────────┐  ┌──────────────────┐   │
+  │  │ CTO            │  │ Product Owner  │  │ Head of Finance  │   │
+  │  │ Quiere: techn. │  │ Quiere: speed  │  │ Quiere: costos   │   │
+  │  │ excelente      │  │ to market      │  │ controlados      │   │
+  │  └────────────────┘  └────────────────┘  └──────────────────┘   │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  Alta influencia, Bajo interés (Mantener satisfechos)            │
+  │  ┌────────────────┐  ┌────────────────┐                          │
+  │  │ CISO           │  │ Legal/Compliance│                         │
+  │  │ Quiere: 0      │  │ Quiere: PCI-DSS│                          │
+  │  │ brechas        │  │ SOC2, GDPR     │                          │
+  │  └────────────────┘  └────────────────┘                          │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  Baja influencia, Alto interés (Mantener informados)             │
+  │  ┌────────────────┐  ┌────────────────┐  ┌──────────────────┐   │
+  │  │ Dev Team       │  │ SRE/Ops        │  │ QA Team          │   │
+  │  │ Quiere: DX     │  │ Quiere: observ │  │ Quiere: testing  │   │
+  │  │ moderna        │  │ + runbooks     │  │ posible          │   │
+  │  └────────────────┘  └────────────────┘  └──────────────────┘   │
+  └──────────────────────────────────────────────────────────────────┘
+  
+  El SA debe satisfacer TODOS estos intereses simultáneamente.
+  La arquitectura resultante es un compromiso negociado, no la solución técnica ideal.
+</code></pre>
+</div>
+
+<h4>Técnica: Requirements Decomposition</h4>
+<p>Antes de cualquier decisión técnica, el SA debe descomponer los requerimientos en cuatro capas.
+Los requerimientos mal clasificados producen arquitecturas incorrectas.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Capa</th>
+<th>Descripción</th>
+<th>Ejemplo real</th>
+<th>Impacto en arquitectura</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="b"><strong>Funcional</strong></td>
+<td>Qué debe hacer el sistema</td>
+<td>"Los usuarios pueden hacer pagos con tarjeta"</td>
+<td>Define los bounded contexts y servicios</td>
+</tr>
+<tr>
+<td class="g"><strong>No-funcional</strong></td>
+<td>Cómo debe comportarse</td>
+<td>"Tiempo de respuesta &lt;200ms p99", "99.99% uptime"</td>
+<td>Define la infraestructura, escalabilidad, resiliencia</td>
+</tr>
+<tr>
+<td class="y"><strong>Constraints</strong></td>
+<td>Restricciones no negociables</td>
+<td>"PCI-DSS compliance", "presupuesto $50K/año", "equipo de 5"</td>
+<td>Elimina opciones arquitectónicas completas</td>
+</tr>
+<tr>
+<td class="r"><strong>Assumptions</strong></td>
+<td>Suposiciones que deben validarse</td>
+<td>"Asumimos 10K usuarios el primer año"</td>
+<td>Puntos de revisión en el roadmap arquitectónico</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="cost-model">Cost Modeling: El Análisis que los Juniors Omiten</h3>
+<p>La mayoría de las decisiones arquitectónicas tienen un componente de costo que no es visible
+hasta producción. Un SA senior modela los costos antes de comprometerse con una arquitectura.
+</p>
+
+<h4>TCO (TOTAL COST OF OWNERSHIP) ARQUITECTÓNICO</h4>
+
+<div class="diagram">
+<pre><code>
+  TCO de una arquitectura = Suma de todos los costos durante su vida útil
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  COSTOS DE CONSTRUCCIÓN (One-time)                                  │
+  │  • Desarrollo inicial                                               │
+  │  • Infraestructura inicial                                          │
+  │  • Migración de datos                                               │
+  │  • Formación del equipo                                             │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │  COSTOS OPERACIONALES (Recurrentes)                                 │
+  │  • Infraestructura cloud (compute, storage, network egress)         │
+  │  • Licencias de software                                            │
+  │  • Salarios del equipo de operaciones                               │
+  │  • Tiempo de ingeniería en mantenimiento                            │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │  COSTOS OCULTOS (Frecuentemente ignorados)                          │
+  │  • Costo de complejidad: tiempo de onboarding de nuevos ingenieros  │
+  │  • Costo de debugging: tiempo promedio en incidentes                │
+  │  • Costo de vendor lock-in: costo de migrar si el vendor cambia     │
+  │  • Costo de deuda técnica: velocidad de desarrollo reducida         │
+  │  • Costo de oportunidad: qué NO se construyó para mantener esto     │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │  COSTOS DE RIESGO                                                   │
+  │  • Costo esperado de incidentes (probabilidad × impacto)            │
+  │  • Costo de breach de seguridad                                     │
+  │  • Costo de downtime (revenue loss + SLA penalties)                 │
+  └─────────────────────────────────────────────────────────────────────┘
+</code></pre>
+</div>
+
+<div class="case-study">
+<div class="cs-header">
+<span class="cs-badge">CASO REAL</span>
+<h4>El Costo Oculto de los Microservicios en una Startup</h4>
+</div>
+<p>Una startup de 15 ingenieros adoptó microservicios en su segundo año. El costo inicial
+parecía razonable: 8 servicios, Kubernetes, Kafka. Doce meses después, el análisis real:</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Costo</th>
+<th>Monolito estimado</th>
+<th>Microservicios real</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Infraestructura cloud/mes</td>
+<td>$2,400</td>
+<td class="r">$8,900</td>
+</tr>
+<tr>
+<td>Horas/semana en operaciones</td>
+<td>5h</td>
+<td class="r">22h</td>
+</tr>
+<tr>
+<td>Tiempo de onboarding (nuevo ing.)</td>
+<td>2 semanas</td>
+<td class="r">6 semanas</td>
+</tr>
+<tr>
+<td>MTTR de incidentes</td>
+<td>15 min</td>
+<td class="r">52 min</td>
+</tr>
+<tr>
+<td>Features entregadas/sprint</td>
+<td>12</td>
+<td class="r">7</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>La startup revirtió a un <strong>monolito modular</strong> 18 meses después de adoptar
+microservicios. El costo de la reversión fue de 3 meses de trabajo de dos ingenieros senior.
+</p>
+</div>
+
+<h3 id="roi">ROI Técnico y Cómo Justificar Decisiones Arquitectónicas</h3>
+
+<p>Los ejecutivos no compran arquitectura técnica — compran <strong>outcomes de negocio</strong>. El
+SA debe ser capaz de traducir cualquier decisión técnica a términos de negocio: revenue, costo,
+riesgo, o velocidad.</p>
+
+<div class="diagram">
+<pre><code>
+  Framework de Justificación: Architecture Decision → Business Outcome
+
+  Ejemplo: "Propongo migrar a una arquitectura event-driven"
+  
+  Framing técnico (NO usar con ejecutivos):
+  "Necesitamos decouplear nuestros servicios con un message broker
+   para mejorar la resiliencia y escalabilidad asíncrona"
+  
+  Framing de negocio (USAR con ejecutivos):
+  "Actualmente, cuando el servicio de pagos tiene un pico de carga,
+   el catálogo de productos también se ralentiza, aunque son procesos
+   independientes. Esto nos costó $45K en SLA penalties el Q3.
+   
+   La propuesta técnica separa estos procesos para que operen
+   independientemente. El resultado esperado:
+   
+   → Reducción de 80% en correlación de fallos entre servicios
+   → SLA penalties proyectadas: <$5K/trimestre
+   → ROI en 8 meses considerando el costo de implementación ($120K)
+   → Como beneficio adicional: capacity para 3x el tráfico actual"
+</code></pre>
+</div>
+
+<h4>LA MATRIZ DE DECISIÓN ARQUITECTÓNICA</h4>
+<p>Cuando hay múltiples opciones viables, la matriz de decisión permite comparar objetivamente
+considerando los constraints del negocio. Los pesos deben ser acordados con stakeholders antes
+de evaluar las opciones — si se acuerdan después, la decisión ya está sesgada.</p>
+
+<pre data-lang="markdown"><code>## Architecture Decision Matrix: Plataforma de Pagos
+
+| Criterio                    | Peso | Opción A: Build interno | Opción B: Stripe + custom | Opción C: Adyen |
+|-----------------------------|------|------------------------|---------------------------|-----------------|
+| Time to market              | 25%  | 2/10 (12 meses)        | 8/10 (6 semanas)         | 6/10 (3 meses) |
+| Costo total año 1           | 20%  | 5/10 ($800K)           | 7/10 ($120K)             | 6/10 ($200K)   |
+| Control y personalización   | 20%  | 10/10                  | 5/10 (limitado)          | 7/10           |
+| Compliance PCI-DSS          | 20%  | 3/10 (costoso)         | 10/10 (heredado)         | 10/10          |
+| Vendor lock-in risk         | 15%  | 10/10 (ninguno)        | 4/10 (alto)              | 6/10           |
+|------------------------------|------|------------------------|---------------------------|-----------------|
+| SCORE PONDERADO             |      | 5.5                    | 6.9 ← WINNER             | 6.8            |
+
+## Decisión: Opción B (Stripe + customización)
+## Revisión en: 18 meses o si el volumen supera $50M/año
+</code></pre>
+
+<div class="callout info">
+<div class="callout-icon"></div>
+<p><strong>Nota crítica sobre las matrices:</strong> Una matriz de decisión no reemplaza el
+juicio — lo estructura. Si la matriz produce un resultado que todos sienten que está
+equivocado, probablemente los pesos están mal calibrados, no el resultado. Revisa los pesos
+antes de concluir que la matriz "está equivocada".</p>
+</div>
+
+<h3>Governance, Compliance y Risk Analysis</h3>
+<p>Las constraints de compliance no son restricciones opcionales — son límites que eliminan opciones
+arquitectónicas completas. El SA debe entenderlas antes de diseñar, no después.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Regulación/Standard</th>
+<th>Dominio</th>
+<th>Impacto arquitectónico principal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PCI-DSS</strong></td>
+<td>Pagos con tarjeta</td>
+<td>Segmentación de red, cifrado, auditoría de accesos, tokenización</td>
+</tr>
+<tr>
+<td><strong>GDPR / LGPD</strong></td>
+<td>Datos personales EU/Brasil</td>
+<td>Data residency, right to erasure, consent management, data minimization</td>
+</tr>
+<tr>
+<td><strong>HIPAA</strong></td>
+<td>Datos médicos USA</td>
+<td>Cifrado en tránsito y reposo, audit logs, BAA con proveedores</td>
+</tr>
+<tr>
+<td><strong>SOC 2 Type II</strong></td>
+<td>SaaS empresarial</td>
+<td>Control de accesos, monitoreo continuo, incident response documentado</td>
+</tr>
+<tr>
+<td><strong>ISO 27001</strong></td>
+<td>Seguridad de información</td>
+<td>ISMS completo, risk assessment, controles técnicos documentados</td>
+</tr>
+<tr>
+<td><strong>DORA (EU)</strong></td>
+<td>Finanzas digitales EU</td>
+<td>Resiliencia operacional, pruebas de penetración, third-party risk</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>La alineación de arquitectura con el negocio se fundamenta en <strong>Domain-Driven
+Design</strong> (los bounded contexts mapean a unidades de negocio), en <strong>Clean
+Architecture</strong> (el dominio del negocio en el centro, la infraestructura como
+detalle), y en la <strong>Hexagonal Architecture</strong> donde los puertos representan las
+interfaces hacia los stakeholders externos.</p>
+</div>

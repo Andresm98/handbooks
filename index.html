@@ -1,320 +1,155 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anax Apeiron DevBook | Knowledge Hub Domain</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-    <meta name="theme-color" content="#38bdf8">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --accent: #38bdf8;
-            --border: #334155;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-
-        header {
-            max-width: 1200px;
-            margin: 0 auto 3rem auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-        }
-
-        h1 {
-            font-size: 1.8rem;
-            letter-spacing: -1px;
-        }
-
-        h1 span {
-            color: var(--accent);
-            font-weight: 800;
-        }
-
-        .search-container {
-            position: relative;
-            width: 300px;
-        }
-
-        #search {
-            width: 100%;
-            padding: 0.6rem 1rem 0.6rem 2.5rem;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: white;
-            outline: none;
-        }
-
-        .search-container i {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-        }
-
-        /* Dashboard Grid */
-        #files {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            list-style: none;
-        }
-
-        .guide-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .guide-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .guide-card i.main-icon {
-            font-size: 2rem;
-            color: var(--accent);
-            margin-bottom: 1rem;
-        }
-
-        .guide-card .name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        .guide-card .meta {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            display: flex;
-            justify-content: space-between;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .highlight {
-            border-color: var(--accent) !important;
-            background: rgba(56, 189, 248, 0.1) !important;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .search-container {
-                width: 100%;
-            }
-        }
-    </style>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
-                    .catch(err => console.warn('Error al registrar Service Worker:', err));
-            });
-        }
-    </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AnaxDevBook · Handbooks de ingeniería y arquitectura</title>
+<meta name="description" content="Handbooks de Software Engineering, Arquitectura, Solutions Architecture e IA Generativa, con rutas de estudio por rol.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1f5f8b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="assets/handbook.css">
+<script src="assets/handbook.js"></script>
+<style>
+  .home { max-width: 1200px; margin: 0 auto; padding: 3rem 16px 5rem; }
+  .home-hero { position: relative; padding: 2.5rem 0 2rem; text-align: center; }
+  .home-hero::before { content: ''; position: absolute; inset: -3rem -50vw auto; height: 420px; z-index: -1; pointer-events: none;
+    background: radial-gradient(700px 260px at 50% 0%, color-mix(in srgb, #38bdf8 18%, transparent), transparent 70%), radial-gradient(500px 220px at 70% 20%, color-mix(in srgb, #6366f1 12%, transparent), transparent 70%); }
+  .home-hero .eyebrow { display: inline-flex; align-items: center; gap: .5rem; font-size: .8125rem; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: .25rem .8rem; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .home-hero h1 { font-size: clamp(2.3rem, 6vw, 3.75rem); font-weight: 800; letter-spacing: -.022em; line-height: 1.1; margin: 1.2rem auto 1rem; max-width: 900px; }
+  .home-hero h1 span { background: linear-gradient(90deg, #0ea5e9, #6366f1); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .home-hero p { max-width: 640px; margin: 0 auto; font-size: 1.125rem; }
+  .search-box { position: relative; max-width: 620px; margin: 2rem auto 0; text-align: left; }
+  .search-box input { width: 100%; height: 52px; border-radius: 12px; border: 0; background: var(--bg-elev); color: var(--ink); padding: 0 1.1rem 0 2.8rem; font: 1rem var(--font-body);
+    box-shadow: var(--shadow-lg), 0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent); }
+  .search-box::before { content: ''; position: absolute; left: 1.05rem; top: 18px; width: 12px; height: 12px; border: 2px solid var(--ink-mute); border-radius: 50%; z-index: 1; pointer-events: none; }
+  .search-box::after { content: ''; position: absolute; left: 1.95rem; top: 31px; width: 6px; height: 2px; background: var(--ink-mute); transform: rotate(45deg); z-index: 1; pointer-events: none; }
+  .search-box input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+  .results { position: absolute; left: 0; right: 0; top: 60px; z-index: 30; background: var(--bg-elev); border-radius: 12px; box-shadow: var(--shadow-lg), 0 0 0 1px var(--ring); max-height: 60vh; overflow-y: auto; display: none; padding: .35rem; }
+  .results.show { display: block; }
+  .results a { display: block; padding: .6rem .8rem; text-decoration: none; border-radius: 8px; color: var(--ink); }
+  .results a:hover, .results a.sel { background: var(--accent-soft); text-decoration: none; }
+  .results .r-path { font-size: .75rem; color: var(--ink-mute); font-weight: 500; }
+  .results .r-head { display: block; font-weight: 600; font-size: .95rem; }
+  .results .r-text { font-size: .8125rem; color: var(--ink-mute); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400; }
+  .results .empty { padding: .9rem 1rem; color: var(--ink-mute); font-size: .9rem; }
+  .results mark { background: color-mix(in srgb, var(--accent) 20%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+  .section-head { margin: 4rem 0 1.5rem; }
+  .section-head h2 { font-size: 1.75rem; font-weight: 800; letter-spacing: -.02em; margin: 0 0 .35rem; }
+  .section-head p { margin: 0; }
+  .books { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+  .book-card { display: flex; flex-direction: column; gap: .55rem; padding: 1.5rem; border-radius: 16px; background: var(--bg-elev); text-decoration: none; color: var(--ink);
+    box-shadow: var(--shadow), 0 0 0 1px var(--ring); transition: box-shadow .2s, transform .2s; }
+  .book-card:hover { transform: translateY(-2px); text-decoration: none; color: var(--ink); box-shadow: var(--shadow-lg), 0 0 0 1px color-mix(in srgb, var(--card-accent) 45%, transparent); }
+  .book-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: .85rem; background: var(--card-accent); box-shadow: 0 4px 10px -2px color-mix(in srgb, var(--card-accent) 50%, transparent); margin-bottom: .4rem; }
+  .book-kicker { font-size: .8125rem; font-weight: 600; color: var(--card-accent); display: flex; justify-content: space-between; gap: .5rem; align-items: center; }
+  .book-kicker .badge { --c: var(--good); color: var(--good); }
+  .book-title { font-size: 1.2rem; font-weight: 700; line-height: 1.3; letter-spacing: -.01em; }
+  .book-desc { font-size: .9rem; line-height: 1.65; color: var(--ink-soft); flex: 1; font-weight: 400; }
+  .book-meta { font-size: .8125rem; font-weight: 500; color: var(--ink-mute); padding-top: .9rem; border-top: 1px solid var(--line); display: flex; justify-content: space-between; }
+  .book-meta::after { content: 'Abrir \2192'; color: var(--card-accent); font-weight: 600; }
+  .paths { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; }
+  .path { border-radius: 16px; padding: 1.4rem; background: var(--bg-sunk); box-shadow: inset 0 0 0 1px var(--line); }
+  .path h3 { margin: 0 0 .3rem; font-size: 1.05rem; font-weight: 700; }
+  .path p { font-size: .875rem; margin-bottom: 1rem; }
+  .path ol { list-style: none; padding: 0; margin: 0; counter-reset: step; font-size: .875rem; }
+  .path li { counter-increment: step; position: relative; padding-left: 2rem; margin-bottom: .6rem; line-height: 1.5; }
+  .path li::before { content: counter(step); position: absolute; left: 0; top: .05rem; width: 1.35rem; height: 1.35rem; border-radius: 999px; display: grid; place-items: center; font-size: .7rem; font-weight: 700; color: var(--accent); background: var(--bg-elev); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .path small { display: block; color: var(--ink-mute); font-size: .75rem; }
+  .home-foot { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: .875rem; color: var(--ink-mute); text-align: center; }
+</style>
 </head>
+<body data-book="index" data-sw="sw.js">
+<header class="topbar">
+  <a class="brand" href="index.html"><span class="brand-mark">A</span><span>AnaxDevBook</span></a>
+  <span class="spacer"></span>
+  <button class="icon-btn" id="themeBtn" aria-label="Cambiar tema claro/oscuro">◐</button>
+</header>
+<main class="home">
+  <section class="home-hero">
+    <div class="eyebrow">Knowledge hub · Ingeniería, arquitectura e IA</div>
+    <h1>De ingeniero de software a <span>arquitecto de soluciones con IA</span></h1>
+    <p>Cuatro handbooks que no se repiten entre sí y un roadmap interactivo. Cada tema vive en un solo lugar, y las rutas por rol te dicen en qué orden leerlos.</p>
+    <div class="search-box">
+      <input id="q" type="search" placeholder="Buscar en todos los handbooks: RAG, Saga, Zero Trust, CQRS…" autocomplete="off" aria-label="Buscar en todos los handbooks">
+      <div class="results" id="results" role="listbox"></div>
+    </div>
+  </section>
 
-<body>
+  <div class="section-head"><h2>Handbooks</h2><p>Cada tema vive en un solo lugar; los handbooks se enlazan entre sí.</p></div>
+  <div class="books">
+<a class="book-card" href="docs/ia-generativa.html" style="--card-accent:#8b5cf6"><span class="book-icon">AI</span><span class="book-kicker">IA · AI Engineer · AI Architect<span class="badge">Ampliado</span></span><span class="book-title">IA Generativa, RAG y Sistemas Agénticos</span><span class="book-desc">Fundamentos de ML y Transformers, integración de LLMs, RAG, agentes, MCP, evals, seguridad, gobernanza, costos y arquitectura de plataforma. Con mapa de competencias por rol.</span><span class="book-meta">38 capítulos · 2 h</span></a>
+<a class="book-card" href="docs/software-engineer.html" style="--card-accent:#10b981"><span class="book-icon">SE</span><span class="book-kicker">Ingeniería</span><span class="book-title">Software Engineering — Handbook Senior</span><span class="book-desc">El oficio del código, diseño, backend, frontend, datos, testing, performance y seguridad, con el stack .NET, SQL Server y Angular de Junior a Lead.</span><span class="book-meta">18 capítulos · 2 h</span></a>
+<a class="book-card" href="docs/arquitectura-software.html" style="--card-accent:#0ea5e9"><span class="book-icon">AR</span><span class="book-kicker">Arquitectura</span><span class="book-title">Arquitectura de Software</span><span class="book-desc">La referencia única de patrones: principios, paradigmas, estilos como decisión, patrones distribuidos, frontend y casos reales.</span><span class="book-meta">10 capítulos · 1 h</span></a>
+<a class="book-card" href="docs/solutions-architect.html" style="--card-accent:#f59e0b"><span class="book-icon">SA</span><span class="book-kicker">Solutions Architect</span><span class="book-title">Solutions Architecture</span><span class="book-desc">El rol del SA, modelos mentales, sistemas distribuidos, multi-cloud, redes, datos, seguridad, DevOps/SRE, modernización y casos reales.</span><span class="book-meta">21 capítulos · 2 h</span></a>
+<a class="book-card" href="docs/roadmap.html" style="--card-accent:#f43f5e"><span class="book-icon">RM</span><span class="book-kicker">Aplicación · Práctica</span><span class="book-title">Roadmap interactivo de Ingeniería de Software (Banca)</span><span class="book-desc">Ruta Junior → Arquitecto con dependencias entre temas, matriz de prioridad, preguntas de entrevista por nivel, proyectos prácticos y progreso guardado.</span><span class="book-meta">23 temas · checklist y favoritos · offline</span></a>
+  </div>
 
-    <header>
-        <h1>Anax Apeiron<span> DEVBOOK</span></h1>
-        <div class="search-container">
-            <i class="fa fa-search"></i>
-            <input id="search" type="text" placeholder="Buscar guías..." autocomplete="off">
-        </div>
-    </header>
+  <div class="section-head"><h2>Rutas de estudio por rol</h2><p>El orden recomendado según el rol al que apuntas.</p></div>
+  <div class="paths">
+<article class="path"><h3>Software Engineer</h3><p>Del oficio del código a operar sistemas en producción.</p><ol><li><a href="docs/software-engineer.html#cap01">Qué es un ingeniero senior</a></li><li><a href="docs/software-engineer.html#cap02">Oficio del código y diseño</a></li><li><a href="docs/software-engineer.html#cap04">Backend, frontend y datos con el stack de referencia</a></li><li><a href="docs/software-engineer.html#cap07">Testing, performance y seguridad</a></li><li><a href="docs/arquitectura-software.html#patrones">Patrones de arquitectura</a></li><li><a href="docs/roadmap.html">Practicar con el roadmap</a> <small>checklist y entrevistas por nivel</small></li></ol></article>
+<article class="path"><h3>AI Software Engineer</h3><p>Construir, medir y operar sistemas con LLMs.</p><ol><li><a href="docs/ia-generativa.html#competencias">Mapa de competencias</a></li><li><a href="docs/ia-generativa.html#fundamentos-ml">Fundamentos: ML, Transformers, LLMs</a></li><li><a href="docs/ia-generativa.html#integracion-apis">Integrar LLMs en software</a></li><li><a href="docs/ia-generativa.html#rag">RAG de punta a punta</a></li><li><a href="docs/ia-generativa.html#agentes">Agentes, herramientas y MCP</a></li><li><a href="docs/ia-generativa.html#evaluacion">Evals y LLMOps</a></li></ol></article>
+<article class="path"><h3>Solutions Architect</h3><p>Decidir qué se construye, con qué y a qué costo.</p><ol><li><a href="docs/solutions-architect.html#cap01">El rol y los modelos mentales</a></li><li><a href="docs/arquitectura-software.html#estilos-decision">Estilos como herramientas de decisión</a></li><li><a href="docs/solutions-architect.html#cap06">Cloud, redes y costos</a></li><li><a href="docs/solutions-architect.html#cap07">Datos y seguridad</a></li><li><a href="docs/solutions-architect.html#cap09">Operación y modernización</a></li><li><a href="docs/solutions-architect.html#estudio-casos">Casos y trade-offs para entrevistas</a></li></ol></article>
+<article class="path"><h3>AI Solutions Architect</h3><p>Arquitectura, riesgo y estrategia de sistemas con IA.</p><ol><li><a href="docs/ia-generativa.html#competencias">Mapa de competencias</a></li><li><a href="docs/ia-generativa.html#seleccion-modelos">Selección de modelos e inferencia</a></li><li><a href="docs/ia-generativa.html#rag-produccion">RAG en producción</a></li><li><a href="docs/ia-generativa.html#seguridad">Seguridad y gobernanza</a></li><li><a href="docs/ia-generativa.html#plataformas">Plataformas, ADRs y estrategia</a></li><li><a href="docs/ia-generativa.html#system-design-ia">System design de IA</a></li></ol></article>
+  </div>
 
-    <ul id="files">
-        <!-- Guía 1 -->
-        <li>
-            <a href="docs/arquitecturas-software.html" class="guide-card">
-                <i class="fa-solid fa-sitemap main-icon"></i>
-                <span class="name">Arquitecturas de Software</span>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Patrones de diseño, Microservicios y Clean
-                    Architecture.</p>
-                <div class="meta">
-                    <span><i class="fa fa-file-code"></i> 90 KB</span>
-                    <span><i class="fa fa-calendar"></i> Mayo 2026</span>
-                </div>
-            </a>
-        </li>
-        <!-- Guía 2 -->
-        <li>
-            <a href="docs/guia-junior-senior-dotnet-sql-angular.html" class="guide-card">
-                <i class="fa-solid fa-layer-group main-icon"></i>
-                <span class="name">Fullstack Roadmap (.NET/SQL/Angular)</span>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">De Junior a Senior: El camino técnico
-                    completo.</p>
-                <div class="meta">
-                    <span><i class="fa fa-file-code"></i> 101 KB</span>
-                    <span><i class="fa fa-calendar"></i> Mayo 2026</span>
-                </div>
-            </a>
-        </li>
-        <!-- Guía 3 -->
-        <li>
-            <a href="docs/guia-rag-agentic.html" class="guide-card">
-                <i class="fa-solid fa-robot main-icon"></i>
-                <span class="name">RAG & Agentic Workflows</span>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">IA Generativa aplicada y automatización de
-                    flujos.</p>
-                <div class="meta">
-                    <span><i class="fa fa-file-code"></i> 85 KB</span>
-                    <span><i class="fa fa-calendar"></i> Mayo 2026</span>
-                </div>
-            </a>
-        </li>
-        <!-- Guía 4 -->
-        <li>
-            <a href="docs/solution_architect_study_guide.html" class="guide-card">
-                <i class="fa-solid fa-diagram-project main-icon"></i>
-                <span class="name">Solution Architect Guide</span>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Preparación para roles de arquitectura y
-                    diseño sistémico.</p>
-                <div class="meta">
-                    <span><i class="fa fa-file-code"></i> 92 KB</span>
-                    <span><i class="fa fa-calendar"></i> Mayo 2026</span>
-                </div>
-            </a>
-        </li>
-        <!-- Guía 5 -->
-        <li>
-            <a href="docs/solutions-architect.html" class="guide-card">
-                <i class="fa-solid fa-diagram-project main-icon"></i>
-                <span class="name">Solution Architect Complete HandBook</span>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Preparación para roles de arquitectura de
-                    soluciones.</p>
-                <div class="meta">
-                    <span><i class="fa fa-file-code"></i> 92 KB</span>
-                    <span><i class="fa fa-calendar"></i> Mayo 2026</span>
-                </div>
-            </a>
-        </li>
-        <!-- Guía 6 -->
-        <li>
-            <a href="docs/software-engineer.html" class="guide-card">
-                <i class="fa-solid fa-diagram-project main-icon"></i>
-                <span class="name">Software Engineer Guide</span>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Guía completa para desarrolladores de
-                    software.</p>
-                <div class="meta">
-                    <span><i class="fa fa-file-code"></i> 92 KB</span>
-                    <span><i class="fa fa-calendar"></i> Mayo 2026</span>
-                </div>
-            </a>
-        </li>
-        <!-- Guía 7 -->
-        <li>
-            <a href="docs/guia-performanze-fullstack.html" class="guide-card">
-                <i class="fa-solid fa-diagram-project main-icon"></i>
-                <span class="name">Software Engineer Full Stack Guide</span>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Guía completa para desarrolladores de
-                    software.</p>
-                <div class="meta">
-                    <span><i class="fa fa-file-code"></i> 46 KB</span>
-                    <span><i class="fa fa-calendar"></i> Mayo 2026</span>
-                </div>
-            </a>
-        </li>
-
-        <!-- Guía 8 -->
-        <li>
-            <a href="docs/guide-software-engineering-bank.html" class="guide-card">
-                <i class="fa-solid fa-diagram-project main-icon"></i>
-                <span class="name">Software Engineer Banking</span>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Guía completa para desarrolladores de
-                    software en la Banca.</p>
-                <div class="meta">
-                    <span><i class="fa fa-file-code"></i> 46 KB</span>
-                    <span><i class="fa fa-calendar"></i> Junio 2026</span>
-                </div>
-            </a>
-        </li>
-
-        <!-- Guía 9 -->
-        <li>
-            <a href="docs/guia-ia-agentica.html" class="guide-card">
-                <i class="fa-solid fa-diagram-project main-icon"></i>
-                <span class="name">Guía Agéntica</span>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Guía completa para desarrolladores de
-                    software en el ámbito AI Agent.</p>
-                <div class="meta">
-                    <span><i class="fa fa-file-code"></i> 46 KB</span>
-                    <span><i class="fa fa-calendar"></i> Agosto 2026</span>
-                </div>
-            </a>
-        </li>
-    </ul>
-
-    <script>
-        document.getElementById('search').addEventListener('keyup', function () {
-            const term = this.value.toLowerCase();
-            const cards = document.querySelectorAll('.guide-card');
-
-            cards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                if (term === "") {
-                    card.classList.remove('highlight');
-                    card.parentElement.style.display = "block";
-                } else if (text.includes(term)) {
-                    card.classList.add('highlight');
-                    card.parentElement.style.display = "block";
-                } else {
-                    card.classList.remove('highlight');
-                    card.parentElement.style.display = "none";
-                }
-            });
-        });
-    </script>
+  <footer class="home-foot">
+    Revisado octubre 2026 · El sitio se genera con <code>python tools/build.py</code> a partir de <code>src/</code>. Funciona sin conexión una vez instalado.
+  </footer>
+</main>
+<script>
+(function () {
+  var input = document.getElementById('q'), box = document.getElementById('results');
+  var data = null, sel = -1;
+  function norm(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  function escH(s) { return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function load() {
+    if (data) return Promise.resolve(data);
+    return fetch('search-index.json').then(function (r) { return r.json(); }).then(function (d) {
+      data = d.map(function (e) { e.n = norm(e.h + ' ' + e.c + ' ' + e.t); e.nh = norm(e.h); return e; }); return data;
+    });
+  }
+  function hl(text, terms) {
+    var out = escH(text);
+    terms.forEach(function (t) { if (t.length > 1) out = out.replace(new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig'), '<mark>$1</mark>'); });
+    return out;
+  }
+  function run() {
+    var q = norm(input.value.trim());
+    if (q.length < 2) { box.classList.remove('show'); return; }
+    load().then(function (d) {
+      var terms = q.split(/\s+/);
+      var hits = d.filter(function (e) { return terms.every(function (t) { return e.n.indexOf(t) > -1; }); })
+        .map(function (e) { var s = 0; terms.forEach(function (t) { if (e.nh.indexOf(t) > -1) s += 3; }); if (e.nh.indexOf(q) === 0) s += 2; return [s, e]; })
+        .sort(function (a, b) { return b[0] - a[0]; }).slice(0, 25).map(function (x) { return x[1]; });
+      sel = -1;
+      box.innerHTML = hits.length ? hits.map(function (e) {
+        return '<a href="' + e.u + '"><span class="r-path">' + escH(e.b) + ' › ' + escH(e.c) + '</span><span class="r-head">' + hl(e.h, terms) + '</span><span class="r-text">' + escH(e.t) + '</span></a>';
+      }).join('') : '<div class="empty">Sin resultados. Prueba con otro término.</div>';
+      box.classList.add('show');
+    }).catch(function () {
+      box.innerHTML = '<div class="empty">La búsqueda necesita servir el sitio por HTTP (por ejemplo <code>python -m http.server</code>).</div>';
+      box.classList.add('show');
+    });
+  }
+  input.addEventListener('input', run);
+  input.addEventListener('focus', run);
+  input.addEventListener('keydown', function (e) {
+    var items = box.querySelectorAll('a');
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      sel = Math.max(0, Math.min(items.length - 1, sel + (e.key === 'ArrowDown' ? 1 : -1)));
+      items.forEach(function (a, i) { a.classList.toggle('sel', i === sel); });
+      if (items[sel]) items[sel].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && items[sel > -1 ? sel : 0]) {
+      location.href = items[sel > -1 ? sel : 0].getAttribute('href');
+    } else if (e.key === 'Escape') { box.classList.remove('show'); input.blur(); }
+  });
+  document.addEventListener('click', function (e) { if (!e.target.closest('.search-box')) box.classList.remove('show'); });
+  document.addEventListener('keydown', function (e) { if (e.key === '/' && document.activeElement !== input) { e.preventDefault(); input.focus(); } });
+})();
+</script>
 </body>
-
 </html>

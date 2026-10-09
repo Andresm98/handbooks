@@ -1,0 +1,310 @@
+<p>Un Solutions Architect que no entiende los fundamentos de sistemas distribuidos tomará decisiones
+que parecen correctas en diseño y se destruyen en producción. Estos fundamentos no son teoría
+académica — son axiomas que determinan qué es físicamente posible en cualquier sistema
+distribuido, independientemente del vendor, el cloud, o el framework.</p>
+
+<h3 id="cap-pacelc">CAP Theorem y PACELC: Las Leyes Físicas de los Sistemas Distribuidos</h3>
+
+<p>El <strong>Teorema CAP</strong> (Brewer, 2000) establece que en presencia de una partición de
+red, un sistema distribuido debe elegir entre Consistencia y Disponibilidad. Pero en la
+práctica, las particiones son raras. El modelo más útil es <strong>PACELC</strong>:</p>
+
+<div class="diagram">
+<pre><code>
+  PACELC: Partition → (Availability vs Consistency) Else → (Latency vs Consistency)
+  
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  Si hay Partición:          │  Else (operación normal):             │
+  │  ┌────────────────────┐     │  ┌─────────────────────────────────┐  │
+  │  │ Elige A (AP)        │     │  │ Elige L (EL) = Baja latencia    │  │
+  │  │ Sistema responde   │     │  │ o acepta más round-trips para   │  │
+  │  │ aunque stale       │     │  │ garantizar consistencia (EC)    │  │
+  │  └────────────────────┘     │  └─────────────────────────────────┘  │
+  │  ┌────────────────────┐     │                                       │
+  │  │ Elige C (CP)        │     │  Esta es la decisión que más         │
+  │  │ Sistema rechaza    │     │  impacta la experiencia diaria        │
+  │  │ requests si stale  │     │  de los usuarios                      │
+  │  └────────────────────┘     │                                       │
+  └─────────────────────────────────────────────────────────────────────┘
+  
+  Clasificación PACELC de bases de datos:
+  
+  PA/EL → DynamoDB, Cassandra  (disponible + baja latencia, consistency sacrificada)
+  PC/EC → PostgreSQL, MySQL    (consistente, latencia algo mayor)
+  PA/EC → MongoDB (configurable)
+  PC/EL → VoltDB              (consistente Y baja latencia, costoso a escala)
+</code></pre>
+</div>
+
+<div class="callout axiom">
+<div class="callout-icon"></div>
+<p><strong>Axioma #2:</strong> CAP no es una decisión tecnológica — es una decisión de negocio.
+Preguntar "¿qué base de datos usamos?" sin antes responder "¿puede nuestro negocio tolerar
+leer datos desactualizados?" es tomar la decisión en el orden incorrecto.</p>
+</div>
+
+<h4>Aplicación práctica en decisiones de SA</h4>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Dominio de negocio</th>
+<th>Tolerancia a inconsistencia</th>
+<th>Elección PACELC</th>
+<th>Tecnología típica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Saldo bancario / pagos</td>
+<td class="r">Cero — consistencia estricta</td>
+<td>PC/EC</td>
+<td>PostgreSQL, CockroachDB</td>
+</tr>
+<tr>
+<td>Contador de likes / views</td>
+<td class="g">Alta — unos segundos de lag OK</td>
+<td>PA/EL</td>
+<td>Redis, Cassandra</td>
+</tr>
+<tr>
+<td>Carrito de compras</td>
+<td class="y">Media — segundos, no minutos</td>
+<td>PA/EC</td>
+<td>DynamoDB, MongoDB</td>
+</tr>
+<tr>
+<td>Inventario de productos</td>
+<td class="r">Baja — no oversell</td>
+<td>PC/EC</td>
+<td>PostgreSQL + locks, Redis lua scripts</td>
+</tr>
+<tr>
+<td>Feed de redes sociales</td>
+<td class="g">Alta — stale content OK</td>
+<td>PA/EL</td>
+<td>Cassandra, DynamoDB</td>
+</tr>
+<tr>
+<td>Configuración de sistema</td>
+<td class="r">Cero — todos leen igual</td>
+<td>PC/EC</td>
+<td>etcd, Zookeeper, Consul</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="fallacies">Las 8 Falacias de los Sistemas Distribuidos</h3>
+<p>Peter Deutsch (Sun Microsystems) documentó las suposiciones falsas que los desarrolladores hacen
+sobre redes distribuidas. Cada una de estas falacias es origen de bugs críticos en producción.
+</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Falacia</th>
+<th>La realidad</th>
+<th>Implicación arquitectónica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="b"><strong>1</strong></td>
+<td>La red es confiable</td>
+<td>Los paquetes se pierden, se duplican, llegan fuera de orden</td>
+<td>Retry logic, idempotencia, circuit breakers son obligatorios</td>
+</tr>
+<tr>
+<td class="b"><strong>2</strong></td>
+<td>La latencia es cero</td>
+<td>Cada hop de red añade latencia. En multi-region: 100-300ms</td>
+<td>Diseñar para latencia. Batching, async, caching local</td>
+</tr>
+<tr>
+<td class="b"><strong>3</strong></td>
+<td>El ancho de banda es infinito</td>
+<td>El ancho de banda tiene costo y límite — especialmente egress en cloud</td>
+<td>Payload design, compression, efficient serialization (protobuf &gt; JSON)</td>
+</tr>
+<tr>
+<td class="b"><strong>4</strong></td>
+<td>La red es segura</td>
+<td>El tráfico interno también puede ser comprometido</td>
+<td>mTLS entre servicios, Zero Trust, no confiar en la red privada</td>
+</tr>
+<tr>
+<td class="b"><strong>5</strong></td>
+<td>La topología no cambia</td>
+<td>IPs cambian, servicios escalan in/out, nodos mueren</td>
+<td>Service discovery dinámico. No hardcodear IPs. DNS + health checks</td>
+</tr>
+<tr>
+<td class="b"><strong>6</strong></td>
+<td>Hay un solo administrador</td>
+<td>Múltiples equipos operan partes del sistema con prioridades distintas</td>
+<td>APIs con contracts claros, SLOs entre equipos, backward compatibility</td>
+</tr>
+<tr>
+<td class="b"><strong>7</strong></td>
+<td>El costo de transporte es cero</td>
+<td>El egress en AWS puede costar más que los servidores</td>
+<td>Analizar data flow. Colocar servicios que se comunican en la misma AZ</td>
+</tr>
+<tr>
+<td class="b"><strong>8</strong></td>
+<td>La red es homogénea</td>
+<td>Protocolos, versiones, capacidades distintas entre nodos</td>
+<td>Protocol negotiation, versioned APIs, graceful degradation</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="consistency">Consistencia, Idempotencia y Backpressure</h3>
+
+<h4>MODELOS DE CONSISTENCIA</h4>
+<p>Los modelos de consistencia forman un espectro. El SA debe elegir el modelo más débil que el
+negocio puede aceptar — porque modelos más fuertes tienen costos reales en latencia y
+disponibilidad.</p>
+
+<div class="diagram">
+<pre><code>
+  Espectro de Consistencia (de más fuerte a más débil)
+
+  LINEARIZABLE ──────────────────────────────────────────── EVENTUAL
+  │                    │                    │                    │
+  Strong               Sequential           Causal              Eventual
+  Consistency          Consistency          Consistency         Consistency
+  │                    │                    │                    │
+  Más caro             │                    │                    Más barato
+  Más lento            │                    │                    Más rápido
+  Alta disponib.       │                    │                    Alta disponib.
+  limitada             │                    │                    
+  │                    │                    │                    │
+  etcd, Zookeeper      CockroachDB          Cassandra (tunable)  DynamoDB
+  PostgreSQL           Spanner              MongoDB              Redis (async)
+  (single node)                             (configurable)       
+
+  Regla práctica: Empieza con eventual consistency.
+  Sube solo cuando tengas un caso de negocio que lo justifique.
+</code></pre>
+</div>
+
+<h4>IDEMPOTENCIA: EL PRINCIPIO MÁS SUBESTIMADO</h4>
+<p>Una operación es <strong>idempotente</strong> si ejecutarla múltiples veces produce el mismo
+resultado que ejecutarla una sola vez. En sistemas distribuidos, los retries son inevitables —
+por lo que cualquier operación que no sea idempotente es una bomba de tiempo.</p>
+
+<pre data-lang="python"><code><span class="cm"># ❌ NO idempotente — retry doble el pago</span>
+<span class="kw">def</span> <span class="fn">charge_customer</span>(customer_id: str, amount: int):
+    payment = create_payment(customer_id, amount)
+    charge_stripe(payment)
+    <span class="cm"># Si falla aquí y el cliente reintenta → pago duplicado</span>
+
+<span class="cm"># ✓ Idempotente — mismo resultado con múltiples llamadas</span>
+<span class="kw">def</span> <span class="fn">charge_customer</span>(customer_id: str, amount: int, idempotency_key: str):
+    <span class="cm"># Verificar si ya procesamos esta operación</span>
+    existing = db.get(<span class="str">f"payment:{idempotency_key}"</span>)
+    <span class="kw">if</span> existing:
+        <span class="kw">return</span> existing  <span class="cm"># Retorna resultado previo sin re-ejecutar</span>
+    
+    payment = create_payment(customer_id, amount)
+    result = charge_stripe(payment)
+    
+    <span class="cm"># Guardar resultado con TTL (30 días típico)</span>
+    db.set(<span class="str">f"payment:{idempotency_key}"</span>, result, ttl=<span class="nm">30*24*3600</span>)
+    <span class="kw">return</span> result
+
+<span class="cm"># El cliente genera la idempotency_key (UUID v4) antes de hacer el request
+# Si el request falla, reintenta CON LA MISMA KEY → resultado idempotente</span></code></pre>
+
+<h4>BACKPRESSURE: CÓMO LOS SISTEMAS SE DESTRUYEN A SÍ MISMOS</h4>
+<p>El <strong>backpressure</strong> es el mecanismo por el cual un componente downstream comunica al
+upstream que no puede consumir más trabajo. Sin backpressure, el upstream sigue produciendo
+trabajo que el downstream no puede manejar — hasta que el sistema colapsa.</p>
+
+<div class="diagram">
+<pre><code>
+  SIN Backpressure: Cascading Failure
+  
+  Producer (10K msg/s) ──► Queue (crece sin límite) ──► Consumer (1K msg/s)
+                                    │
+                                    ▼ Queue llega a millones de mensajes
+                                    ▼ Consumer se queda sin memoria
+                                    ▼ Consumer muere
+                                    ▼ Queue sigue llenándose
+                                    ▼ Producer no sabe que el sistema murió
+                                    ▼ ☠ Cascading failure total
+  
+  CON Backpressure: Sistema Auto-regulado
+  
+  Producer ──► Queue (max: 10K) ──► Consumer
+     ▲                  │
+     │    "queue llena" │
+     └──────────────────┘
+  Producer se ralentiza cuando queue está llena.
+  Sistema encuentra equilibrio natural.
+  
+  Implementación: TCP flow control, Kafka consumer groups,
+  RxJava backpressure operators, gRPC flow control
+</code></pre>
+</div>
+
+<h3>Patrones de Mensajería: At-least-once, At-most-once, Exactly-once</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Semántica</th>
+<th>Garantía</th>
+<th>Costo</th>
+<th>Cuándo usar</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="b"><strong>At-most-once</strong></td>
+<td>El mensaje llega 0 o 1 vez</td>
+<td class="g">Muy bajo</td>
+<td>Métricas de monitoreo, logs best-effort</td>
+<td>UDP telemetry, fire-and-forget logs</td>
+</tr>
+<tr>
+<td class="y"><strong>At-least-once</strong></td>
+<td>El mensaje llega 1+ veces</td>
+<td class="y">Medio</td>
+<td>La mayoría de los casos — requiere idempotencia del consumer</td>
+<td>Kafka default, SQS, RabbitMQ con acks</td>
+</tr>
+<tr>
+<td class="r"><strong>Exactly-once</strong></td>
+<td>El mensaje llega exactamente 1 vez</td>
+<td class="r">Alto — requiere coordinación 2-phase</td>
+<td>Transacciones financieras, inventario crítico</td>
+<td>Kafka transactional producer, Flink exactly-once</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warn">
+<div class="callout-icon"></div>
+<p><strong>Exactly-once es frecuentemente innecesario:</strong> At-least-once + idempotent
+consumers es más fácil de implementar, más resiliente, y en la práctica produce el mismo
+resultado. Exactly-once tiene costos de latencia reales y complejidad operacional
+significativa.</p>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>Los fundamentos de sistemas distribuidos son la base técnica del <strong>Saga
+Pattern</strong> (transacciones distribuidas sin locks), del <strong>Outbox
+Pattern</strong> (exactly-once con at-least-once messaging), y del <strong>Event
+Sourcing</strong> (ordering de eventos como fuente de verdad). El CAP theorem informa
+directamente la selección de base de datos en cualquier estilo arquitectónico.</p>
+</div>

@@ -1,0 +1,91 @@
+<p>Los sistemas agénticos introducen una superficie de riesgo que no existe en software determinista tradicional: el propio modelo es un punto de entrada manipulable. La gobernanza no es una capa opcional añadida al final, es parte del diseño de arquitectura desde el primer ADR.</p>
+
+<h3>Riesgos específicos de sistemas con LLM</h3>
+<div class="card-grid">
+<div class="card">
+<h4>Prompt injection</h4>
+<p>Contenido malicioso embebido en documentos, resultados de herramientas o entradas de usuario que intenta alterar las instrucciones del sistema. Especial cuidado en RAG, donde el contenido recuperado es, de facto, entrada no confiable.</p>
+</div>
+<div class="card">
+<h4>Exfiltración de datos vía herramientas</h4>
+<p>Un agente con herramientas de escritura (email, HTTP) puede ser inducido a enviar datos sensibles fuera del perímetro si no hay validación de las acciones antes de ejecutarlas.</p>
+</div>
+<div class="card">
+<h4>Escalación de privilegios</h4>
+<p>Herramientas MCP o APIs con permisos más amplios de lo que la tarea del agente requiere. El principio de mínimo privilegio aplica a cada tool, no solo al servicio contenedor.</p>
+</div>
+<div class="card">
+<h4>Alucinación en dominios regulados</h4>
+<p>Respuestas plausibles pero incorrectas sobre temas normativos o financieros, con impacto directo si no hay un paso de validación o citación de fuente obligatoria.</p>
+</div>
+</div>
+
+<h3>OWASP Top 10 para aplicaciones con LLM</h3>
+<p>El proyecto OWASP GenAI Security publica una lista de los riesgos más críticos en aplicaciones con LLM. La edición 2025 es la referencia común para threat modeling y auditorías:</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>ID</th><th>Riesgo</th><th>En una línea</th><th>Control principal</th></tr></thead>
+<tbody>
+<tr><td>LLM01</td><td>Prompt Injection</td><td>Entradas (directas o dentro de documentos y resultados de herramientas) que alteran el comportamiento del modelo.</td><td>Separar datos de instrucciones, mínimo privilegio, aprobación humana en acciones sensibles.</td></tr>
+<tr><td>LLM02</td><td>Sensitive Information Disclosure</td><td>El sistema revela datos personales, secretos o información de otros usuarios.</td><td>Filtrado por permisos en retrieval, redacción de PII, no poner secretos en prompts.</td></tr>
+<tr><td>LLM03</td><td>Supply Chain</td><td>Modelos, datasets, librerías o plugins comprometidos.</td><td>Fuentes verificadas, inventario (AI-BOM), escaneo y fijación de versiones.</td></tr>
+<tr><td>LLM04</td><td>Data and Model Poisoning</td><td>Datos de entrenamiento, ajuste o del índice RAG manipulados.</td><td>Procedencia de datos, control de quién escribe en las fuentes indexadas.</td></tr>
+<tr><td>LLM05</td><td>Improper Output Handling</td><td>La salida del modelo se usa sin validar (XSS, inyección SQL, ejecución de comandos).</td><td>Tratar la salida como entrada no confiable: validar, escapar, parametrizar.</td></tr>
+<tr><td>LLM06</td><td>Excessive Agency</td><td>El agente tiene más herramientas, permisos o autonomía de los necesarios.</td><td>Herramientas mínimas, alcances estrechos, aprobación para acciones irreversibles.</td></tr>
+<tr><td>LLM07</td><td>System Prompt Leakage</td><td>El prompt de sistema se filtra y con él reglas o datos sensibles.</td><td>No depender del secreto del prompt; nunca credenciales ni lógica de autorización en él.</td></tr>
+<tr><td>LLM08</td><td>Vector and Embedding Weaknesses</td><td>Fugas entre tenants, inversión de embeddings, documentos envenenados en el índice.</td><td>Aislamiento por tenant, pre-filtrado por permisos, validación de fuentes.</td></tr>
+<tr><td>LLM09</td><td>Misinformation</td><td>Respuestas falsas presentadas con confianza que llevan a malas decisiones.</td><td>Grounding con citas, verificación, comunicación de incertidumbre, supervisión humana.</td></tr>
+<tr><td>LLM10</td><td>Unbounded Consumption</td><td>Uso descontrolado que dispara costos o niega el servicio.</td><td>Rate limiting, cuotas por usuario, límites de pasos y de tokens, presupuestos.</td></tr>
+</tbody>
+</table>
+</div>
+<p class="muted">OWASP mantiene además guías específicas para aplicaciones agénticas. Revisa la edición vigente al hacer una auditoría.</p>
+
+<h3>Prompt injection indirecta: el riesgo central de los agentes</h3>
+<p>No existe hoy una defensa a nivel de modelo que elimine la prompt injection. Un correo, una página web, un PDF o el resultado de una herramienta pueden contener texto que el modelo interprete como instrucción. Por eso la defensa es <strong>arquitectónica</strong>: limitar lo que un agente manipulado <em>puede</em> hacer.</p>
+<div class="diagram">        La combinación peligrosa ("trifecta letal")
+
+   ┌──────────────────┐  ┌──────────────────────┐  ┌────────────────────┐
+   │ Acceso a datos   │  │ Exposición a         │  │ Capacidad de       │
+   │ privados         │ +│ contenido no         │ +│ comunicar hacia    │
+   │ (cuentas, CRM)   │  │ confiable (web, mail)│  │ afuera (email, URL)│
+   └──────────────────┘  └──────────────────────┘  └────────────────────┘
+                 Si un agente tiene las tres, un atacante puede
+                 hacer que exfiltre datos. Quita al menos una, o pon
+                 aprobación humana en el canal de salida.</div>
+
+<h3>Controles arquitectónicos</h3>
+<ul>
+<li><strong>Aislamiento de identidad por agente:</strong> cada agente o servicio opera bajo su propia identidad gestionada (Entra ID / IAM Role), nunca credenciales compartidas de "la aplicación de IA" en general.</li>
+<li><strong>Guardrails de entrada y salida:</strong> filtrado de contenido antes de que llegue al modelo y validación de la respuesta antes de ejecutar una acción o mostrarla al usuario.</li>
+<li><strong>Human-in-the-loop obligatorio:</strong> cualquier acción irreversible o de alto impacto (transferencias, cambios de configuración, comunicación externa) requiere aprobación explícita, nunca autonomía plena del agente.</li>
+<li><strong>Segregación de secretos:</strong> claves de API y credenciales de herramientas gestionadas vía vault (Key Vault, AWS Secrets Manager), nunca en el system prompt ni en variables de entorno del propio contenedor del agente sin rotación.</li>
+<li><strong>Sanitización de contenido recuperado:</strong> en RAG, tratar cada chunk recuperado como entrada no confiable — no como instrucción del sistema — con separación clara en el prompt entre "datos" y "comandos".</li>
+<li><strong>Auditoría inmutable:</strong> registro de cada decisión del agente (qué se recuperó, qué herramienta se invocó, qué se respondió) en un almacén de solo-append, trazable por <code>AGENT_RUN_ID</code>.</li>
+</ul>
+
+<h3>Seguridad y guardrails</h3>
+<ul>
+<li><strong>Prompt injection:</strong> los documentos ingestados pueden contener instrucciones
+maliciosas.
+Sanitiza el input antes de incluirlo en el contexto del LLM.</li>
+<li><strong>PII en chunks:</strong> implementa detección y redacción de información personal antes
+de indexar
+documentos. Usa librerías como Presidio de Microsoft.</li>
+<li><strong>Rate limiting por usuario:</strong> evita abuso y controla costos. Implementa en la API
+gateway.
+</li>
+<li><strong>Output validation:</strong> verifica que el output del LLM cumple el schema esperado
+antes de
+enviarlo al usuario o usarlo en pasos downstream.</li>
+<li><strong>Tool call sandboxing:</strong> code execution tools deben correr en entornos aislados
+(Docker,
+Firecracker) con timeouts y límites de recursos.</li>
+</ul>
+
+<h3>Red teaming de sistemas de IA</h3>
+<ul>
+<li>Incluye en el golden dataset casos adversarios: inyecciones en documentos, intentos de extraer el prompt, solicitudes fuera de alcance, intentos de escalar privilegios a través de herramientas.</li>
+<li>Prueba con datos de otro tenant o de otro usuario para verificar el aislamiento.</li>
+<li>Repite el red teaming al cambiar de modelo, de herramientas o de fuentes indexadas.</li>
+</ul>

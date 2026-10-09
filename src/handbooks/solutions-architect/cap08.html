@@ -1,0 +1,490 @@
+<p>La seguridad no es una capa que se añade sobre una arquitectura existente — es una propiedad que
+debe estar presente desde el primer diagrama. Un SA que trata la seguridad como un requisito
+tardío construye sistemas que son re-arquitecturados (o abandonados) después de incidentes.</p>
+
+<h3 id="zero-trust">Zero Trust: El Modelo Mental Correcto</h3>
+
+<p><strong>Zero Trust</strong> no es un producto ni una herramienta — es un principio: <em>"Never
+trust, always verify."</em> Elimina el concepto de red interna segura. Cualquier request,
+desde cualquier origen (interno o externo), debe ser autenticado, autorizado, y registrado.</p>
+
+<div class="diagram">
+<pre><code>
+  Modelo Perimetral (Legacy) vs Zero Trust
+
+  PERIMETRAL (INSEGURO):
+  Internet → [Firewall] → Red interna "confiable"
+                          │  ┌─────────┐  ┌─────────┐
+                          └─►│ Svc A   │─►│ Svc B   │ (sin auth entre servicios)
+                             └─────────┘  └─────────┘
+  Problema: Si un atacante cruza el firewall, tiene acceso a TODO.
+  Lateral movement trivial. El 80% de los brechas ocurren internamente.
+
+  ZERO TRUST:
+  Internet → [Identity Proxy] → Request con identidad verificada
+                                │
+              Cada request verifica: ┌─────────────────────────┐
+              1. ¿Quién eres?       │ Identity Provider (IdP)  │
+              2. ¿Tienes permiso?   │ (Okta, Auth0, KeyCloak)  │
+              3. ¿Desde dónde?      └─────────────────────────┘
+              4. ¿Es normal?                   │
+                                    ┌──────────▼──────────┐
+              ┌─────────┐  mTLS     │ Policy Engine       │
+              │ Svc A   │──────────►│ (OPA, Casbin)       │
+              └─────────┘           └─────────────────────┘
+              ┌─────────┐  mTLS
+              │ Svc B   │──────────► Igual verificación
+              └─────────┘
+</code></pre>
+</div>
+
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Zero Trust: El Modelo de Seguridad para Sistemas Distribuidos</summary>
+<p>El modelo perimetral tradicional ("confiar en todo dentro de la red") fue diseñado para una era
+donde las aplicaciones vivían en datacenters físicos con un perímetro claro. En sistemas
+cloud-native y microservicios, ese perímetro no existe.</p>
+
+<div class="diagram">
+<pre><code>
+  MODELO PERIMETRAL TRADICIONAL (obsoleto)
+  
+  ┌─────── "Red Segura" (firewall perimetral) ────────┐
+  │                                                   │
+  │  Service A ──────────────────────► Service B      │
+  │  (sin autenticación, "confiamos en la red interna")│
+  │                                                   │
+  │  Problema: Un atacante dentro del perímetro       │
+  │  tiene acceso a TODO sin restricciones             │
+  └───────────────────────────────────────────────────┘
+
+  ZERO TRUST MODEL (moderno)
+  
+  Cada request se evalúa independientemente:
+  
+  Service A ──[mTLS + JWT]──► API Gateway ──[AuthN + AuthZ]──► Service B
+                │                    │                    │
+                ▼                    ▼                    ▼
+         Identidad               Políticas            Auditoría
+         verificada              evaluadas            registrada
+  
+  Principios Zero Trust:
+  → "Never trust, always verify" — incluso tráfico interno
+  → Least privilege — mínimos permisos necesarios
+  → Assume breach — diseñar como si el atacante ya está dentro
+  → Verify explicitly — autenticar cada request con contexto completo
+</code></pre>
+</div>
+</details>
+<h3 id="auth-patterns">Patrones de Autenticación y Autorización</h3>
+
+<h4>OAuth2 + OIDC: EL ESTÁNDAR REAL</h4>
+<p>OAuth2 es un framework de <em>autorización</em> (¿qué puedes hacer?). OIDC (OpenID Connect) añade
+<em>autenticación</em> sobre OAuth2 (¿quién eres?). La mayoría de los sistemas modernos usan
+ambos.
+</p>
+
+<div class="diagram">
+<pre><code>
+  OAuth2 Authorization Code Flow + PKCE (estándar para apps web/móvil)
+
+  Usuario   Browser/App     Auth Server     Resource API
+     │           │                │               │
+     │──login───►│                │               │
+     │           │──auth request─►│               │
+     │           │  (+ code_verifier PKCE)         │
+     │           │                │               │
+     │◄──────────│◄─login form────│               │
+     │──creds────►────────────────►               │
+     │           │◄─auth code─────│               │
+     │           │                │               │
+     │           │──token request─►               │
+     │           │  (code + code_verifier)         │
+     │           │◄─access_token──│               │
+     │           │  + id_token    │               │
+     │           │  + refresh_token               │
+     │           │                │               │
+     │           │──API call──────────────────────►│
+     │           │  (Bearer: access_token)         │
+     │           │◄─response──────────────────────│
+     │           │                │               │
+
+  PKCE (Proof Key for Code Exchange): previene interceptación del auth code.
+  Obligatorio para public clients (SPAs, mobile apps).
+</code></pre>
+</div>
+
+<h4>JWT: USO CORRECTO Y ERRORES COMUNES</h4>
+
+<pre data-lang="json"><code><span class="cm">// JWT Payload — lo que va dentro del token (NO encriptado, solo firmado)</span>
+{
+  <span class="str">"sub"</span>: <span class="str">"user-123"</span>,          <span class="cm">// Subject: ID del usuario</span>
+  <span class="str">"iss"</span>: <span class="str">"auth.company.com"</span>,  <span class="cm">// Issuer: quién emitió el token</span>
+  <span class="str">"aud"</span>: <span class="str">"api.company.com"</span>,   <span class="cm">// Audience: para quién es</span>
+  <span class="str">"exp"</span>: 1734000000,          <span class="cm">// Expiration: cuándo expira</span>
+  <span class="str">"iat"</span>: 1733996400,          <span class="cm">// Issued at: cuándo se emitió</span>
+  <span class="str">"jti"</span>: <span class="str">"uuid-v4"</span>,            <span class="cm">// JWT ID: para prevenir replay attacks</span>
+  <span class="str">"roles"</span>: [<span class="str">"admin"</span>, <span class="str">"finance"</span>],
+  <span class="str">"org_id"</span>: <span class="str">"org-456"</span>
+}
+
+<span class="cm">// ERRORES CRÍTICOS con JWT:</span>
+<span class="cm">// ❌ Guardar datos sensibles en el payload (está en base64, no cifrado)</span>
+<span class="cm">// ❌ Expiration muy larga (1 semana+) — imposible revocar</span>
+<span class="cm">// ❌ No validar 'aud' — un token de servicio A acepta en servicio B</span>
+<span class="cm">// ❌ Algoritmo 'none' — vulnerabilidad clásica en implementaciones malas</span>
+<span class="cm">// ❌ Guardar access token en localStorage — XSS lo expone</span>
+<span class="cm">// ✓  Guardar en httpOnly cookie o en memoria (SPA)</span>
+<span class="cm">// ✓  Access token: 15 min. Refresh token: 7-30 días en httpOnly cookie</span></code></pre>
+
+<h4>RBAC vs ABAC: CUÁNDO USAR CADA UNO</h4>
+
+<div class="compare-row">
+<div class="compare-col">
+<h4>RBAC — Role-Based Access Control</h4>
+<ul>
+<li>Permisos asignados a roles, roles a usuarios</li>
+<li>Simple de entender y auditar</li>
+<li>admin, editor, viewer, billing-admin</li>
+<li>Suficiente para 80% de los sistemas</li>
+<li>Problema: role explosion en sistemas complejos</li>
+<li>Implementación: JWT roles, Casbin, OPA</li>
+</ul>
+</div>
+<div class="compare-col">
+<h4>ABAC — Attribute-Based Access Control</h4>
+<ul>
+<li>Permisos basados en atributos del usuario, recurso, y contexto</li>
+<li>"Puede ver si es el owner O está en el mismo org"</li>
+<li>Más expresivo, más complejo</li>
+<li>Necesario para multi-tenant, permisos granulares</li>
+<li>Difícil de auditar sin herramientas</li>
+<li>Implementación: OPA/Rego, AWS Cedar, Zanzibar</li>
+</ul>
+</div>
+</div>
+
+<h4>mTLS: AUTENTICACIÓN MUTUA ENTRE SERVICIOS</h4>
+<p>En un sistema Zero Trust, los servicios se autentican entre sí mediante certificados TLS mutuos.
+Cada servicio tiene su propio certificado de identidad. Implementaciones: Istio service mesh,
+SPIFFE/SPIRE, Consul Connect.</p>
+
+<div class="diagram">
+<pre><code>
+  mTLS: Handshake Mutuo
+  
+  Service A                           Service B
+      │                                   │
+      │──── Client Hello ────────────────►│
+      │◄─── Server Certificate ───────────│  (Svc B presenta su cert)
+      │──── Client Certificate ──────────►│  (Svc A presenta su cert)
+      │◄─── Verify (ambos se autentican) ─│
+      │                                   │
+      │    Ambos verifican:                │
+      │    1. Cert firmado por CA interna  │
+      │    2. Identidad del servicio (SPIFFE: spiffe://cluster/ns/svc-b)
+      │    3. Cert no revocado (OCSP)      │
+      │                                   │
+      │═══════ Comunicación cifrada ══════│
+  
+  Automatizado con Istio: la app no sabe que existe mTLS.
+  El sidecar (Envoy) maneja todo transparentemente.
+</code></pre>
+</div>
+
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Patrones de Autenticación y Autorización</summary>
+<h5>OAuth 2.0 + OIDC: LOS PROTOCOLOS ESTÁNDAR</h5>
+<div class="diagram">
+<pre><code>
+  OAuth 2.0 Authorization Code Flow (con PKCE — el más seguro para SPAs)
+  
+  Browser/App          Authorization Server       Resource Server
+  ──────────           ────────────────────       ───────────────
+  1. Genera code_verifier + code_challenge
+  2. Redirect → /authorize?code_challenge=...
+  3.                   ← Login page
+  4. User credentials →
+  5.                   ← Authorization code (corto plazo, ~10 min)
+  6. POST /token con code + code_verifier
+  7.                   ← access_token (JWT) + refresh_token
+  8. GET /api/resource + Bearer token ──────────────►
+  9.                                  Valida JWT (firma, exp, claims)
+  10.                                              ← Protected resource
+  
+  Puntos críticos:
+  → code_verifier nunca viaja por la red — protege contra intercepción del code
+  → access_token de vida corta (15 min típico)
+  → refresh_token de vida larga con rotación automática
+  → Siempre HTTPS — ninguna excepción
+</code></pre>
+</div>
+
+<h5>JWT: ESTRUCTURA Y VULNERABILIDADES COMUNES</h5>
+
+<pre data-lang="python"><code><span class="cm"># ✓ Validación segura de JWT en producción</span>
+<span class="kw">import</span> jwt
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timezone
+
+<span class="kw">def</span> <span class="fn">validate_token</span>(token: str, public_key: str) -> dict:
+    <span class="kw">try</span>:
+        payload = jwt.decode(
+            token,
+            public_key,
+            algorithms=[<span class="str">"RS256"</span>],   <span class="cm"># ← NUNCA "none" o "HS256" con secreto débil</span>
+            options={
+                <span class="str">"verify_exp"</span>: <span class="nm">True</span>,    <span class="cm"># Verificar expiración</span>
+                <span class="str">"verify_aud"</span>: <span class="nm">True</span>,    <span class="cm"># Verificar audience (tu servicio)</span>
+                <span class="str">"verify_iss"</span>: <span class="nm">True</span>,    <span class="cm"># Verificar issuer (tu auth server)</span>
+                <span class="str">"require"</span>: [<span class="str">"exp"</span>, <span class="str">"iat"</span>, <span class="str">"sub"</span>, <span class="str">"aud"</span>]
+            },
+            audience=<span class="str">"payments-service"</span>,
+            issuer=<span class="str">"https://auth.miempresa.com"</span>
+        )
+        <span class="cm"># Verificar que el token no está revocado (token blacklist en Redis)</span>
+        <span class="kw">if</span> is_revoked(payload[<span class="str">"jti"</span>]):
+            <span class="kw">raise</span> jwt.InvalidTokenError(<span class="str">"Token revoked"</span>)
+        
+        <span class="kw">return</span> payload
+        
+    <span class="kw">except</span> jwt.ExpiredSignatureError:
+        <span class="kw">raise</span> AuthError(<span class="str">"Token expired — use refresh token"</span>)
+    <span class="kw">except</span> jwt.InvalidTokenError <span class="kw">as</span> e:
+        <span class="kw">raise</span> AuthError(<span class="str">f"Invalid token: {e}"</span>)
+
+<span class="cm"># ❌ Vulnerabilidades comunes:
+# jwt.decode(token, key, algorithms=["none"])  — permite tokens sin firma
+# jwt.decode(token, key)                       — algoritmo no verificado
+# Sin verificar audience — token robado de otro servicio es válido aquí</span></code></pre>
+
+<h5>RBAC VS ABAC: CUÁNDO USAR CADA MODELO</h5>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th>Descripción</th>
+<th>Ventaja</th>
+<th>Limitación</th>
+<th>Ideal para</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RBAC</strong></td>
+<td>Roles → Permisos. Users → Roles</td>
+<td class="g">Simple de entender y administrar</td>
+<td class="r">Explosión de roles para casos complejos</td>
+<td>La mayoría de aplicaciones B2B y B2C</td>
+</tr>
+<tr>
+<td><strong>ABAC</strong></td>
+<td>Atributos del user + recurso + contexto → decisión</td>
+<td class="g">Altamente granular y flexible</td>
+<td class="r">Complejo de auditar y debuggear</td>
+<td>Sistemas de salud, financieros, gobierno</td>
+</tr>
+<tr>
+<td><strong>ReBAC</strong></td>
+<td>Relaciones entre entidades → permisos</td>
+<td class="g">Modela permisos como grafo de relaciones</td>
+<td class="r">Complejo de implementar</td>
+<td>Google Docs-style sharing, colaboración</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h5>GESTIÓN DE SECRETS EN PRODUCCIÓN</h5>
+<div class="diagram">
+<pre><code>
+  Anti-pattern: Secrets en código / variables de entorno en texto plano
+  ─────────────────────────────────────────────────────────────────────
+  DB_PASSWORD=mysecretpassword123  ← en .env o en el Dockerfile
+  → Visible en logs, en historial de git, en imágenes de Docker
+  → Un leak del código = leak de todas las credenciales
+
+  Pattern correcto: Dynamic Secrets con HashiCorp Vault
+  ─────────────────────────────────────────────────────────────────────
+  
+  App (Service Account) ──[Kubernetes Auth]──► Vault
+                                                │
+                              ┌─────────────────┘
+                              │ Genera credenciales dinámicas
+                              │ con TTL corto (1 hora)
+                              ▼
+                         DB_PASSWORD = xK9mP2...  ← único, temporal
+                         
+  → Si el password se filtra, expira en 1 hora
+  → Rotación automática sin restart de la aplicación
+  → Auditoría completa: quién pidió qué credencial y cuándo
+  → Revocación inmediata si el servicio es comprometido
+</code></pre>
+</div>
+</details>
+<h3>Secrets Management: El Anti-pattern más Común</h3>
+
+<div class="callout danger">
+<div class="callout-icon"></div>
+<p><strong>El error más frecuente y más costoso:</strong> Secrets en código fuente (git), en
+variables de entorno sin gestión, o en archivos de configuración. En 2023, GitHub detectó
+12.8M secretos expuestos en repositorios públicos. La media de tiempo de explotación después
+de la exposición es de 4 horas.</p>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Solución</th>
+<th>Cómo funciona</th>
+<th>Ventaja</th>
+<th>Cuando usar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>HashiCorp Vault</strong></td>
+<td>Secrets engine centralizado con leases y rotación automática</td>
+<td class="g">Más flexible, multi-cloud, dynamic secrets</td>
+<td>Multi-cloud, on-premise + cloud, alta personalización</td>
+</tr>
+<tr>
+<td><strong>AWS Secrets Manager</strong></td>
+<td>Managed service en AWS, rotación automática nativa</td>
+<td class="g">Zero-ops, integración nativa AWS, RDS auto-rotation</td>
+<td>Stack 100% AWS, sin necesidad de control adicional</td>
+</tr>
+<tr>
+<td><strong>K8s Secrets + External Secrets</strong></td>
+<td>K8s Secrets sincronizados desde Vault/AWS SM</td>
+<td class="g">Secrets como recursos K8s nativos</td>
+<td>Workloads en Kubernetes que consumen secrets</td>
+</tr>
+<tr>
+<td><strong>SOPS + Age</strong></td>
+<td>Secrets cifrados en git, descifrados en deploy</td>
+<td class="g">GitOps-friendly, auditables en VCS</td>
+<td>GitOps workflows, secrets en repositorio cifrado</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>Seguridad en Kubernetes: Las 5 Configuraciones Críticas</h3>
+
+<pre data-lang="yaml"><code><span class="cm"># 1. Pod Security Context — nunca ejecutar como root</span>
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: true  <span class="cm"># Filesystem read-only</span>
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [<span class="str">"ALL"</span>]              <span class="cm"># Drop todas las capabilities</span>
+
+<span class="cm">---
+# 2. NetworkPolicy — denegar todo por defecto, permitir explícitamente</span>
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payments-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: payments
+  policyTypes: [Ingress, Egress]
+  ingress:
+  - from:
+    - podSelector:           <span class="cm"># Solo desde API Gateway</span>
+        matchLabels:
+          app: api-gateway
+    ports:
+    - port: 8080
+  egress:
+  - to:
+    - podSelector:           <span class="cm"># Solo hacia la BD</span>
+        matchLabels:
+          app: postgres
+    ports:
+    - port: 5432
+
+<span class="cm">---
+# 3. RBAC — Least privilege para service accounts</span>
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: payments-role
+rules:
+- apiGroups: [<span class="str">""</span>]
+  resources: [<span class="str">"secrets"</span>]    <span class="cm"># Solo puede leer sus secrets</span>
+  verbs: [<span class="str">"get"</span>]
+  resourceNames: [<span class="str">"payments-secrets"</span>]</code></pre>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>La seguridad arquitectónica se implementa de forma diferente según el estilo. En
+<strong>Microservicios</strong>, mTLS y service mesh son la base del Zero Trust. En
+<strong>Serverless</strong>, IAM roles con least privilege son el mecanismo principal. En
+<strong>Event-Driven</strong>, la autenticación del productor/consumidor en Kafka (SASL/SSL)
+y el cifrado de mensajes son críticos. En <strong>Clean/Hexagonal Architecture</strong>, los
+security concerns pertenecen a los adapters externos, no al dominio.
+</p>
+</div>
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Seguridad en Kubernetes: Los Vectores Más Comunes</summary>
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Containers corriendo como root
+</div>
+<p>Un container root que escapa al host tiene acceso de root al nodo. Siempre usar
+<code>runAsNonRoot: true</code> + <code>readOnlyRootFilesystem: true</code> en
+SecurityContext.
+</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Secrets en variables de entorno
+</div>
+<p>Las variables de entorno son visibles en <code>kubectl describe pod</code> y en logs de
+crash. Usar Vault Agent Injector o External Secrets Operator.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Network policies abiertas</div>
+<p>Por defecto en K8s, cualquier pod puede comunicarse con cualquier otro pod. Las
+NetworkPolicies deben ser "deny all" por defecto con allowlist explícito.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Imágenes sin escaneo de
+vulnerabilidades</div>
+<p>Una imagen base con CVEs críticos es una vulnerabilidad desplegada. Integrar Trivy, Grype
+o Snyk en el pipeline de CI — nunca en CD.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>RBAC demasiado permisivo</div>
+<p><code>ClusterAdmin</code> para todos los service accounts es equivalente a "sudo sin
+contraseña". Definir roles mínimos por servicio con auditoría activa.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>API Server expuesto sin
+restricciones</div>
+<p>El API server de K8s no debe ser accesible desde Internet. Usar private endpoint +
+VPN/Bastion + IP allowlist para acceso administrativo.</p>
+</div>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>La seguridad arquitectónica se integra directamente en <strong>Hexagonal
+Architecture</strong> (los adaptadores de entrada son el primer punto de
+autenticación/autorización), en <strong>Microservices</strong> (mTLS entre servicios como
+implementación de Zero Trust), y en <strong>Service Mesh</strong> (Istio/Linkerd como
+implementación de políticas de seguridad sin código en los servicios).</p>
+</div>
+</details>
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Otra forma de plantear este capítulo</summary>
+<p>La seguridad no es una capa que se añade encima de la arquitectura — es una propiedad que emerge
+del diseño desde el inicio. Un SA que trata la seguridad como un checklist de compliance al
+final del proyecto crea sistemas que son vulnerables por diseño, no por implementación.</p>
+
+<p>La pregunta correcta no es "¿estamos seguros?" sino "¿cuáles son nuestros threat vectors, cuál es
+la probabilidad de cada uno, y cuál es el costo de mitigación vs el costo del impacto?"</p>
+</details>

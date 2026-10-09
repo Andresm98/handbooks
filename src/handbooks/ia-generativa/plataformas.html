@@ -1,0 +1,92 @@
+<p>Las tres nubes principales ofrecen capas equivalentes pero con distinta madurez y distinto grado de acoplamiento a su propio ecosistema. La elección rara vez es "cuál es mejor" sino "cuál se integra mejor con el stack de identidad, red y datos que ya existe".</p>
+
+<table>
+<tr><th>Capacidad</th><th>AWS</th><th>Azure</th><th>GCP</th></tr>
+<tr><td>Orquestación de agentes gestionada</td><td>Bedrock Agents</td><td>Azure AI Foundry Agent Service</td><td>Vertex AI Agent Builder</td></tr>
+<tr><td>Acceso a múltiples modelos base</td><td>Bedrock (Anthropic, Meta, Amazon, etc.)</td><td>Azure AI Foundry (OpenAI, Anthropic vía partners, otros)</td><td>Vertex AI (Gemini, Anthropic vía partners, otros)</td></tr>
+<tr><td>Vector store nativo</td><td>OpenSearch Serverless / Aurora pgvector</td><td>Azure AI Search</td><td>Vertex AI Vector Search</td></tr>
+<tr><td>Identidad de agentes</td><td>IAM Roles</td><td>Entra ID (Managed Identity)</td><td>IAM + Workload Identity</td></tr>
+<tr><td>Autoescalado dirigido por eventos</td><td>EKS + KEDA / Lambda</td><td>AKS + KEDA / Azure Functions</td><td>GKE + KEDA / Cloud Functions</td></tr>
+<tr><td>Broker de eventos gestionado</td><td>MSK (Kafka) / EventBridge</td><td>Service Bus / Event Hubs</td><td>Pub/Sub</td></tr>
+</table>
+
+<div class="callout">
+<div class="callout-label">Criterio de decisión práctico</div>
+Si la organización ya opera con AWS como nube de referencia (IAM, VPC, observabilidad centralizada en CloudWatch), forzar un stack de IA en otra nube añade fricción de identidad y red que rara vez compensa una ventaja marginal de modelo. La consistencia con el resto del portafolio suele pesar más que la diferencia de capacidades entre plataformas de IA.
+</div>
+
+<h3>Stack de referencia por capa</h3>
+<div class="arch-box">
+<div class="arch-layer"><span class="arch-layer-label">UI / API</span><div class="arch-chips"><span class="chip blue">Frontend web o móvil</span><span class="chip blue">FastAPI · ASP.NET Core · Node</span><span class="chip green">Streaming (SSE / WebSocket)</span></div></div>
+<div class="arch-layer"><span class="arch-layer-label">AI Gateway</span><div class="arch-chips"><span class="chip gold">Auth y cuotas por tenant</span><span class="chip gold">Routing y fallback</span><span class="chip gold">Caché, trazas, costos</span></div></div>
+<div class="arch-layer"><span class="arch-layer-label">Orquestación</span><div class="arch-chips"><span class="chip blue">SDK del proveedor</span><span class="chip">LangGraph · Agent Framework · LlamaIndex</span><span class="chip red">Temporal / Step Functions para durabilidad</span></div></div>
+<div class="arch-layer"><span class="arch-layer-label">Modelos</span><div class="arch-chips"><span class="chip blue">API directa del proveedor</span><span class="chip">Bedrock · Azure AI Foundry · Vertex AI</span><span class="chip green">Modelos abiertos self-hosted (vLLM)</span></div></div>
+<div class="arch-layer"><span class="arch-layer-label">Herramientas</span><div class="arch-chips"><span class="chip blue">Servidores MCP internos</span><span class="chip">APIs de dominio</span><span class="chip green">Sandboxes de ejecución</span></div></div>
+<div class="arch-layer"><span class="arch-layer-label">Conocimiento</span><div class="arch-chips"><span class="chip blue">Vector DB / búsqueda híbrida</span><span class="chip">Parsers de documentos</span><span class="chip green">Pipeline de ingesta con CDC</span></div></div>
+<div class="arch-layer"><span class="arch-layer-label">Datos y estado</span><div class="arch-chips"><span class="chip gold">PostgreSQL</span><span class="chip">Redis (caché, memoria corta)</span><span class="chip">Event backbone (Kafka y equivalentes)</span></div></div>
+<div class="arch-layer"><span class="arch-layer-label">Calidad y operación</span><div class="arch-chips"><span class="chip blue">OpenTelemetry</span><span class="chip green">Langfuse · LangSmith · Phoenix</span><span class="chip red">Evals en CI</span><span class="chip">Prometheus + Grafana</span></div></div>
+</div>
+
+<h3>Servicios por capa y proveedor</h3>
+<p>Catálogo de referencia por capa arquitectónica. Útil para armar el diagrama de contenedores C4 de una propuesta concreta y para conversaciones de <em>vendor selection</em> con criterios explícitos en vez de preferencia de marca.</p>
+
+<h3>Capa de acceso a modelos</h3>
+<table>
+<tr><th>Servicio</th><th>Proveedor</th><th>Notas</th></tr>
+<tr><td>Amazon Bedrock</td><td>AWS</td><td>Acceso unificado a Anthropic, Meta, Amazon Titan/Nova, Mistral; integración nativa con IAM y VPC</td></tr>
+<tr><td>Azure AI Foundry</td><td>Azure</td><td>OpenAI + catálogo de modelos de terceros; fuerte integración con Entra ID y Azure Monitor</td></tr>
+<tr><td>Vertex AI (Model Garden)</td><td>GCP</td><td>Gemini + modelos de terceros; integración nativa con BigQuery para RAG sobre datos analíticos</td></tr>
+<tr><td>Claude API / Claude Platform</td><td>Anthropic directo</td><td>Acceso directo sin intermediario cloud; útil cuando no se requiere el resto del ecosistema de una nube específica</td></tr>
+</table>
+
+<h3>Cómputo y runtime de agentes</h3>
+<table>
+<tr><th>Servicio</th><th>Proveedor</th><th>Patrón que habilita</th></tr>
+<tr><td>EKS / AKS / GKE + KEDA</td><td>AWS / Azure / GCP</td><td>Runner pattern con Jobs efímeros escalados por profundidad de cola</td></tr>
+<tr><td>AWS Lambda / Azure Functions / Cloud Functions</td><td>AWS / Azure / GCP</td><td>Agentes de vida corta, invocación esporádica, escalado a cero</td></tr>
+<tr><td>AWS Fargate / Azure Container Apps / Cloud Run</td><td>AWS / Azure / GCP</td><td>Contenedores sin gestión de nodos, buen punto medio entre Lambda y K8s completo</td></tr>
+<tr><td>AWS Step Functions / Azure Logic Apps / Workflows</td><td>AWS / Azure / GCP</td><td>Orquestación determinista envolviendo pasos no determinísticos del LLM</td></tr>
+</table>
+
+<h3>Conocimiento y RAG</h3>
+<table>
+<tr><th>Servicio</th><th>Proveedor</th><th>Notas</th></tr>
+<tr><td>OpenSearch Serverless / Aurora pgvector</td><td>AWS</td><td>OpenSearch para búsqueda híbrida; pgvector si ya hay Postgres operado y se quiere evitar un motor adicional</td></tr>
+<tr><td>Azure AI Search</td><td>Azure</td><td>Búsqueda híbrida vectorial + semántica + keyword nativa, con conectores a Blob Storage y SharePoint</td></tr>
+<tr><td>Vertex AI Vector Search</td><td>GCP</td><td>Optimizado para escala muy alta (miles de millones de vectores) con baja latencia</td></tr>
+<tr><td>Pinecone / Weaviate / Qdrant</td><td>Independiente</td><td>Vector stores especializados, multi-cloud, útiles cuando se quiere evitar acoplamiento a un solo proveedor</td></tr>
+</table>
+
+<h3>Backbone de eventos y mensajería</h3>
+<table>
+<tr><th>Servicio</th><th>Proveedor</th><th>Notas</th></tr>
+<tr><td>Amazon MSK / EventBridge</td><td>AWS</td><td>MSK para Kafka gestionado; EventBridge para enrutamiento de eventos de bajo volumen entre servicios desacoplados</td></tr>
+<tr><td>Azure Service Bus / Event Hubs</td><td>Azure</td><td>Service Bus para colas/topics transaccionales; Event Hubs para streaming de alto volumen</td></tr>
+<tr><td>Google Pub/Sub</td><td>GCP</td><td>Modelo de entrega at-least-once gestionado, buena integración con Dataflow para procesamiento de streams</td></tr>
+<tr><td>Redpanda</td><td>Independiente</td><td>API-compatible con Kafka, menor overhead operativo (sin ZooKeeper), útil en despliegues propios o multi-cloud</td></tr>
+</table>
+
+<h3>Identidad, secretos y seguridad</h3>
+<table>
+<tr><th>Servicio</th><th>Proveedor</th><th>Notas</th></tr>
+<tr><td>IAM Roles + Secrets Manager</td><td>AWS</td><td>Identidad por servicio/agente vía roles asumibles; rotación automática de credenciales de herramientas</td></tr>
+<tr><td>Entra ID + Key Vault</td><td>Azure</td><td>Managed Identity por contenedor/función; integración directa con Azure AI Foundry para auditoría de acceso a modelos</td></tr>
+<tr><td>IAM + Secret Manager</td><td>GCP</td><td>Workload Identity Federation para evitar credenciales de larga duración en cargas agénticas</td></tr>
+<tr><td>Guardrails de proveedor (Bedrock Guardrails, Azure AI Content Safety)</td><td>AWS / Azure</td><td>Filtrado de contenido dañino y PII configurable como política, no como lógica ad-hoc en el prompt</td></tr>
+</table>
+
+<h3>Observabilidad</h3>
+<table>
+<tr><th>Servicio</th><th>Proveedor</th><th>Notas</th></tr>
+<tr><td>CloudWatch + X-Ray</td><td>AWS</td><td>Tracing distribuido estándar; requiere instrumentación adicional para trazar pasos internos del agente</td></tr>
+<tr><td>Azure Monitor + Application Insights</td><td>Azure</td><td>Integración directa con Azure AI Foundry para tracing de llamadas a modelo sin instrumentación manual</td></tr>
+<tr><td>Cloud Trace / Cloud Logging</td><td>GCP</td><td>Integrado con Vertex AI para trazas de llamadas a modelo y latencia por paso</td></tr>
+<tr><td>LangSmith / Langfuse / Arize</td><td>Independiente</td><td>Especializados en trazas de agentes y evals; se integran vía SDK sin importar la nube subyacente</td></tr>
+<tr><td>Prometheus / Grafana / Loki / Jaeger</td><td>Independiente</td><td>Stack open-source para los cuatro Golden Signals, ya cubre infraestructura además de la capa de IA</td></tr>
+</table>
+
+<div class="callout beige">
+<div class="callout-label">Criterio de selección</div>
+Evita mezclar el vector store, el broker de eventos y el runtime de cómputo de tres nubes distintas "por lo mejor de cada una": el costo de integración de identidad y red entre nubes suele superar la ganancia marginal de capacidad. Elige la nube donde ya vive el dato transaccional de origen y construye la capa de IA ahí.
+</div>
+

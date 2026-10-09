@@ -1,0 +1,50 @@
+<p>Hay tres formas de hacer que un modelo general resuelva tu problema: darle mejores instrucciones (<strong>prompting</strong>), darle el conocimiento en el momento (<strong>RAG / herramientas</strong>) o cambiar sus pesos (<strong>fine-tuning</strong>). La regla de la industria es probar en ese orden, porque el costo, el tiempo y el riesgo crecen en ese orden.</p>
+
+<h3>Matriz de decisión</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Necesidad</th><th>Prompting</th><th>RAG / herramientas</th><th>Fine-tuning</th></tr></thead>
+<tbody>
+<tr><td>Conocimiento privado o que cambia</td><td class="r">No</td><td class="g">Sí: la mejor opción</td><td class="r">No: se desactualiza y no cita fuentes</td></tr>
+<tr><td>Formato, tono o estilo consistente</td><td class="g">Casi siempre basta</td><td class="y">No es su objetivo</td><td class="g">Sí, si el volumen lo justifica</td></tr>
+<tr><td>Tarea estrecha a muy alto volumen</td><td class="y">Caro con modelos grandes</td><td class="y">Depende</td><td class="g">Sí: un modelo pequeño ajustado puede igualar a uno grande</td></tr>
+<tr><td>Citar fuentes y auditar</td><td class="r">No</td><td class="g">Sí</td><td class="r">No</td></tr>
+<tr><td>Tiempo hasta el primer resultado</td><td class="g">Horas</td><td class="y">Días o semanas</td><td class="r">Semanas, más datos etiquetados</td></tr>
+<tr><td>Cambiar de proveedor después</td><td class="g">Fácil</td><td class="g">Fácil (el índice es tuyo)</td><td class="r">Difícil: el ajuste queda atado al modelo base</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Técnicas de fine-tuning</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Técnica</th><th>Qué hace</th><th>Cuándo</th></tr></thead>
+<tbody>
+<tr><td><strong>Fine-tuning completo</strong></td><td>Actualiza todos los pesos</td><td>Raro fuera de laboratorios: muy caro y riesgo de olvidar capacidades generales.</td></tr>
+<tr><td><strong>LoRA</strong></td><td>Congela el modelo y entrena matrices de bajo rango añadidas a algunas capas</td><td>Estándar para modelos abiertos: barato, rápido, adaptadores intercambiables.</td></tr>
+<tr><td><strong>QLoRA</strong></td><td>LoRA sobre un modelo cuantizado a 4 bits</td><td>Ajustar modelos medianos en una sola GPU.</td></tr>
+<tr><td><strong>SFT</strong></td><td>Pares instrucción → respuesta ideal</td><td>Enseñar formato y criterio de una tarea.</td></tr>
+<tr><td><strong>DPO / preferencias</strong></td><td>Pares respuesta preferida / rechazada</td><td>Ajustar estilo y juicio cuando es más fácil comparar que escribir la respuesta ideal.</td></tr>
+<tr><td><strong>Destilación</strong></td><td>Un modelo grande genera ejemplos para entrenar uno pequeño</td><td>Reducir costo y latencia en una tarea ya resuelta por el modelo grande (revisa los términos de uso del proveedor).</td></tr>
+<tr><td><strong>Fine-tuning de embeddings</strong></td><td>Ajusta el modelo de embeddings a tu vocabulario</td><td>Cuando el retrieval falla por jerga de dominio; suele dar más retorno que ajustar el LLM.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Datos: el 80% del trabajo</h3>
+<ul>
+<li><strong>Calidad sobre cantidad:</strong> cientos o pocos miles de ejemplos excelentes y consistentes superan a decenas de miles ruidosos.</li>
+<li><strong>Cobertura de casos difíciles:</strong> el modelo aprende la distribución que le muestras; si solo ve casos fáciles, fallará en los difíciles.</li>
+<li><strong>Separación estricta:</strong> conjuntos de entrenamiento, validación y prueba sin solaparse, y una evaluación base del modelo sin ajustar para comparar.</li>
+<li><strong>Privacidad:</strong> los datos de entrenamiento quedan "dentro" del modelo; no incluyas datos personales que no podrías justificar, ni secretos.</li>
+</ul>
+
+<div class="callout danger">
+<span class="callout-label">Señales de que no deberías hacer fine-tuning</span>
+No has agotado prompting con ejemplos. No tienes un golden dataset para medir la mejora. El problema es de conocimiento que cambia. No tienes quién mantenga el modelo ajustado cuando salga una versión base nueva (y saldrá en meses).
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Costo total de propiedad</span>
+<p>Un fine-tuning no es un proyecto, es un producto: pipeline de datos, entrenamiento reproducible, evaluación, registro de modelos, despliegue y re-entrenamiento al cambiar el modelo base. Inclúyelo en el ADR junto al ahorro esperado por request.</p>
+</div>

@@ -1,0 +1,224 @@
+<h3 id="tradeoffs">Trade-offs Fundamentales</h3>
+<p>La arquitectura de software es el arte de gestionar trade-offs. No existe la arquitectura
+perfecta, solo la más adecuada para el contexto dado.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Trade-off</th>
+<th>Opción A</th>
+<th>vs</th>
+<th>Opción B</th>
+<th>Decisión guiada por</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Consistencia vs Disponibilidad</td>
+<td class="blue">Fuerte consistencia</td>
+<td>↔</td>
+<td class="green">Alta disponibilidad</td>
+<td>Naturaleza del dominio (CAP)</td>
+</tr>
+<tr>
+<td>Costo vs Rendimiento</td>
+<td class="orange">Infra optimizada (cara)</td>
+<td>↔</td>
+<td class="green">Infra genérica (barata)</td>
+<td>SLA requeridos y presupuesto</td>
+</tr>
+<tr>
+<td>Acoplamiento vs Autonomía</td>
+<td class="blue">Llamadas síncronas (bajo lag)</td>
+<td>↔</td>
+<td class="green">Mensajería async (desacoplado)</td>
+<td>Tolerancia a latencia</td>
+</tr>
+<tr>
+<td>Simplicidad vs Escalabilidad</td>
+<td class="green">Monolito (simple)</td>
+<td>↔</td>
+<td class="blue">Microservicios (escalable)</td>
+<td>Tamaño del equipo y carga</td>
+</tr>
+<tr>
+<td>Velocidad vs Seguridad</td>
+<td class="orange">Deploy rápido</td>
+<td>↔</td>
+<td class="blue">Revisiones exhaustivas</td>
+<td>Riesgo del dominio</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout tip">
+<div class="callout-icon"></div>
+<p><strong>Axioma del arquitecto:</strong> "Optimiza para el cambio, no para la perfección
+inicial. El código más flexible es aquel que puede ser descartado fácilmente."</p>
+</div>
+
+<!-- ESCALABILIDAD -->
+<hr class="divider">
+<h3>Escalabilidad: Horizontal vs Vertical</h3>
+
+<div class="compare-row">
+<div class="compare-col">
+<h4>⬆ Escalado Vertical (Scale Up)</h4>
+<ul>
+<li>Añadir más CPU/RAM/disco al servidor</li>
+<li>Simple: sin cambios en la arquitectura</li>
+<li>Límite físico: hay un máximo de hardware</li>
+<li>Single point of failure</li>
+<li>Costo crece no linearmente</li>
+<li>Ideal para: BBDDs relacionales, legacy apps</li>
+</ul>
+</div>
+<div class="compare-col">
+<h4>↔ Escalado Horizontal (Scale Out)</h4>
+<ul>
+<li>Añadir más instancias/nodos al cluster</li>
+<li>Requiere stateless apps y load balancer</li>
+<li>Sin límite teórico de escalabilidad</li>
+<li>Alta disponibilidad nativa</li>
+<li>Costo crece linearmente</li>
+<li>Ideal para: microservicios, contenedores</li>
+</ul>
+</div>
+</div>
+
+<!-- OBSERVABILIDAD -->
+<hr class="divider">
+<h3 id="observabilidad">Observabilidad: Los Tres Pilares</h3>
+<p>En sistemas distribuidos, no es suficiente monitorear. Se requiere
+<strong>observabilidad</strong>: la capacidad de comprender el estado interno del sistema desde
+sus salidas externas.</p>
+
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="dot dot-blue"></span>Logs</div>
+<p>Registros de eventos discretos con timestamp. Formatos estructurados (JSON).
+Centralizados en ELK Stack, Splunk, Cloud Logging. Nivel: DEBUG, INFO, WARN, ERROR.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot dot-green"></span>Métricas</div>
+<p>Valores numéricos a lo largo del tiempo. Latencia p50/p95/p99, error rate, throughput,
+saturación. Herramientas: Prometheus + Grafana, Datadog, CloudWatch.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot dot-purple"></span>Trazas Distribuidas</div>
+<p>Seguimiento de un request a través de múltiples servicios. Trace ID correlaciona logs y
+spans. OpenTelemetry, Jaeger, Zipkin, AWS X-Ray.</p>
+</div>
+</div>
+
+<pre data-lang="python"><code># Instrumentación OpenTelemetry (estándar de facto)
+from opentelemetry import trace, metrics
+from opentelemetry.sdk.trace import TracerProvider
+
+tracer = trace.get_tracer("orders-service")
+meter = metrics.get_meter("orders-service")
+
+# Métrica: contador de órdenes creadas
+orders_counter = meter.create_counter(
+    "orders.created",
+    description="Total de órdenes creadas",
+    unit="1"
+)
+
+async def create_order(request: CreateOrderRequest):
+    # Span: unidad de trabajo en una traza distribuida
+    with tracer.start_as_current_span("create_order") as span:
+        span.set_attribute("user.id", request.user_id)
+        span.set_attribute("order.items_count", len(request.items))
+
+        order = await order_repository.save(Order.from_request(request))
+
+        # Registrar métrica con atributos
+        orders_counter.add(1, {"status": "success", "region": "us-east-1"})
+        span.set_attribute("order.id", str(order.id))
+
+        return order</code></pre>
+
+<!-- SEGURIDAD -->
+<hr class="divider">
+<h3 id="seguridad">Seguridad: Zero Trust y IAM</h3>
+<p>El modelo <strong>Zero Trust</strong> asume que no existe perímetro de red seguro. Cada request,
+desde dentro o fuera de la red, debe ser autenticado y autorizado explícitamente.</p>
+
+<div class="principle-grid">
+<div class="principle-item">
+<strong>Never Trust, Always Verify</strong>
+<p>Autenticar y autorizar cada request sin importar el origen. Incluso tráfico interno.</p>
+</div>
+<div class="principle-item">
+<strong>Least Privilege</strong>
+<p>Dar solo los permisos mínimos necesarios para cada servicio, usuario o rol.</p>
+</div>
+<div class="principle-item">
+<strong>Micro-segmentación</strong>
+<p>Segmentar la red internamente. Firewall entre zonas, no solo en el perímetro.</p>
+</div>
+<div class="principle-item">
+<strong>mTLS</strong>
+<p>Mutual TLS entre servicios. Ambos lados se autentican. Istio/Envoy lo implementan.</p>
+</div>
+<div class="principle-item">
+<strong>Secrets Management</strong>
+<p>Gestión centralizada de secretos: Vault (HashiCorp), AWS Secrets Manager, Azure Key
+Vault.</p>
+</div>
+<div class="principle-item">
+<strong>Supply Chain Security</strong>
+<p>SBOM, firma de imágenes de contenedor (Cosign), escaneo de vulnerabilidades en CI/CD.</p>
+</div>
+</div>
+
+<!-- RESILIENCIA -->
+<hr class="divider">
+<h3 id="resiliencia-ops">Resiliencia y Tolerancia a Fallos</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Técnica</th>
+<th>Descripción</th>
+<th>Implementación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Health Checks</strong></td>
+<td>Endpoints /health y /ready para orquestadores</td>
+<td>Kubernetes liveness/readiness probes</td>
+</tr>
+<tr>
+<td><strong>Graceful Degradation</strong></td>
+<td>Servir respuesta parcial cuando un dependency falla</td>
+<td>Valores por defecto, caché stale</td>
+</tr>
+<tr>
+<td><strong>Chaos Engineering</strong></td>
+<td>Inyectar fallos deliberados para encontrar debilidades</td>
+<td>Chaos Monkey, Chaos Toolkit, LitmusChaos</td>
+</tr>
+<tr>
+<td><strong>Multi-AZ / Multi-Region</strong></td>
+<td>Replicar en múltiples zonas de disponibilidad</td>
+<td>AWS RDS Multi-AZ, Global Tables DynamoDB</td>
+</tr>
+<tr>
+<td><strong>Backup & PITR</strong></td>
+<td>Backups automáticos con Point-in-Time Recovery</td>
+<td>RDS automated backups, Velero para K8s</td>
+</tr>
+<tr>
+<td><strong>Idempotencia</strong></td>
+<td>Operaciones seguras de reintentar sin efectos duplicados</td>
+<td>Idempotency keys en APIs, exactly-once en Kafka</td>
+</tr>
+</tbody>
+</table>
+</div>

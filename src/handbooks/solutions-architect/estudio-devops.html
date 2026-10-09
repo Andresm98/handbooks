@@ -1,0 +1,205 @@
+<article>
+<h3>🔄 CI/CD — Continuous Integration / Continuous Delivery</h3>
+<div class="two-col">
+<div>
+<h4>Continuous Integration (CI)</h4>
+<ul>
+<li>Integrar cambios frecuentemente (varias veces al día)</li>
+<li>Build automático en cada commit</li>
+<li>Tests automáticos (unit, integration)</li>
+<li>Feedback rápido al desarrollador</li>
+</ul>
+</div>
+<div>
+<h4>Continuous Delivery vs Deployment</h4>
+<ul>
+<li><strong>CD (Delivery):</strong> código siempre en estado deployable. Deploy a producción
+requiere aprobación humana.</li>
+<li><strong>CD (Deployment):</strong> cada cambio que pasa CI se despliega automáticamente a
+producción sin intervención humana.</li>
+</ul>
+</div>
+</div>
+
+<h4>Pipeline típico</h4>
+<pre><code>commit → <span class="token-keyword">Build</span> → <span class="token-keyword">Unit Tests</span> → <span class="token-keyword">Integration Tests</span> → <span class="token-keyword">Security Scan</span> → <span class="token-keyword">Artifact</span> → <span class="token-keyword">Deploy Staging</span> → <span class="token-keyword">E2E Tests</span> → <span class="token-keyword">Deploy Prod</span>
+
+<span class="token-comment"># Herramientas CI/CD</span>
+GitHub Actions | GitLab CI | Jenkins | CircleCI | Azure DevOps | AWS CodePipeline</code></pre>
+
+<h4>Estrategias de Deploy</h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Estrategia</th>
+<th>Descripción</th>
+<th>Riesgo</th>
+<th>Rollback</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Rolling</strong></td>
+<td>Reemplaza instancias gradualmente</td>
+<td>Bajo</td>
+<td>Complejo</td>
+</tr>
+<tr>
+<td><strong>Blue/Green</strong></td>
+<td>Dos entornos idénticos; switch de tráfico</td>
+<td>Mínimo</td>
+<td>Instantáneo (switch back)</td>
+</tr>
+<tr>
+<td><strong>Canary</strong></td>
+<td>% pequeño de tráfico a nueva versión</td>
+<td>Muy bajo</td>
+<td>Fácil (reduce %)</td>
+</tr>
+<tr>
+<td><strong>Feature Flags</strong></td>
+<td>Features desactivadas en código, activadas por config</td>
+<td>Mínimo</td>
+<td>Toggle OFF</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>
+
+<!-- IaC -->
+<article>
+<h3>🏗️ Infrastructure as Code (IaC)</h3>
+<div class="card-grid">
+<div class="card">
+<h3>🌍 Terraform</h3>
+<p>IaC multi-cloud, declarativa, HCL. El estándar de la industria para multi-cloud.</p>
+<ul>
+<li>Provider ecosystem enorme (AWS, Azure, GCP, K8s)</li>
+<li>State management (local o remote con S3/Terraform Cloud)</li>
+<li>Módulos reutilizables</li>
+<li>Plan → Apply workflow</li>
+</ul>
+</div>
+<div class="card">
+<h3>🔧 AWS CloudFormation / CDK</h3>
+<p>CloudFormation: YAML/JSON declarativo. CDK: código real (TypeScript/Python) que genera
+CloudFormation.</p>
+<ul>
+<li>Nativo AWS, integrado con todos los servicios</li>
+<li>CDK = type-safe, testeable, reutilizable</li>
+<li>Stacks y nested stacks</li>
+</ul>
+</div>
+<div class="card">
+<h3>🔵 Azure Bicep</h3>
+<p>DSL de Microsoft para Azure Resource Manager. Más legible que ARM templates JSON.</p>
+<ul>
+<li>Transpila a ARM templates</li>
+<li>Type safety, módulos</li>
+<li>Integrado con Azure DevOps</li>
+</ul>
+</div>
+<div class="card">
+<h3>⚙️ Ansible / Pulumi</h3>
+<p>Ansible: configuration management imperativo (idempotente). Pulumi: IaC en lenguajes reales
+(Python, Go, TS).</p>
+<ul>
+<li>Ansible: excelente para OS-level config</li>
+<li>Pulumi: cuando se necesita lógica compleja</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- OBSERVABILIDAD -->
+<article>
+<h3>👁️ Observabilidad — Los 3 Pilares</h3>
+<p>La observabilidad es la capacidad de entender el estado interno de un sistema desde el exterior. Se
+basa en 3 pilares complementarios:</p>
+
+<div class="card-grid">
+<div class="card">
+<h3>📊 Metrics</h3>
+<p>Mediciones numéricas agregadas en el tiempo. Responden: <em>¿Está el sistema sano? ¿Hay
+anomalías?</em></p>
+<h4>Tipos de métricas</h4>
+<ul>
+<li><strong>RED:</strong> Rate, Errors, Duration (para servicios)</li>
+<li><strong>USE:</strong> Utilization, Saturation, Errors (para recursos)</li>
+</ul>
+<h4>Herramientas</h4>
+<ul>
+<li>Prometheus, Grafana, CloudWatch, Datadog</li>
+</ul>
+</div>
+<div class="card">
+<h3>📝 Logs</h3>
+<p>Registros de eventos discretos. El <strong>logging</strong> registra; el
+<strong>monitoring</strong> analiza esos datos.</p>
+<h4>Best practices</h4>
+<ul>
+<li>Logs estructurados (JSON)</li>
+<li>Correlation IDs para tracing</li>
+<li>Niveles: DEBUG, INFO, WARN, ERROR</li>
+<li>Retención y compresión</li>
+</ul>
+<h4>Herramientas</h4>
+<ul>
+<li>ELK Stack, Splunk, CloudWatch Logs, Loki</li>
+</ul>
+</div>
+<div class="card">
+<h3>🔍 Traces (Distributed Tracing)</h3>
+<p>Seguimiento end-to-end de una request a través de múltiples servicios. Responden: <em>¿Dónde
+está la latencia?</em></p>
+<h4>Conceptos</h4>
+<ul>
+<li><strong>Trace:</strong> journey completo de un request</li>
+<li><strong>Span:</strong> operación individual dentro de un trace</li>
+<li><strong>Context propagation:</strong> headers W3C TraceContext</li>
+</ul>
+<h4>Herramientas</h4>
+<ul>
+<li>Jaeger, Zipkin, AWS X-Ray, OpenTelemetry</li>
+</ul>
+</div>
+</div>
+
+<div class="callout callout-tip">
+<span class="callout-icon">✅</span>
+<div>En cloud, priorizar: <strong>Observabilidad de métricas, logs y trazas para análisis en tiempo
+real</strong>. OpenTelemetry es el estándar open-source para instrumentación unificada.
+</div>
+</div>
+</article>
+
+<!-- RESILIENCIA -->
+<article>
+<h3>🛡️ Resiliencia y Tolerancia a Fallos</h3>
+<div class="two-col">
+<div>
+<h4>Patrones de Resiliencia</h4>
+<ul>
+<li><strong>Circuit Breaker:</strong> evita cascade failures</li>
+<li><strong>Retry with backoff:</strong> reintentos con espera exponencial</li>
+<li><strong>Timeout:</strong> no esperar indefinidamente</li>
+<li><strong>Bulkhead:</strong> aislar recursos entre funciones (ej: thread pools)</li>
+<li><strong>Health checks:</strong> liveness + readiness probes (K8s)</li>
+<li><strong>Graceful degradation:</strong> funcionalidad reducida ante fallos</li>
+</ul>
+</div>
+<div>
+<h4>Contenedores — Ciclo de vida ante fallo</h4>
+<ol>
+<li>Contenedor detectado como unresponsive</li>
+<li>Deja de recibir tráfico (remove from load balancer)</li>
+<li>Guarda error logs y debug info</li>
+<li>Shutdown del contenedor</li>
+<li>Lanzamiento de contenedor reemplazo</li>
+</ol>
+<p>Orquestado por: <strong>Kubernetes</strong>, ECS, GKE.</p>
+</div>
+</div>
+</article>

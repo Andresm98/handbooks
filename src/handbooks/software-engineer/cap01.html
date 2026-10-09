@@ -1,0 +1,165 @@
+<p>La definición más común de "senior" en la industria es incorrecta. No es el ingeniero con más
+años de
+experiencia, ni el que conoce más tecnologías, ni el que escribe el código más sofisticado. Un
+ingeniero
+senior es el que <strong>multiplica el output del equipo</strong>, convierte la ambigüedad en
+claridad
+técnica, y reduce activamente la complejidad del sistema.</p>
+
+<p>La diferencia entre un junior y un senior no es de conocimiento — es de <em>modelo mental</em>.
+El junior
+ve un problema técnico. El senior ve el problema técnico, el problema de negocio detrás, las
+consecuencias
+de las diferentes soluciones en el tiempo, y el impacto en el equipo que lo va a mantener.</p>
+
+<div class="callout axiom">
+<div class="callout-icon"></div>
+<p><strong>Axioma #1:</strong> Un ingeniero senior que hace el trabajo de tres juniors no es
+tres veces
+mejor — está haciendo algo incorrecto. El leverage real de un senior está en elevar a los
+que están
+alrededor, no en escribir más código.</p>
+</div>
+
+<h3 id="levels">La Progresión Real: Junior → Mid → Senior → Staff</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Nivel</th>
+<th>Scope de impacto</th>
+<th>Input necesario</th>
+<th>Output primario</th>
+<th>Lo que los distingue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="b"><strong>Junior</strong></td>
+<td>Una tarea, un componente</td>
+<td>Instrucciones detalladas, supervisión continua</td>
+<td>Código que funciona según lo especificado</td>
+<td>Aprenden rápido, hacen buenas preguntas</td>
+</tr>
+<tr>
+<td class="g"><strong>Mid</strong></td>
+<td>Una feature completa</td>
+<td>Requerimientos claros, revisión en puntos clave</td>
+<td>Features completas con tests y documentación</td>
+<td>Trabajan de forma independiente, identifican problemas</td>
+</tr>
+<tr>
+<td class="y"><strong>Senior</strong></td>
+<td>Un dominio o sistema completo</td>
+<td>Objetivos de negocio, sin especificaciones técnicas</td>
+<td>Soluciones técnicas a problemas de negocio</td>
+<td>Multiplican al equipo, toman buenas decisiones de trade-off</td>
+</tr>
+<tr>
+<td class="v"><strong>Staff</strong></td>
+<td>Múltiples equipos, dirección técnica</td>
+<td>Estrategia de alto nivel</td>
+<td>Visión técnica, estándares, alineación cross-team</td>
+<td>Cambian el rumbo técnico de la organización</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="multiplier">El Efecto Multiplicador del Senior</h3>
+<p>Los seniors más valiosos no son los mejores programadores del equipo. Son los que hacen mejores a
+todos los
+demás. Esto se manifiesta de formas concretas:</p>
+
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="dot d-gn"></span>Code reviews que enseñan</div>
+<p>No solo señalan qué está mal — explican por qué, con alternativas concretas. Un buen code
+review
+transfiere conocimiento al autor. Una semana de buenos reviews puede acelerar el
+crecimiento de un
+junior más que un mes de trabajo independiente.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot d-gn"></span>Clarificar antes de codificar</div>
+<p>Identifican ambigüedad en los requerimientos antes de escribir una línea. "¿Qué pasa
+cuando el usuario
+no tiene email?" es una pregunta que ahorra días de re-trabajo. Los juniors implementan
+lo que les
+dijeron; los seniors preguntan lo que no les dijeron.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot d-gn"></span>Simplificar lo que ya existe</div>
+<p>Cada semana eliminan complejidad del sistema: refactorizan código difícil de entender,
+eliminar
+abstracciones incorrectas, consolidan duplicación. El código que eliminan es la
+contribución más valiosa
+que nadie ve.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot d-gn"></span>Decir "no sé" estratégicamente</div>
+<p>Admiten incertidumbre en lugar de especular. "No sé, pero lo investigo y te digo en 30
+minutos"
+construye más confianza que una respuesta incorrecta dada con seguridad.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot d-rd"></span>Anti-pattern: Hero engineer</div>
+<p>El senior que resuelve todos los problemas él mismo crea una dependencia del equipo en su
+persona, no
+transfiere conocimiento, y es un single point of failure. Si el equipo colapsa cuando se
+va de
+vacaciones, algo está mal.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot d-rd"></span>Anti-pattern: Complexity as status
+</div>
+<p>Escribir código sofisticado para demostrar habilidad. La solución más simple que resuelve
+el problema
+es casi siempre superior. "Si no puedes explicarlo simplemente, no lo entiendes bien." —
+Feynman.</p>
+</div>
+</div>
+
+<h3>Cómo se Desarrolla el Criterio Técnico</h3>
+<p>El criterio — la capacidad de tomar buenas decisiones técnicas con información incompleta — no
+viene de
+leer documentación. Viene de un ciclo específico que la mayoría de los ingenieros no hace
+conscientemente:
+</p>
+
+<div class="diagram">
+<pre><code>
+  El Ciclo de Desarrollo del Criterio Técnico
+
+  1. DECISIÓN   →   Tomar una decisión técnica con la información disponible
+       │            Documentar el razonamiento (aunque sea mentalmente)
+       │
+  2. OBSERVAR   →   Observar las consecuencias en producción real
+       │            ¿Se cumplieron las predicciones? ¿Qué fue diferente?
+       │
+  3. ANALIZAR   →   Postmortem personal: ¿por qué fue diferente?
+       │            ¿Qué información faltaba? ¿Qué asumí incorrectamente?
+       │
+  4. ACTUALIZAR →   Actualizar el modelo mental con el aprendizaje
+       │            La próxima decisión similar incorpora este conocimiento
+       │
+       └─────────── Repetir ──────────────────────────────────────────┐
+
+  El error más común: saltar de 1 a 1 sin pasar por 2, 3, y 4.
+  Acumular años de experiencia sin extraer el aprendizaje de cada experiencia
+  produce antigüedad, no criterio.
+</code></pre>
+</div>
+
+<div class="arch-rel">
+<span class="arch-rel-lbl">Conexión técnica</span>
+<p>El modelo mental del ingeniero senior se aplica directamente a las decisiones
+arquitectónicas: elegir
+entre <strong>Clean Architecture y un monolito simple</strong>, entre <strong>consistencia
+fuerte y
+eventual consistency</strong>, entre <strong>construir y comprar</strong>. El criterio
+técnico es lo que
+convierte el conocimiento de patrones en decisiones correctas para el contexto específico.
+</p>
+</div>

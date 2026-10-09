@@ -1,0 +1,545 @@
+<p>Un estilo arquitectónico no es una moda ni una marca en el CV — es una <strong>respuesta a un
+conjunto específico de problemas</strong>. El error más común en la industria es seleccionar
+un estilo porque "es lo que se usa ahora" en lugar de porque resuelve los problemas específicos
+del contexto.</p>
+
+<p>El SA senior conoce los estilos como un cirujano conoce sus instrumentos: cada uno tiene un uso
+correcto, un uso incorrecto, y consecuencias severas si se aplica en el contexto equivocado.</p>
+
+<h3 id="decision-matrix">Matriz de Decisión de Estilos Arquitectónicos</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Estilo</th>
+<th>Contexto ideal</th>
+<th>Tamaño de equipo</th>
+<th>Complejidad operacional</th>
+<th>Escalabilidad</th>
+<th>Cuándo NO usarlo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Monolito</strong></td>
+<td>MVP, dominio no definido, equipo pequeño</td>
+<td class="g">2–15 personas</td>
+<td class="g">Baja</td>
+<td class="r">Vertical only</td>
+<td>Cuando equipos distintos necesitan deploys independientes</td>
+</tr>
+<tr>
+<td><strong>Monolito Modular</strong></td>
+<td>Empresa mediana con dominio definido</td>
+<td class="g">10–50 personas</td>
+<td class="g">Baja-Media</td>
+<td class="y">Vertical + horizontal limitado</td>
+<td>Cuando los módulos tienen latencia muy diferente</td>
+</tr>
+<tr>
+<td><strong>Microservicios</strong></td>
+<td>Alta escala, equipos independientes, dominios claros</td>
+<td class="r">50+ personas</td>
+<td class="r">Alta</td>
+<td class="g">Horizontal ilimitado</td>
+<td>Equipos pequeños, dominio no estabilizado</td>
+</tr>
+<tr>
+<td><strong>Event-Driven</strong></td>
+<td>Integración desacoplada, auditoría, workflows async</td>
+<td class="y">Cualquiera con madurez</td>
+<td class="r">Alta (debugging difícil)</td>
+<td class="g">Alta</td>
+<td>Cuando necesitas consistencia fuerte síncrona</td>
+</tr>
+<tr>
+<td><strong>Serverless</strong></td>
+<td>Workloads esporádicos, event-triggered, prototipos</td>
+<td class="g">Cualquiera</td>
+<td class="g">Muy baja</td>
+<td class="g">Automática</td>
+<td>Workloads continuos de alta frecuencia (costo), latencia crítica</td>
+</tr>
+<tr>
+<td><strong>CQRS</strong></td>
+<td>Modelos de lectura y escritura muy diferentes</td>
+<td class="y">20+ con experiencia</td>
+<td class="r">Alta</td>
+<td class="g">Alta independiente</td>
+<td>Dominios CRUD simples — añade complejidad innecesaria</td>
+</tr>
+<tr>
+<td><strong>Event Sourcing</strong></td>
+<td>Auditoría completa, time-travel, reconstitución de estado</td>
+<td class="r">Requiere alta madurez</td>
+<td class="r">Muy alta</td>
+<td class="g">Alta</td>
+<td>Casi todos los casos — raramente justificado fuera de fintech</td>
+</tr>
+<tr>
+<td><strong>Hexagonal</strong></td>
+<td>Dominio de negocio complejo, múltiples integraciones</td>
+<td class="y">Cualquiera</td>
+<td class="y">Media</td>
+<td class="y">Depende del runtime</td>
+<td>Apps simples sin integraciones — sobreingeniería</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Matriz de Decisión de Estilos Arquitectónicos</summary>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Estilo</th>
+<th>Equipo ideal</th>
+<th>Escala de tráfico</th>
+<th>Madurez del dominio</th>
+<th>Costo operacional</th>
+<th>Time to market</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Monolito simple</strong></td>
+<td>1–8 personas</td>
+<td class="g">Bajo–medio</td>
+<td>Cualquiera</td>
+<td class="g">Muy bajo</td>
+<td class="g">Muy rápido</td>
+</tr>
+<tr>
+<td><strong>Monolito modular</strong></td>
+<td>5–20 personas</td>
+<td class="g">Bajo–alto</td>
+<td>Medio–alto</td>
+<td class="g">Bajo</td>
+<td class="g">Rápido</td>
+</tr>
+<tr>
+<td><strong>SOA / Macroservicios</strong></td>
+<td>15–50 personas</td>
+<td class="y">Medio–alto</td>
+<td>Alto</td>
+<td class="y">Medio</td>
+<td class="y">Medio</td>
+</tr>
+<tr>
+<td><strong>Microservicios</strong></td>
+<td>50+ personas</td>
+<td class="r">Alto–muy alto</td>
+<td>Muy alto</td>
+<td class="r">Muy alto</td>
+<td class="r">Lento</td>
+</tr>
+<tr>
+<td><strong>Serverless</strong></td>
+<td>1–15 personas</td>
+<td class="g">Variable/bursty</td>
+<td>Cualquiera</td>
+<td class="g">Bajo (en idle)</td>
+<td class="g">Muy rápido</td>
+</tr>
+<tr>
+<td><strong>Event-Driven</strong></td>
+<td>10–100 personas</td>
+<td class="y">Medio–muy alto</td>
+<td>Alto</td>
+<td class="y">Medio–alto</td>
+<td class="y">Medio</td>
+</tr>
+<tr>
+<td><strong>CQRS + Event Sourcing</strong></td>
+<td>10–50 personas</td>
+<td class="y">Medio–alto</td>
+<td>Muy alto</td>
+<td class="y">Alto</td>
+<td class="r">Lento</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h5>MONOLITO MODULAR: EL ESTILO MÁS SUBESTIMADO</h5>
+<p>El monolito modular es frecuentemente la respuesta correcta para organizaciones de 10–50 personas
+que sienten la presión de "ir a microservicios". Ofrece <strong>boundaries claros de módulo sin
+el costo operacional</strong> de servicios separados.</p>
+
+<div class="diagram">
+<pre><code>
+  MONOLITO MODULAR: Separación lógica, deployment unificado
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                      PROCESO ÚNICO                                  │
+  │                                                                     │
+  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │
+  │  │   MODULE:    │  │   MODULE:    │  │   MODULE:    │             │
+  │  │   Orders     │  │   Payments   │  │   Inventory  │             │
+  │  │              │  │              │  │              │             │
+  │  │ Public API   │  │ Public API   │  │ Public API   │             │
+  │  │ ──────────── │  │ ──────────── │  │ ──────────── │             │
+  │  │ Internal     │  │ Internal     │  │ Internal     │             │
+  │  │ (private)    │  │ (private)    │  │ (private)    │             │
+  │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘             │
+  │         │ Solo APIs públicas cruzan boundaries│                    │
+  │         └──────────────────┴──────────────────┘                    │
+  │                            │                                       │
+  └────────────────────────────┼───────────────────────────────────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │   Base de Datos      │
+                    │   (schemas separados │
+                    │    por módulo)        │
+                    └─────────────────────┘
+
+  Ventaja: Si el módulo de Payments necesita escalar,
+  se puede extraer como microservicio cuando el problema lo justifique.
+  El boundary ya existe — solo cambia el mecanismo de comunicación.
+</code></pre>
+</div>
+
+<h5>EVENT-DRIVEN ARCHITECTURE: CUÁNDO ES LA RESPUESTA</h5>
+<p>La arquitectura event-driven no es un estilo de moda — es la respuesta correcta cuando el negocio
+genuinamente opera en términos de eventos y necesita <strong>desacoplamiento temporal</strong>
+entre productores y consumidores.</p>
+
+<div class="when-box">
+<div class="when-use">
+<span class="when-label">Usar EDA cuando</span>
+<ul>
+<li>Múltiples sistemas deben reaccionar al mismo evento sin coordinación centralizada
+</li>
+<li>Los productores no deben esperar a que los consumidores procesen</li>
+<li>Necesitas auditabilidad completa de lo que ocurrió y cuándo</li>
+<li>Los consumidores tienen disponibilidades distintas</li>
+<li>El volumen de eventos supera la capacidad de procesamiento síncrono</li>
+</ul>
+</div>
+<div class="when-avoid">
+<span class="when-label">No usar EDA cuando</span>
+<ul>
+<li>Necesitas respuesta síncrona inmediata (checkout de e-commerce simple)</li>
+<li>El equipo no tiene experiencia con sistemas de mensajería</li>
+<li>El debugging de flujos asíncronos es prohibitivo con el equipo actual</li>
+<li>La consistencia transaccional entre servicios es requerida estrictamente</li>
+<li>El dominio es simple y no justifica la complejidad añadida</li>
+</ul>
+</div>
+</div>
+
+<h5>CQRS Y EVENT SOURCING: EL PODER Y EL PRECIO</h5>
+<p>CQRS y Event Sourcing son frecuentemente adoptados juntos, pero son patrones independientes. Cada
+uno tiene un costo significativo que debe justificarse.</p>
+
+<div class="pros-cons">
+<div class="pros">
+<h5>CQRS — Cuándo vale la pena</h5>
+<ul>
+<li>Read/write ratio extremadamente asimétrico (99:1)</li>
+<li>Los modelos de lectura y escritura son fundamentalmente diferentes</li>
+<li>Necesitas proyecciones especializadas para reporting</li>
+<li>Quieres escalar lectura y escritura independientemente</li>
+<li>Equipo familiarizado con el patrón — curva de aprendizaje real</li>
+</ul>
+</div>
+<div class="cons">
+<h5>Event Sourcing — Precio que pagas</h5>
+<ul>
+<li>El esquema de eventos es inmutable — evolucionar es complejo</li>
+<li>Las proyecciones deben reconstruirse — puede tomar horas</li>
+<li>No puedes "corregir" datos — solo puedes compensar con nuevos eventos</li>
+<li>Queries sobre estado actual requieren proyecciones precalculadas</li>
+<li>El debugging requiere "replay" del historial de eventos</li>
+</ul>
+</div>
+</div>
+</details>
+<h3>El Espectro Monolito → Microservicios</h3>
+<p>La decisión más común y más malentendida. El espectro no es binario — hay una progresión natural
+que la mayoría de los sistemas debería seguir.</p>
+
+<div class="diagram">
+<pre><code>
+  Evolución Natural Recomendada:
+
+  Etapa 1         Etapa 2              Etapa 3              Etapa 4
+  ┌──────────┐    ┌──────────────┐     ┌──────────────┐     ┌─────────────────┐
+  │  Monolito │───►│  Monolito   │────►│  Monolito   │────►│  Microservicios │
+  │  simple   │    │  modular    │     │  + 1-2 svc  │     │  (solo si       │
+  │           │    │  (módulos   │     │  extraídos  │     │  el equipo y   │
+  │  0-12     │    │  con        │     │  por escala │     │  escala lo      │
+  │  meses    │    │  boundaries │     │  o equipo   │     │  justifican)   │
+  │           │    │  claros)    │     │             │     │                │
+  └──────────┘    └──────────────┘     └──────────────┘     └─────────────────┘
+
+  Trigger para avanzar:
+  Etapa 1→2: Módulos empiezan a acoplarse problemáticamente
+  Etapa 2→3: Un módulo tiene SLO o escala radicalmente diferente
+  Etapa 3→4: Múltiples equipos bloqueados por despliegues conjuntos
+
+  ⚠ Ir directamente a Etapa 4 sin pasar por las anteriores
+    es el error más costoso en arquitectura moderna.
+</code></pre>
+</div>
+
+<h4>Microservicios: Lo que Nadie te Dice</h4>
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>La taxonomía de servicios importa
+más que la descomposición</div>
+<p>No basta con dividir. Cada servicio necesita un owner claro, un contrato de API
+versionado, su propio pipeline CI/CD, y un runbook. Sin esto, los microservicios son
+monolitos distribuidos — lo peor de ambos mundos.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>El distributed monolith</div>
+<p>Si tus "microservicios" deben desplegarse juntos, comparten base de datos, o una llamada
+falla en cascada por todos — tienes un monolito distribuido con toda la complejidad de
+microservicios y ninguna de sus ventajas.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>El costo de la red es real</div>
+<p>Una llamada in-process: ~microsegundos. Una llamada HTTP entre servicios: 1-10ms. Un
+flujo de 10 servicios encadenados síncronamente: 10-100ms de overhead adicional solo por
+la red.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Observabilidad no es opcional
+</div>
+<p>En un monolito, el stack trace te dice exactamente qué falló. En microservicios, sin
+distributed tracing configurado desde el día uno, debuggear un fallo cross-service puede
+tomar horas.</p>
+</div>
+</div>
+
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>El Continuum Monolito → Microservicios</summary>
+<p>El debate "monolito vs microservicios" es falso. No son dos opciones — son los extremos de un
+continuum. La decisión real es en qué punto del continuum posicionarse dado el contexto actual.
+</p>
+
+<div class="diagram">
+<pre><code>
+  CONTINUUM DE DESCOMPOSICIÓN ARQUITECTÓNICA
+
+  Monolito     Monolito      Modular       Macro-        Micro-
+  Simple       Modular       Monolito      servicios     servicios
+     │             │         con APIs       (SOA)            │
+     │             │             │             │             │
+  1 proceso    1 proceso     1 proceso    3-10 servicios  10-100+
+  1 DB         módulos       módulos con  servicios       servicios
+  Deploy       internos      boundaries   grano grueso    grano fino
+  todo junto   boundaries    hard         DB separada     DB separada
+               soft          1 deploy     Deploy indep.   Deploy indep.
+     │             │             │             │             │
+  Complejidad  ──────────────────────────────────────────► Alta
+  Operacional  Baja                                        
+  Autonomía    ──────────────────────────────────────────► Alta
+  de equipos   Baja
+  Costo infra  ──────────────────────────────────────────► Alto
+               Bajo
+  
+  ¿Dónde estar? Depende de: tamaño de equipo, escala de tráfico,
+  madurez del dominio, presupuesto de operaciones.
+</code></pre>
+</div>
+</details>
+<h3>Event-Driven Architecture: Profundidad Real</h3>
+<p>EDA es el estilo más poderoso y más malentendido. La mayoría de los equipos adoptan "eventos" sin
+entender los tres modelos fundamentales que existen dentro de EDA.</p>
+
+<div class="diagram">
+<pre><code>
+  Los 3 Modelos de Event-Driven Architecture
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  1. EVENT NOTIFICATION                                              │
+  │     "Algo ocurrió, quien quiera puede enterarse"                    │
+  │     Emisor no sabe quién consume. Bajo acoplamiento.                │
+  │     Problema: el estado completo no está en el evento.              │
+  │     Uso: notificaciones, cambios de estado simples                  │
+  │                                                                     │
+  │     OrderService ──[OrderPlaced: {orderId: 123}]──► Notif. Service  │
+  │                                                 └──► Inventory Svc  │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │  2. EVENT-CARRIED STATE TRANSFER                                    │
+  │     El evento lleva todo el estado necesario                        │
+  │     Consumers son autónomos: no necesitan hacer queries adicionales │
+  │     Problema: eventos grandes, versionado complejo                  │
+  │     Uso: replicación de datos entre servicios                       │
+  │                                                                     │
+  │     OrderService ──[OrderPlaced: {orderId, userId, items,           │
+  │                      total, address, ...}]──► Analytics Service     │
+  │                                                                     │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │  3. EVENT SOURCING                                                  │
+  │     Los eventos SON la fuente de verdad. El estado se deriva.       │
+  │     Problema: complejidad operacional muy alta.                     │
+  │     Uso: auditoría completa, reconstitución temporal                │
+  │                                                                     │
+  │     Event Store: [OrderCreated, ItemAdded, Discounted, Confirmed]   │
+  │     Estado actual = replay de todos los eventos                     │
+  └─────────────────────────────────────────────────────────────────────┘
+</code></pre>
+</div>
+
+<h3>Serverless: El Modelo Mental Correcto</h3>
+<p>Serverless no es "sin servidores" — es "sin gestión de servidores". El modelo mental correcto es
+pensar en <strong>funciones como unidades de billing y escalado</strong>, no como unidades de
+lógica de negocio.</p>
+
+<div class="when-box">
+<div class="when-use">
+<span class="when-label">Serverless ideal para</span>
+<ul>
+<li>Procesamiento de imágenes/archivos al subir</li>
+<li>Webhooks de terceros (Stripe, GitHub, Twilio)</li>
+<li>ETL pipelines con carga variable</li>
+<li>Scheduled jobs / cron tasks</li>
+<li>Backends de prototipos y MVPs</li>
+<li>APIs con tráfico muy esporádico</li>
+</ul>
+</div>
+<div class="when-avoid">
+<span class="when-label">Serverless problemático cuando</span>
+<ul>
+<li>Latencia p99 es crítica (cold start 100-2000ms)</li>
+<li>Workload continuo de alta frecuencia (más caro que VMs)</li>
+<li>Transacciones de larga duración (&gt;15 min)</li>
+<li>Estado complejo entre invocaciones</li>
+<li>Debugging intensivo necesario en producción</li>
+<li>Necesitas vendor lock-in mínimo</li>
+</ul>
+</div>
+</div>
+
+<h3 id="anti-patterns-styles">Anti-patterns Críticos por Estilo</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Estilo</th>
+<th>Anti-pattern</th>
+<th>Consecuencia real</th>
+<th>Solución</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Microservicios</strong></td>
+<td>Shared database entre servicios</td>
+<td class="r">Acoplamiento de datos, imposible escalar independientemente, schema
+migrations afectan todos</td>
+<td>Database-per-service. Datos compartidos vía eventos o API calls</td>
+</tr>
+<tr>
+<td><strong>Event-Driven</strong></td>
+<td>Events como comandos disfrazados</td>
+<td class="r">Acoplamiento implícito. El productor asume comportamiento del
+consumidor</td>
+<td>Eventos describen hechos ("OrderPlaced"), no comandos ("ProcessPayment")</td>
+</tr>
+<tr>
+<td><strong>CQRS</strong></td>
+<td>CQRS sin necesidad real</td>
+<td class="r">Complejidad doble sin beneficio. Dos modelos que mantener</td>
+<td>Aplicar solo cuando Read y Write models divergen significativamente</td>
+</tr>
+<tr>
+<td><strong>Hexagonal</strong></td>
+<td>Ports sin abstracción real</td>
+<td class="r">Boilerplate sin beneficio. El framework sigue penetrando el dominio
+</td>
+<td>Los ports deben ser interfaces del dominio, no wrappers del framework</td>
+</tr>
+<tr>
+<td><strong>Serverless</strong></td>
+<td>Funciones con demasiada lógica</td>
+<td class="r">Testing difícil, cold starts largos, debugging imposible</td>
+<td>Funciones delgadas que orquestan; lógica en librerías testeables</td>
+</tr>
+<tr>
+<td><strong>Monolito Modular</strong></td>
+<td>Módulos con dependencias circulares</td>
+<td class="r">Imposible extraer a servicios. Mismo problema que el monolito no
+modular</td>
+<td>Dependency rules estrictas. Módulo A no puede depender de módulo B si B depende
+de A</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>Los estilos arquitectónicos no existen en aislamiento. <strong>Microservicios</strong>
+naturalmente adoptan <strong>Event-Driven</strong> para comunicación async.
+<strong>CQRS</strong> con <strong>Event Sourcing</strong> forma un par clásico.
+<strong>Hexagonal</strong> y <strong>Clean Architecture</strong> son la estructura interna
+de cualquier servicio, independientemente del estilo macroscópico. El Solutions Architect
+diseña la combinación correcta para el contexto específico.
+</p>
+</div>
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Anti-patterns de Estilos Arquitectónicos</summary>
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Distributed Monolith</div>
+<p>Microservicios con coupling tan fuerte que deben desplegarse juntos. Lo peor de ambos
+mundos: complejidad de microservicios sin sus beneficios. Origen: boundaries mal
+definidos o shared database.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Event-Driven Spaghetti</div>
+<p>Sistema event-driven sin documentación de qué eventos existen, quién los produce y quién
+los consume. El flujo de negocio se vuelve imposible de rastrear. Requiere un event
+catalog desde el inicio.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>CQRS everywhere</div>
+<p>Aplicar CQRS a todos los bounded contexts cuando solo uno o dos lo justifican. Añade
+complejidad de eventual consistency donde no se necesita.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Nano-services</div>
+<p>Microservicios tan pequeños que cada función es un servicio. La comunicación entre
+servicios domina el tiempo de procesamiento real. Señal: servicios que nunca se
+despliegan solos.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Serverless Monolith</div>
+<p>Una función Lambda con 50MB de código que hace todo. Sin beneficios de serverless: cold
+starts destructivos, timeouts problemáticos, debugging imposible.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Shared Database Antipattern</div>
+<p>Múltiples servicios que comparten la misma base de datos y el mismo esquema. El
+acoplamiento a nivel de datos es más fuerte que el acoplamiento a nivel de API.</p>
+</div>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>La selección de estilo arquitectónico está directamente informada por los <strong>Bounded
+Contexts de DDD</strong> (cada BC es un candidato a servicio/módulo), por
+<strong>Conway's Law</strong> (el estilo debe mapear a la estructura del equipo), y por los
+<strong>Fallacies of Distributed Computing</strong> (que penalizan la sobre-descomposición).
+</p>
+</div>
+</details>
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Otra forma de plantear este capítulo</summary>
+<p>Los estilos arquitectónicos no son tecnologías ni frameworks — son <strong>respuestas a contextos
+específicos</strong>. El error más común de los arquitectos junior es elegir un estilo por
+su popularidad o por lo que usa una empresa de referencia. El SA senior elige el estilo que
+mejor resuelve las constraints específicas del problema.</p>
+
+<p>Esta sección no es un catálogo de definiciones — es una guía de cuándo cada estilo es la
+respuesta correcta, cuándo no lo es, y cómo evolucionan los sistemas entre estilos a lo largo
+del tiempo.</p>
+</details>

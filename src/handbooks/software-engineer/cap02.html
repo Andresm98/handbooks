@@ -1,0 +1,248 @@
+<p>El código se escribe una vez y se lee decenas de veces. Un estudio de Microsoft Research encontró
+que los
+ingenieros pasan el <strong>70% del tiempo leyendo código</strong> — el propio y el ajeno.
+Escribir código
+que otros puedan leer, entender, y modificar sin miedo no es un lujo estético — es una habilidad
+de
+ingeniería con impacto directo en la velocidad del equipo.</p>
+
+<h3 id="naming">Naming: La Habilidad más Subestimada</h3>
+<p>Phil Karlton dijo que hay dos problemas difíciles en ciencias de la computación: invalidación de
+caché y
+nombrar cosas. El naming incorrecto es una mentira que el código cuenta sobre sí mismo. Cada
+nombre
+incorrecto es deuda cognitiva que se paga cada vez que alguien lee ese código.</p>
+
+<pre data-lang="typescript"><code><span class="cm">// ❌ Naming que miente o que no dice nada</span>
+<span class="kw">function</span> <span class="fn">process</span>(d: any): any {
+  <span class="kw">const</span> r = d.filter((x: any) => x.s === <span class="nm">1</span>)
+  <span class="kw">return</span> r.map((x: any) => ({ ...x, t: Date.now() }))
+}
+
+<span class="cm">// ¿Qué procesa? ¿Qué significa s === 1? ¿Qué es t?
+// Para entender esto hay que: leer el contexto, buscar dónde se llama,
+// buscar qué significa s y t en la entidad. Costo cognitivo alto.</span>
+
+<span class="cm">// ✓ Naming que documenta la intención</span>
+<span class="kw">function</span> <span class="fn">markActiveUsersAsProcessed</span>(users: User[]): User[] {
+  <span class="kw">const</span> activeUsers = users.filter(user => user.status === UserStatus.Active)
+  <span class="kw">return</span> activeUsers.map(user => ({
+    ...user,
+    processedAt: Date.now()
+  }))
+}
+
+<span class="cm">// El nombre de la función ES la documentación.
+// No necesitas comentarios si el código se lee como prosa.</span>
+
+<span class="cm">// ─────────────────────────────────────────────────────────────
+// REGLAS DE NAMING QUE REALMENTE IMPORTAN:
+// ─────────────────────────────────────────────────────────────
+
+// 1. Variables: sustantivos que describen el contenido
+//    ❌ data, info, result, temp, x, val
+//    ✓  userProfile, activeOrders, totalRevenueUSD
+
+// 2. Funciones: verbos que describen la acción
+//    ❌ user(), orders(), handle()
+//    ✓  fetchUserById(), calculateOrderTotal(), validateEmailFormat()
+
+// 3. Booleans: preguntas que se responden con sí/no
+//    ❌ active, valid, user
+//    ✓  isActive, hasValidEmail, canEditProfile
+
+// 4. Longitud proporcional al scope
+//    Loop variable: i está bien
+//    Función pública en API: nombre descriptivo completo
+
+// 5. Evitar abreviaturas excepto las universales (id, url, dto)
+//    ❌ usr, ord, pmt, qty
+//    ✓  user, order, payment, quantity</span></code></pre>
+
+<h4>FUNCIONES: UNA SOLA RESPONSABILIDAD, UN SOLO NIVEL DE ABSTRACCIÓN</h4>
+<pre data-lang="python"><code><span class="cm"># ❌ Función que hace demasiado y mezcla niveles de abstracción</span>
+<span class="kw">def</span> <span class="fn">process_order</span>(order_data: dict) -> dict:
+    <span class="cm"># Validación de campos</span>
+    <span class="kw">if</span> <span class="kw">not</span> order_data.get(<span class="str">'user_id'</span>):
+        <span class="kw">raise</span> ValueError(<span class="str">'user_id required'</span>)
+    <span class="kw">if</span> <span class="kw">not</span> order_data.get(<span class="str">'items'</span>) <span class="kw">or</span> len(order_data[<span class="str">'items'</span>]) == <span class="nm">0</span>:
+        <span class="kw">raise</span> ValueError(<span class="str">'items required'</span>)
+
+    <span class="cm"># Cálculo de totales</span>
+    subtotal = sum(item[<span class="str">'price'</span>] * item[<span class="str">'quantity'</span>] <span class="kw">for</span> item <span class="kw">in</span> order_data[<span class="str">'items'</span>])
+    tax = subtotal * <span class="nm">0.21</span>
+    total = subtotal + tax
+
+    <span class="cm"># Guardar en base de datos</span>
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(<span class="str">"INSERT INTO orders (user_id, total) VALUES (?, ?)"</span>,
+                   (order_data[<span class="str">'user_id'</span>], total))
+    order_id = cursor.lastrowid
+    conn.commit()
+
+    <span class="cm"># Enviar email</span>
+    send_email(order_data[<span class="str">'user_email'</span>], f<span class="str">"Order {order_id} confirmed"</span>)
+
+    <span class="kw">return</span> {<span class="str">'order_id'</span>: order_id, <span class="str">'total'</span>: total}
+
+<span class="cm"># Problemas: imposible testear sin BD y email reales, 
+# mezcla SQL con lógica de negocio, viola SRP masivamente</span>
+
+<span class="cm"># ✓ Separación de responsabilidades en capas claras</span>
+<span class="kw">def</span> <span class="fn">create_order</span>(command: CreateOrderCommand, 
+                  repo: OrderRepository,
+                  notifier: OrderNotifier) -> Order:
+    <span class="fn">_validate_order_command</span>(command)           <span class="cm"># valida</span>
+    order = <span class="fn">_build_order_from_command</span>(command) <span class="cm"># construye</span>
+    saved = repo.<span class="fn">save</span>(order)                    <span class="cm"># persiste</span>
+    notifier.<span class="fn">order_created</span>(saved)               <span class="cm"># notifica</span>
+    <span class="kw">return</span> saved
+
+<span class="cm"># Cada función hace UNA cosa. Cada dependencia es inyectada.
+# Testeable de forma aislada. Legible como prosa.</span></code></pre>
+
+<h3 id="solid-real">SOLID: Aplicado con Profundidad Real</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Principio</th>
+<th>La regla simple</th>
+<th>Lo que realmente significa</th>
+<th>Señal de violación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="b"><strong>S — SRP</strong></td>
+<td>Una clase, una razón para cambiar</td>
+<td>Una clase debe ser responsable ante un único actor del sistema. No "hace una
+cosa" — responde a un
+único stakeholder</td>
+<td>La clase cambia cuando el equipo de finanzas cambia algo Y cuando el equipo de
+UI cambia algo</td>
+</tr>
+<tr>
+<td class="g"><strong>O — OCP</strong></td>
+<td>Abierto a extensión, cerrado a modificación</td>
+<td>Añadir comportamiento nuevo sin tocar código existente. Logrado con
+polimorfismo, no con if/else
+</td>
+<td>Añadir un nuevo tipo de pago requiere modificar la clase PaymentProcessor
+existente</td>
+</tr>
+<tr>
+<td class="y"><strong>L — LSP</strong></td>
+<td>Subtipos sustituibles por el supertipo</td>
+<td>Si tienes código que funciona con Animal, debe funcionar con Perro sin cambios
+ni sorpresas</td>
+<td>Una subclase que lanza una excepción en un método que el padre implementa
+silenciosamente</td>
+</tr>
+<tr>
+<td class="v"><strong>I — ISP</strong></td>
+<td>Interfaces pequeñas y focalizadas</td>
+<td>Los clientes no deben depender de métodos que no usan. Múltiples interfaces
+pequeñas > una grande
+</td>
+<td>Implementar una interfaz y dejar métodos con
+<code>throw NotImplementedException</code>
+</td>
+</tr>
+<tr>
+<td class="t"><strong>D — DIP</strong></td>
+<td>Depender de abstracciones, no de implementaciones</td>
+<td>El módulo de alto nivel define la interfaz que necesita. El módulo de bajo nivel
+la implementa
+</td>
+<td>La lógica de negocio hace <code>new PostgresRepository()</code> directamente
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<pre data-lang="java"><code><span class="cm">// DIP — Dependency Inversion con ejemplos reales</span>
+
+<span class="cm">// ❌ Viola DIP: el Use Case depende de la implementación concreta</span>
+<span class="kw">class</span> <span class="fn">CreateUserUseCase</span> {
+    <span class="kw">private final</span> PostgresUserRepository repo = <span class="kw">new</span> <span class="fn">PostgresUserRepository</span>();
+    <span class="cm">// Imposible testear sin una BD PostgreSQL real</span>
+    <span class="cm">// Imposible cambiar a MongoDB sin modificar el use case</span>
+}
+
+<span class="cm">// ✓ Respeta DIP: el Use Case define qué necesita, no cómo se implementa</span>
+<span class="kw">interface</span> <span class="fn">UserRepository</span> {               <span class="cm">// Definida en la capa de dominio</span>
+    User save(User user);
+    Optional&lt;User&gt; findById(UserId id);
+}
+
+<span class="kw">class</span> <span class="fn">CreateUserUseCase</span> {
+    <span class="kw">private final</span> UserRepository repo;  <span class="cm">// Depende de la abstracción</span>
+
+    <span class="kw">public</span> <span class="fn">CreateUserUseCase</span>(UserRepository repo) {
+        <span class="kw">this</span>.repo = repo;               <span class="cm">// Inyectado desde fuera</span>
+    }
+
+    <span class="kw">public</span> User <span class="fn">execute</span>(CreateUserCommand cmd) {
+        <span class="kw">var</span> user = User.<span class="fn">create</span>(cmd.email(), cmd.name());
+        <span class="kw">return</span> repo.<span class="fn">save</span>(user);
+    }
+}
+
+<span class="cm">// En tests: InMemoryUserRepository (instantáneo, sin I/O)
+// En producción: PostgresUserRepository
+// El use case no sabe ni le importa la diferencia</span></code></pre>
+
+<h3 id="tech-debt">Deuda Técnica: Herramienta, No Excusa</h3>
+<p>La deuda técnica no es sinónimo de código malo. Es una metáfora financiera: a veces tiene sentido
+tomar una
+deuda deliberada (lanzar más rápido con una solución subóptima) si el retorno justifica el costo
+del interés
+(el trabajo adicional para mantenerla).</p>
+
+<div class="diagram">
+<pre><code>
+  Tipos de Deuda Técnica (Cuadrante de Fowler)
+
+                    DELIBERADA          INADVERTIDA
+                  ┌───────────────────┬──────────────────────┐
+   PRUDENTE       │ "No tenemos       │ "Ahora sabemos que   │
+                  │ tiempo de         │ deberíamos haber     │
+                  │ diseñar bien"     │ usado esta           │
+                  │                   │ arquitectura"        │
+                  │ → Documentar,     │                      │
+                  │   pagar pronto    │ → Aprender, mejorar  │
+                  ├───────────────────┼──────────────────────┤
+   IMPRUDENTE     │ "No hay tiempo    │ "¿Qué son las        │
+                  │ para tests"       │ capas?"              │
+                  │                   │                      │
+                  │ → Problema real   │ → Problema de        │
+                  │   a corto plazo   │   contratación /     │
+                  │                   │   formación          │
+                  └───────────────────┴──────────────────────┘
+
+  La deuda deliberada-prudente es una herramienta válida.
+  La deuda inadvertida o imprudente es un problema de proceso o equipo.
+
+  El costo real de la deuda técnica:
+  • Velocidad de desarrollo reducida (interés compuesto)
+  • Bugs más difíciles de aislar (código acoplado)
+  • Onboarding más lento (código incomprensible)
+  • Miedo a cambiar (código sin tests)
+  • Rotación de ingenieros (trabajo frustrante)
+</code></pre>
+</div>
+
+<div class="callout tip">
+<div class="callout-icon"></div>
+<p><strong>La regla del boy scout:</strong> Deja el código un poco mejor de como lo encontraste.
+No un gran
+refactor — renombrar una variable confusa, extraer una función, añadir un test que faltaba.
+Aplicado
+consistentemente por todo el equipo, revierte la entropía del código sin interrumpir el
+desarrollo de
+features.</p>
+</div>

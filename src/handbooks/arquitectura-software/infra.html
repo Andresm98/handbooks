@@ -1,0 +1,235 @@
+<!-- ON-PREMISE -->
+<h3 id="on-premise">On-Premise</h3>
+<p>La infraestructura <strong>on-premise</strong> implica que todos los servidores, almacenamiento y
+redes se encuentran físicamente en las instalaciones de la organización. La empresa es
+responsable de adquisición, operación y mantenimiento de cada componente.</p>
+
+<div class="tags">
+<span class="tag">Control total</span>
+<span class="tag">Alta inversión inicial (CapEx)</span>
+<span class="tag">Latencia predecible</span>
+<span class="tag">Compliance físico</span>
+</div>
+
+<div class="pros-cons">
+<div class="pros">
+<h4>VENTAJAS</h4>
+<ul>
+<li>Control absoluto sobre hardware y datos</li>
+<li>Cumplimiento normativo (bancos, gobiernos)</li>
+<li>Sin latencia de red hacia proveedor externo</li>
+<li>Sin costos recurrentes de suscripción cloud</li>
+<li>Personalización total del stack</li>
+</ul>
+</div>
+<div class="cons">
+<h4>DESVENTAJAS</h4>
+<ul>
+<li>Alto costo inicial de capital (servidores, datacenter)</li>
+<li>Escalabilidad lenta y costosa</li>
+<li>Equipo de operaciones dedicado</li>
+<li>Riesgo de obsolescencia de hardware</li>
+<li>Recuperación ante desastres compleja</li>
+</ul>
+</div>
+</div>
+
+<div class="when-box">
+<div class="when-use">
+<span class="when-label">Cuándo usar</span>
+<ul>
+<li>Sector financiero con regulaciones estrictas</li>
+<li>Datos clasificados o de defensa nacional</li>
+<li>Sistemas legacy que no pueden migrarse</li>
+<li>Latencia ultra-baja (trading de alta frecuencia)</li>
+</ul>
+</div>
+<div class="when-avoid">
+<span class="when-label">Cuándo evitar</span>
+<ul>
+<li>Startups con presupuesto limitado</li>
+<li>Cargas de trabajo impredecibles o estacionales</li>
+<li>Necesidad de despliegue global rápido</li>
+<li>Equipos pequeños sin operaciones dedicadas</li>
+</ul>
+</div>
+</div>
+
+<!-- CLOUD -->
+<hr class="divider">
+<h3 id="cloud">Cloud: IaaS, PaaS y SaaS</h3>
+<p>El modelo cloud delega la operación de infraestructura a un proveedor externo. Según el nivel de
+abstracción, se clasifica en tres capas fundamentales:</p>
+
+<div class="diagram">
+<pre><code>
+  RESPONSABILIDAD DEL PROVEEDOR  ◄──────────────────────────────►  RESPONSABILIDAD DEL CLIENTE
+  ┌─────────────────────────────┬──────────────────┬────────────────────────────────┐
+  │          SaaS               │       PaaS       │              IaaS              │
+  │  ╔═══════════════╗          │  ╔═══════════╗   │  ╔══════════════╗              │
+  │  ║  Aplicación   ║ ▲Provider│  ║Aplicación ║ ▲C│  ║  Aplicación  ║ ▲ Cliente    │
+  │  ║  Runtime      ║          │  ║Runtime    ║  │  ║  Runtime      ║             │
+  │  ║  OS           ║          │  ║OS         ║ ▼P│  ║  OS          ║             │
+  │  ║  Servidores   ║          │  ║Servidores ║   │  ║  Servidores  ║ ▼ Proveedor │
+  │  ╚═══════════════╝          │  ╚═══════════╝   │  ╚══════════════╝              │
+  │  Gmail, Salesforce          │  Heroku, GCP     │  AWS EC2, Azure VM             │
+  │  Office 365, Slack          │  App Engine      │  GCP Compute Engine            │
+  └─────────────────────────────┴──────────────────┴────────────────────────────────┘
+</code></pre>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th>Gestiona el cliente</th>
+<th>Gestiona el proveedor</th>
+<th>Ejemplos</th>
+<th>Caso de uso ideal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="blue"><strong>IaaS</strong></td>
+<td>SO, runtime, apps, datos</td>
+<td>Servidores, red, virtualización</td>
+<td>AWS EC2, Azure VMs, GCP Compute</td>
+<td>Migración lift-and-shift</td>
+</tr>
+<tr>
+<td class="green"><strong>PaaS</strong></td>
+<td>Aplicaciones, datos</td>
+<td>Todo lo anterior + SO, runtime</td>
+<td>Heroku, App Engine, Azure PaaS</td>
+<td>Desarrollo ágil, sin ops</td>
+</tr>
+<tr>
+<td class="orange"><strong>SaaS</strong></td>
+<td>Configuración, datos propios</td>
+<td>Todo el stack completo</td>
+<td>Gmail, Salesforce, Slack</td>
+<td>Herramientas de productividad</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- CLOUD-NATIVE -->
+<hr class="divider">
+<h3 id="cloud-native">Cloud-Native</h3>
+<p>Una arquitectura <strong>cloud-native</strong> no solo usa la nube, sino que está diseñada
+específicamente para aprovechar sus capacidades: elasticidad, escalabilidad automática y
+servicios gestionados. Los cuatro pilares de la CNCF (Cloud Native Computing Foundation) son:
+</p>
+
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="dot dot-blue"></span>Microservicios</div>
+<p>Aplicaciones compuestas de servicios pequeños, independientes y desplegables de forma
+autónoma.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot dot-green"></span>Contenedores</div>
+<p>Docker/OCI como unidad de despliegue estándar. Kubernetes como orquestador de facto.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot dot-orange"></span>CI/CD</div>
+<p>Pipelines automatizados de integración y entrega continua para despliegues frecuentes y
+seguros.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="dot dot-purple"></span>DevOps & Observabilidad</div>
+<p>Cultura de colaboración con métricas, trazas y logs integrados desde el diseño.</p>
+</div>
+</div>
+
+<pre data-lang="yaml"><code># Ejemplo: Deployment Cloud-Native en Kubernetes
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-service
+  labels:
+    app: orders
+    version: v2.1.0
+spec:
+  replicas: 3                     # Alta disponibilidad
+  strategy:
+    type: RollingUpdate           # Zero-downtime deployments
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: orders
+  template:
+    spec:
+      containers:
+      - name: orders
+        image: myregistry/orders:v2.1.0
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:             # Health checks automáticos
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080</code></pre>
+
+<!-- HYBRID & MULTI-CLOUD -->
+<hr class="divider">
+<h3 id="hybrid">Hybrid Cloud y Multi-Cloud</h3>
+
+<div class="compare-row">
+<div class="compare-col">
+<h4>🔀 Hybrid Cloud</h4>
+<ul>
+<li>Combina on-premise + cloud público</li>
+<li>Datos sensibles en datacenter propio</li>
+<li>Burst de capacidad hacia cloud</li>
+<li>Azure Arc, AWS Outposts, GCP Anthos</li>
+<li>Ideal: bancos, healthcare, gobierno</li>
+</ul>
+</div>
+<div class="compare-col">
+<h4>☁ Multi-Cloud</h4>
+<ul>
+<li>Múltiples proveedores cloud públicos</li>
+<li>Evita vendor lock-in</li>
+<li>Optimización de costos por servicio</li>
+<li>Terraform / Crossplane para abstracción</li>
+<li>Complejidad operativa alta</li>
+</ul>
+</div>
+</div>
+
+<div class="diagram">
+<pre><code>
+  PATRÓN HYBRID: Cloud Bursting
+  ┌──────────────────────────────────────────────────────────┐
+  │  ON-PREMISE DATACENTER                                    │
+  │  ┌─────────────────┐    ┌──────────────────────────────┐ │
+  │  │  Carga base      │    │  Datos sensibles / BBDD      │ │
+  │  │  (workload fijo) │    │  (compliance, regulación)    │ │
+  │  └────────┬─────────┘    └──────────────────────────────┘ │
+  │           │ VPN / Direct Connect                          │
+  └───────────┼──────────────────────────────────────────────┘
+              │
+  ┌───────────▼──────────────────────────────────────────────┐
+  │  CLOUD PÚBLICO (AWS / Azure / GCP)                       │
+  │  ┌──────────────────┐   ┌─────────────────────────────┐  │
+  │  │  Auto-scaling    │   │  Servicios cloud-native      │  │
+  │  │  (picos de carga)│   │  (ML, CDN, Analytics)        │  │
+  │  └──────────────────┘   └─────────────────────────────┘  │
+  └──────────────────────────────────────────────────────────┘
+</code></pre>
+</div>

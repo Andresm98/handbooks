@@ -1,0 +1,228 @@
+<p>Un sistema que no puedes observar es un sistema que no puedes operar. La observabilidad no es
+monitoreo — es la capacidad de hacerle preguntas nuevas a un sistema en producción sin necesitar
+nuevo código de instrumentación. El SA diseña para operabilidad desde el primer diagrama, no
+como un afterthought.</p>
+
+<h3 id="slo-design">Diseñar con SLOs: La Disciplina que Cambia Todo</h3>
+
+<p>Los <strong>SLOs (Service Level Objectives)</strong> no son métricas de monitoreo — son
+compromisos de negocio que determinan cuándo un ingeniero debe ser despertado a las 3am y cuándo
+no.</p>
+
+<div class="diagram">
+<pre><code>
+  La Jerarquía SLI → SLO → SLA → Error Budget
+
+  SLI (Service Level Indicator): La métrica real que medimos
+  Ejemplo: "Porcentaje de requests HTTP que retornan en &lt;200ms"
+                                        │
+                                        ▼
+  SLO (Service Level Objective): La meta interna
+  Ejemplo: "El 99.9% de requests deben completarse en &lt;200ms"
+  (Medido en ventana de 30 días)
+                                        │
+                                        ▼
+  SLA (Service Level Agreement): El contrato con el cliente
+  Ejemplo: "Garantizamos 99.5% de requests en &lt;200ms"
+  (El SLO es más estricto que el SLA — hay colchón)
+                                        │
+                                        ▼
+  Error Budget: Margen de error disponible en el período
+  Ejemplo: "99.9% SLO en 30 días = 43.8 minutos de 'mala experiencia' permitidos"
+  
+  Error Budget = 100% - SLO% = 0.1% de 30 días = 43.8 minutos
+  
+  CUANDO el error budget se agota:
+  → Feature development se pausa
+  → El equipo enfoca 100% en confiabilidad
+  → No se hace on-call al equipo de features
+  → Esto alinea incentivos: features y confiabilidad compiten por el mismo budget
+</code></pre>
+</div>
+
+<h4>SLOs por tipo de sistema</h4>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Tipo de sistema</th>
+<th>SLI recomendado</th>
+<th>SLO típico</th>
+<th>Señal de alerta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API HTTP</td>
+<td>% de requests exitosos (2xx/total)</td>
+<td class="g">99.9%</td>
+<td>Error rate &gt;0.1% en 5min</td>
+</tr>
+<tr>
+<td>API de pagos</td>
+<td>% de transacciones completadas</td>
+<td class="r">99.99%</td>
+<td>Error rate &gt;0.01% en 1min</td>
+</tr>
+<tr>
+<td>Pipeline de datos</td>
+<td>Latencia de procesamiento end-to-end</td>
+<td class="y">p99 &lt; 10min</td>
+<td>p99 &gt; 8min por 15min</td>
+</tr>
+<tr>
+<td>Sistema de búsqueda</td>
+<td>Latencia de query p95</td>
+<td class="g">&lt; 500ms</td>
+<td>p95 &gt; 400ms por 10min</td>
+</tr>
+<tr>
+<td>Streaming (video)</td>
+<td>Buffering ratio</td>
+<td class="g">&lt; 0.5%</td>
+<td>Buffering &gt; 0.3% por 5min</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="otel">Observabilidad: Los Tres Pilares en la Práctica</h3>
+
+<h4>LOS GOLDEN SIGNALS (Google SRE)</h4>
+<div class="principle-grid">
+<div class="principle-item">
+<strong>Latency</strong>
+<p>Tiempo para servir un request. Medir p50, p95, p99 — no solo el promedio. La media oculta
+los outliers que afectan al 1% de usuarios.</p>
+</div>
+<div class="principle-item">
+<strong>Traffic</strong>
+<p>Volumen de demanda: requests/segundo, transacciones/segundo. Establece la baseline para
+detectar anomalías.</p>
+</div>
+<div class="principle-item">
+<strong>Errors</strong>
+<p>Tasa de requests que fallan. Distinguir errores explícitos (5xx) de implícitos (200 con
+respuesta incorrecta).</p>
+</div>
+<div class="principle-item">
+<strong>Saturation</strong>
+<p>Qué tan "lleno" está el servicio: CPU, memoria, conexiones de BD, cola de mensajes.
+Predice problemas antes de que ocurran.</p>
+</div>
+</div>
+
+<h4>OPENTELEMETRY: EL ESTÁNDAR MODERNO</h4>
+
+<pre data-lang="python"><code><span class="kw">from</span> opentelemetry <span class="kw">import</span> trace, metrics
+<span class="kw">from</span> opentelemetry.sdk.trace <span class="kw">import</span> TracerProvider
+<span class="kw">from</span> opentelemetry.exporter.otlp.proto.grpc.trace_exporter <span class="kw">import</span> OTLPSpanExporter
+
+<span class="cm"># Setup: una vez al iniciar la app</span>
+provider = TracerProvider()
+provider.add_span_processor(
+    BatchSpanProcessor(OTLPSpanExporter(endpoint=<span class="str">"otel-collector:4317"</span>))
+)
+trace.set_tracer_provider(provider)
+
+tracer = trace.get_tracer(<span class="str">"payments-service"</span>)
+meter  = metrics.get_meter(<span class="str">"payments-service"</span>)
+
+<span class="cm"># Métrica: histograma de latencia de pagos</span>
+payment_duration = meter.create_histogram(
+    <span class="str">"payment.duration"</span>,
+    unit=<span class="str">"ms"</span>,
+    description=<span class="str">"Latencia de procesamiento de pagos"</span>
+)
+
+<span class="kw">async def</span> <span class="fn">process_payment</span>(payment_request):
+    <span class="kw">with</span> tracer.start_as_current_span(<span class="str">"process_payment"</span>) <span class="kw">as</span> span:
+        span.set_attribute(<span class="str">"payment.amount"</span>, payment_request.amount)
+        span.set_attribute(<span class="str">"payment.currency"</span>, payment_request.currency)
+        span.set_attribute(<span class="str">"payment.provider"</span>, payment_request.provider)
+
+        start = time.monotonic()
+        <span class="kw">try</span>:
+            <span class="cm"># Los sub-spans se encadenan automáticamente con el trace ID</span>
+            result = <span class="kw">await</span> charge_provider(payment_request)
+            span.set_attribute(<span class="str">"payment.status"</span>, <span class="str">"success"</span>)
+            <span class="kw">return</span> result
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            span.record_exception(e)
+            span.set_status(trace.StatusCode.ERROR, str(e))
+            <span class="kw">raise</span>
+        <span class="kw">finally</span>:
+            duration = (time.monotonic() - start) * <span class="nm">1000</span>
+            payment_duration.record(duration, {
+                <span class="str">"provider"</span>: payment_request.provider,
+                <span class="str">"currency"</span>: payment_request.currency
+            })</code></pre>
+
+<h3>Chaos Engineering: Testar la Resiliencia</h3>
+<p>Chaos Engineering es la práctica de inyectar fallos deliberados en un sistema para descubrir
+debilidades antes de que los usuarios las descubran. Netflix con Chaos Monkey, Google con DiRT
+(Disaster Recovery Testing).</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Experimento</th>
+<th>Qué revela</th>
+<th>Herramienta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Matar instancias aleatorias</td>
+<td>Si los health checks y auto-healing funcionan</td>
+<td>Chaos Monkey, LitmusChaos</td>
+</tr>
+<tr>
+<td>Introducir latencia de red</td>
+<td>Si los timeouts están bien configurados, si hay cascading failures</td>
+<td>tc (Linux), Toxiproxy, Istio fault injection</td>
+</tr>
+<tr>
+<td>Saturar CPU/memoria</td>
+<td>Comportamiento bajo saturation, si el autoscaling actúa correctamente</td>
+<td>stress-ng, k6 con chaos</td>
+</tr>
+<tr>
+<td>Cortar acceso a la BD</td>
+<td>Si el circuit breaker funciona, si la app falla gracefully</td>
+<td>NetworkPolicy en K8s, iptables</td>
+</tr>
+<tr>
+<td>Corromper mensajes en cola</td>
+<td>Si el DLQ (Dead Letter Queue) funciona, si el sistema se recupera</td>
+<td>Toxiproxy, custom middleware</td>
+</tr>
+<tr>
+<td>Simular fallo de AZ completa</td>
+<td>Si el multi-AZ deployment realmente distribuye carga</td>
+<td>AWS FIS (Fault Injection Simulator)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout tip">
+<div class="callout-icon"></div>
+<p><strong>Regla de oro del Chaos Engineering:</strong> Siempre empezar con experimentos en
+staging. Documentar el "steady state" (baseline) antes de inyectar el fallo. Medir el
+impacto. Corregir. Solo escalar a producción cuando staging sea estable. Nunca experimentar
+sin runbook de rollback.</p>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>La observabilidad y el SRE son horizontales a todos los estilos arquitectónicos.
+<strong>Microservicios</strong> requieren distributed tracing obligatorio — sin él,
+debuggear un fallo cross-service es inviable. <strong>Event-Driven</strong> requiere tracing
+de mensajes a través del broker (Kafka trace headers). <strong>Serverless</strong> tiene
+observabilidad más limitada — el SA debe instrumentar explícitamente con OpenTelemetry. Los
+SLOs deben definirse antes de diseñar la arquitectura, porque determinan los requerimientos
+de resiliencia e infraestructura.
+</p>
+</div>

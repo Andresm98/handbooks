@@ -1,0 +1,238 @@
+<p>Los arquitectos senior no tienen más conocimiento técnico que los ingenieros que trabajan con
+ellos. Lo que los distingue es la calidad de sus <strong>modelos mentales</strong>: marcos de
+pensamiento que permiten razonar sobre sistemas complejos, anticipar fallos, y tomar mejores
+decisiones con información incompleta.</p>
+
+<p>Un modelo mental no es un framework ni una metodología. Es una forma de ver el mundo que revela
+patrones ocultos. Los mejores SA tienen decenas de modelos mentales activos simultáneamente
+cuando evalúan una arquitectura.</p>
+
+<h3>Los Modelos Mentales Fundamentales</h3>
+
+<h4>1. FIRST PRINCIPLES THINKING</h4>
+<p>Descomponer un problema hasta sus verdades fundamentales, ignorando las convenciones existentes.
+Elon Musk aplicó esto a las baterías: en lugar de aceptar el precio de mercado, preguntó cuánto
+costarían los materiales puros y construyó hacia arriba.</p>
+<p>En arquitectura: <em>"¿Por qué necesitamos una base de datos relacional aquí?"</em> → <em>"Porque
+necesitamos consistencia transaccional entre estas entidades específicas."</em> →
+<em>"¿Estas entidades realmente necesitan consistencia transaccional, o aceptamos eventual
+consistency?"</em> → La respuesta puede ser una decisión completamente diferente.
+</p>
+
+<div class="callout tip">
+<div class="callout-icon"></div>
+<p><strong>En producción real:</strong> Airbnb descubrió que su modelo de "listing + booking +
+payment" asumía transacciones ACID entre tres dominios. Al aplicar first principles,
+identificaron que booking y payment podían ser eventually consistent con compensaciones
+manuales para edge cases — simplificando enormemente su arquitectura.</p>
+</div>
+
+<h4>2. SECOND-ORDER THINKING</h4>
+<p>No solo pensar en las consecuencias de una decisión, sino en las consecuencias de esas
+consecuencias. La mayoría de los problemas arquitectónicos no son errores técnicos — son
+second-order effects no anticipados.</p>
+
+<div class="diagram">
+<pre><code>
+  Decisión: Migrar a microservicios
+  │
+  ├─ First order:  Cada servicio desplegable independientemente ✓
+  │
+  ├─ Second order: Cada servicio necesita su propio CI/CD pipeline
+  │                → El equipo de 5 personas opera 20 pipelines
+  │                → Overhead operacional no anticipado
+  │
+  └─ Third order:  El overhead ralentiza deployments más que el monolito
+                   → El beneficio original se invierte completamente
+                   → El equipo empieza a "saltarse" prácticas para compensar
+                   → La arquitectura se degrada activamente
+</code></pre>
+</div>
+
+<h4>3. INVERSION (PENSA EN EL FALLO PRIMERO)</h4>
+<p>En lugar de preguntar "¿cómo hago que esto funcione?", preguntar "¿de qué formas puede fallar
+esto?". Charlie Munger: <em>"Invert, always invert."</em></p>
+<p>Un SA senior, ante cualquier propuesta arquitectónica, genera primero el listado de cómo fallará
+en producción. Esta lista se convierte en los requerimientos de resiliencia, observabilidad y
+runbooks. Si no puedes listar los modos de fallo, no entiendes lo suficiente el sistema.</p>
+
+<h4 id="thinking-failures">4. THINKING IN FAILURE MODES</h4>
+<div class="diagram">
+<pre><code>
+  Sistema: API de pagos con base de datos principal + réplica de lectura
+
+  Failure Mode Analysis:
+  ┌─────────────────────────────────┬──────────────────┬─────────────────────┐
+  │ Fallo                           │ Impacto          │ Respuesta            │
+  ├─────────────────────────────────┼──────────────────┼─────────────────────┤
+  │ BD principal cae                │ Escrituras 0     │ Failover automático  │
+  │ Réplica con retraso (lag)       │ Reads stale      │ Circuit breaker      │
+  │ Network partition BD↔App        │ Timeouts         │ Retry + fallback     │
+  │ Disco lleno en BD               │ Writes fallan    │ Alert 80%, block 95% │
+  │ OOM en replica                  │ Reads lentos     │ Autoscaling + alert  │
+  │ Corrupción de datos             │ Silenciosa       │ Checksums + audit    │
+  │ Certificado TLS expirado        │ 100% downtime    │ Auto-renewal + alert │
+  └─────────────────────────────────┴──────────────────┴─────────────────────┘
+</code></pre>
+</div>
+
+<h4 id="reversible">5. DECISIONES REVERSIBLES VS IRREVERSIBLES</h4>
+<p>Jeff Bezos clasifica las decisiones en Type 1 (puertas de un solo sentido — irreversibles) y Type
+2 (puertas de doble sentido — reversibles). Los SA deben gastar energía proporcional a la
+irreversibilidad de la decisión.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Decisión</th>
+<th>Tipo</th>
+<th>Costo de revertir</th>
+<th>Proceso recomendado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Elegir base de datos principal</td>
+<td class="r">Type 1</td>
+<td>Meses de migración + riesgo alto</td>
+<td>ADR formal, múltiples stakeholders, PoC</td>
+</tr>
+<tr>
+<td>Diseño de esquema de BBDD</td>
+<td class="r">Type 1</td>
+<td>Migraciones costosas, riesgo de datos</td>
+<td>Iteración cuidadosa, event sourcing considerado</td>
+</tr>
+<tr>
+<td>Contrato público de API</td>
+<td class="r">Type 1</td>
+<td>Breaking changes afectan clientes externos</td>
+<td>Versioning desde el inicio, deprecation policy</td>
+</tr>
+<tr>
+<td>Vendor de cloud principal</td>
+<td class="r">Type 1</td>
+<td>Años de migración, re-arquitectura completa</td>
+<td>Evaluar con extremo cuidado el lock-in</td>
+</tr>
+<tr>
+<td>Framework de backend</td>
+<td class="y">Type 1.5</td>
+<td>Alto pero posible con capas de abstracción</td>
+<td>Hexagonal architecture para aislar el framework</td>
+</tr>
+<tr>
+<td>Librería interna de utilidades</td>
+<td class="g">Type 2</td>
+<td>Bajo — reemplazable incrementalmente</td>
+<td>Decisión rápida, iterar con uso real</td>
+</tr>
+<tr>
+<td>Estrategia de deployment</td>
+<td class="g">Type 2</td>
+<td>Bajo — cambio de pipeline</td>
+<td>Experimentar, medir, ajustar</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout danger">
+<div class="callout-icon"></div>
+<p><strong>Error crítico:</strong> Tratar decisiones Type 1 con el proceso de Type 2 (decidir
+rápido sin análisis profundo) es el origen del 80% de la deuda técnica estratégica. Es
+especialmente común cuando hay presión de tiempo — precisamente cuando más se necesita el
+proceso correcto.</p>
+</div>
+
+<h3>Heurísticas de Arquitectura</h3>
+<p>Las heurísticas son reglas de decisión rápida calibradas por experiencia. No son reglas absolutas
+— son defaults inteligentes que se aplican hasta que el contexto las invalida.</p>
+
+<div class="principle-grid">
+<div class="principle-item">
+<strong>Prefer boring technology</strong>
+<p>PostgreSQL antes que CockroachDB. Redis antes que Dragonfly. La tecnología aburrida tiene
+más documentación, más Stack Overflow, y menos bugs no descubiertos.</p>
+</div>
+<div class="principle-item">
+<strong>Build vs Buy vs Borrow</strong>
+<p>Build solo cuando das ventaja competitiva. Buy cuando es commodity. Borrow (OSS) cuando
+la comunidad puede mantenerlo mejor que tú.</p>
+</div>
+<div class="principle-item">
+<strong>Design for failure, not for success</strong>
+<p>Los sistemas en producción pasan el 99% del tiempo funcionando correctamente. El valor
+está en cómo se comportan en el 1% restante.</p>
+</div>
+<div class="principle-item">
+<strong>Operability is a feature</strong>
+<p>Un sistema que nadie puede operar a las 3am es un sistema con un bug crítico. Los
+runbooks, alertas y observabilidad no son extras — son parte del diseño.</p>
+</div>
+<div class="principle-item">
+<strong>Complexity has a cost</strong>
+<p>Cada componente añadido al sistema tiene un costo operacional perpetuo. La deuda técnica
+más peligrosa no es el código malo — es la complejidad innecesaria.</p>
+</div>
+<div class="principle-item">
+<strong>Conway's Law is real</strong>
+<p>El sistema que construirás reflejará la estructura de comunicación de tu organización.
+Cambia la organización antes de cambiar la arquitectura, o cambia ambas simultáneamente.
+</p>
+</div>
+<div class="principle-item">
+<strong>Eventual consistency is a choice</strong>
+<p>No es una concesión — es una decisión explícita de priorizar disponibilidad sobre
+consistencia. Solo es válida cuando el negocio la acepta explícitamente.</p>
+</div>
+<div class="principle-item">
+<strong>Migrations are the real risk</strong>
+<p>El sistema nuevo raramente falla. La migración del sistema viejo al nuevo es donde ocurre
+el 90% de los incidentes críticos.</p>
+</div>
+</div>
+
+<h3>El Framework de Trade-offs del SA Senior</h3>
+<p>Todo en arquitectura es un trade-off. Los SA senior no buscan la solución óptima — buscan el
+trade-off más favorable dado el contexto específico. Los cinco ejes de trade-off principales
+son:</p>
+
+<div class="diagram">
+<pre><code>
+  Los 5 Ejes de Trade-off Arquitectónico
+  
+  ┌──────────────────────────────────────────────────────────────┐
+  │                                                              │
+  │  VELOCIDAD ◄──────────────────────────────► RESILIENCIA      │
+  │  (time to market)                          (fault tolerance) │
+  │                                                              │
+  │  COSTO ◄───────────────────────────────────► PERFORMANCE     │
+  │  (infrastructure + ops)                    (latency/thrpt)  │
+  │                                                              │
+  │  CONSISTENCIA ◄────────────────────────────► DISPONIBILIDAD  │
+  │  (data accuracy)                           (uptime)         │
+  │                                                              │
+  │  AUTONOMÍA ◄───────────────────────────────► ESTANDARIZACIÓN │
+  │  (team independence)                       (governance)     │
+  │                                                              │
+  │  FLEXIBILIDAD ◄────────────────────────────► SIMPLICIDAD     │
+  │  (future options)                          (operability)    │
+  │                                                              │
+  └──────────────────────────────────────────────────────────────┘
+  
+  No existe solución que maximice ambos extremos.
+  El contexto determina dónde posicionarse en cada eje.
+</code></pre>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>El pensamiento sistémico del SA se aplica directamente en la evaluación de
+<strong>Microservices vs Monolith</strong> (segundo-order effects de la descomposición), en
+el diseño de <strong>Event-Driven Architectures</strong> (failure modes de mensajería
+async), y en decisiones de <strong>CQRS/Event Sourcing</strong> (reversibilidad del modelo
+de datos).
+</p>
+</div>

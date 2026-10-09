@@ -1,0 +1,95 @@
+<p>El costo de un sistema agéntico no es lineal: crece con el número de pasos, el tamaño del contexto en cada llamada, y el grado de paralelismo. Diseñar sin un modelo de costo explícito es la forma más común de que un piloto exitoso se vuelva inviable en producción.</p>
+
+<h3>Estimación rápida de costo mensual</h3>
+<div class="formula">
+<div class="formula-label">Para una sola llamada por request</div>
+Costo/mes ≈ requests/mes × [ (tokens_in − cache_hits) × p_in + cache_hits × p_cache + tokens_out × p_out ]
+</div>
+<p><strong>Ejemplo:</strong> un asistente interno con 200 000 consultas al mes, 6 000 tokens de entrada (de los cuales 4 000 son un prefijo estable cacheable) y 400 de salida. Con un modelo de $4 por millón de tokens de entrada, $20 por millón de salida y lectura de caché a $0,20 por millón:</p>
+<ul>
+<li>Sin caché: 200 000 × (6 000 × 4 + 400 × 20) / 10⁶ = 200 000 × (0,024 + 0,008) = <strong>$6 400/mes</strong>.</li>
+<li>Con caché del prefijo: 200 000 × (2 000 × 4 + 4 000 × 0,2 + 400 × 20) / 10⁶ = 200 000 × (0,008 + 0,0008 + 0,008) ≈ <strong>$3 360/mes</strong> (más el costo de escritura del caché, que se amortiza rápido con tráfico constante).</li>
+</ul>
+<p class="muted">Precios ilustrativos tomados de una tarifa pública vigente a la fecha de revisión; varían por modelo, proveedor y región. El método es lo importante.</p>
+
+<h3>Palancas de optimización de costo</h3>
+<table>
+<tr><th>Palanca</th><th>Mecanismo</th><th>Impacto</th></tr>
+<tr><td>Model routing</td><td>Usar un modelo más pequeño/económico para pasos simples (clasificación, extracción) y reservar el modelo más capaz para razonamiento complejo</td><td>Reducción de costo sin sacrificar calidad en el paso crítico</td></tr>
+<tr><td>Prompt caching</td><td>Cachear el prefijo estable del prompt (system prompt, documentos de referencia largos) entre llamadas</td><td>Reduce costo y latencia en contextos largos reutilizados</td></tr>
+<tr><td>Límite de pasos del agente</td><td>Tope explícito de iteraciones del loop agéntico</td><td>Evita loops descontrolados que consumen tokens sin converger</td></tr>
+<tr><td>Compresión de contexto</td><td>Resumen progresivo en vez de reenviar historial completo</td><td>Reduce tokens de entrada en conversaciones largas</td></tr>
+<tr><td>Batch para tareas no interactivas</td><td>Procesamiento asíncrono en lote en vez de llamadas síncronas individuales</td><td>Tarifas reducidas en la mayoría de proveedores para cargas tolerantes a latencia</td></tr>
+</table>
+
+<h3>Modelo mental de costo por request</h3>
+<div class="diagram">Costo total ≈ Σ (pasos del agente)
+[ tokens_entrada(paso) × precio_input
++ tokens_salida(paso) × precio_output ]
++ overhead de herramientas (APIs externas)
++ costo de infraestructura de ejecución (compute)
+
+El costo escala con: profundidad del loop × ancho del
+paralelismo × tamaño del contexto en cada paso.</div>
+
+<div class="callout beige">
+<div class="callout-label">Métrica que debe vivir en el dashboard de negocio</div>
+<u>Costo por tarea completada exitosamente</u>, no solo costo por llamada al modelo. Un agente más caro por paso pero con mayor tasa de éxito en el primer intento puede ser más barato en total que uno económico que requiere reintentos o intervención humana frecuente.
+</div>
+
+<h3>Gestión de costos</h3>
+<table>
+<tr>
+<th>Técnica</th>
+<th>Ahorro potencial</th>
+<th>Complejidad</th>
+</tr>
+<tr>
+<td>Semantic cache</td>
+<td>30–70% en queries repetitivas</td>
+<td>Baja</td>
+</tr>
+<tr>
+<td>Model routing (small/large)</td>
+<td>40–60%</td>
+<td>Media</td>
+</tr>
+<tr>
+<td>Truncar embeddings MRL</td>
+<td>Hasta 6× menos storage</td>
+<td>Baja</td>
+</tr>
+<tr>
+<td>Prompt caching (Claude)</td>
+<td>90% descuento en tokens repetidos</td>
+<td>Baja</td>
+</tr>
+<tr>
+<td>Batch API</td>
+<td>50% descuento en inferencia offline</td>
+<td>Baja</td>
+</tr>
+</table>
+
+<h3>Latencia: dónde se va el tiempo</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Componente</th><th>Palanca</th></tr></thead>
+<tbody>
+<tr><td>Tiempo hasta el primer token</td><td>Prompts más cortos, caché de prefijo, modelo más rápido, región cercana.</td></tr>
+<tr><td>Tiempo de generación</td><td>Respuestas más cortas (pide concisión), streaming para la percepción, menos esfuerzo de razonamiento donde no aporta.</td></tr>
+<tr><td>Retrieval y re-ranking</td><td>Índices bien dimensionados, menos candidatos al re-ranker, caché de embeddings de consultas frecuentes.</td></tr>
+<tr><td>Pasos del agente</td><td>Menos pasos (herramientas mejor diseñadas), llamadas en paralelo, workflows en lugar de agentes donde el camino es conocido.</td></tr>
+<tr><td>Red y colas</td><td>Conexiones reutilizadas, evitar cascadas síncronas entre servicios.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Controles de FinOps</h3>
+<ul class="checklist">
+<li>Costo atribuido por caso de uso, tenant y equipo (etiquetas en el AI Gateway).</li>
+<li>Presupuestos con alertas y límites duros por tenant y por agente.</li>
+<li>Tablero de costo por tarea completada junto a la métrica de calidad.</li>
+<li>Revisión mensual de prompts y contextos que más tokens consumen.</li>
+<li>Re-evaluación de modelo cuando bajan precios o aparece una versión más eficiente.</li>
+</ul>

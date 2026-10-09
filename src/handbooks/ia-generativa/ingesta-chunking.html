@@ -1,0 +1,173 @@
+<p>La ingesta es el pipeline que transforma documentos brutos en vectores indexados. Es un proceso
+offline (o
+near-online) que determina la calidad base del sistema.</p>
+
+<div class="flow">
+<div class="flow-step">Fuentes<span class="step-sub">PDF, web, DB</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Parsing<span class="step-sub">Docling</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Cleaning<span class="step-sub">normalize</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Chunking<span class="step-sub">split</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Embed<span class="step-sub">vectorize</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Index<span class="step-sub">Qdrant</span></div>
+</div>
+
+<h3>Herramientas de parsing</h3>
+<table>
+<tr>
+<th>Herramienta</th>
+<th>Tipo</th>
+<th>Mejor para</th>
+</tr>
+<tr>
+<td><strong>Docling</strong> (IBM)</td>
+<td>Open source</td>
+<td>PDFs complejos, tablas, columnas, fórmulas</td>
+</tr>
+<tr>
+<td><strong>Unstructured.io</strong></td>
+<td>OSS + API</td>
+<td>Múltiples formatos, pipeline completo</td>
+</tr>
+<tr>
+<td><strong>LlamaParse</strong></td>
+<td>API cloud</td>
+<td>PDFs difíciles, integración LlamaIndex</td>
+</tr>
+<tr>
+<td><strong>PyMuPDF</strong></td>
+<td>Open source</td>
+<td>PDFs simples, alta velocidad</td>
+</tr>
+<tr>
+<td><strong>Markitdown</strong> (Microsoft)</td>
+<td>Open source</td>
+<td>Office docs (docx, xlsx, pptx) → markdown</td>
+</tr>
+</table>
+
+<h3>Metadata enrichment</h3>
+<p>Cada chunk debe almacenarse con metadata relevante. Esta metadata se usa para
+<strong>filtrado</strong>
+(busca solo en documentos del departamento X) y para <strong>provenance</strong> (mostrar al usuario
+de dónde
+viene la respuesta).
+</p>
+
+<pre><span class="cm"># Estructura mínima de metadata por chunk</span>
+{
+  <span class="str">"chunk_id"</span>: <span class="str">"doc_001_chunk_042"</span>,
+  <span class="str">"doc_id"</span>: <span class="str">"contrato_2024_001"</span>,
+  <span class="str">"source"</span>: <span class="str">"s3://bucket/contratos/Q4_2024.pdf"</span>,
+  <span class="str">"page"</span>: <span class="num">12</span>,
+  <span class="str">"section"</span>: <span class="str">"Cláusulas de rescisión"</span>,
+  <span class="str">"created_at"</span>: <span class="str">"2024-11-15"</span>,
+  <span class="str">"doc_type"</span>: <span class="str">"legal"</span>,
+  <span class="str">"language"</span>: <span class="str">"es"</span>,
+  <span class="str">"token_count"</span>: <span class="num">384</span>
+}
+<span class="lang-label">JSON</span></pre>
+
+<p>Además del contenido, cada chunk debe guardar los atributos de <strong>control de acceso</strong> heredados del sistema origen (grupos, unidad de negocio, nivel de confidencialidad) y un <strong>hash de contenido</strong> para detectar cambios y re-indexar solo lo modificado.</p>
+
+<h3>Chunking: la decisión con más impacto</h3>
+<p>El chunking es el proceso de dividir documentos en fragmentos indexables. Es posiblemente la decisión
+de
+diseño con más impacto en la calidad de un sistema RAG, y la que más se pasa por alto.</p>
+
+<div class="callout def">
+<div class="callout-label">Definición</div>
+<p>Un <strong>chunk</strong> es la unidad mínima de recuperación. Debe ser lo suficientemente
+pequeño para ser
+preciso en la búsqueda, y lo suficientemente grande para ser autónomamente comprensible.</p>
+</div>
+
+<h3>Estrategias por complejidad creciente</h3>
+
+<div class="arch-box">
+<div class="arch-layer">
+<span class="arch-layer-label">Nivel 1</span>
+<div class="arch-chips">
+<span class="chip">Fixed-size chunks</span>
+<span class="chip">Overlap sliding window</span>
+</div>
+</div>
+<div class="arch-layer">
+<span class="arch-layer-label">Nivel 2</span>
+<div class="arch-chips">
+<span class="chip blue">Sentence splitting</span>
+<span class="chip blue">Paragraph splitting</span>
+<span class="chip blue">Recursive character splitter</span>
+</div>
+</div>
+<div class="arch-layer">
+<span class="arch-layer-label">Nivel 3</span>
+<div class="arch-chips">
+<span class="chip green">Semantic chunking</span>
+<span class="chip green">Hierarchical (RAPTOR)</span>
+<span class="chip green">Propositions</span>
+</div>
+</div>
+<div class="arch-layer">
+<span class="arch-layer-label">Nivel 4</span>
+<div class="arch-chips">
+<span class="chip gold">Document-aware (headers)</span>
+<span class="chip gold">Agentic chunking</span>
+<span class="chip gold">Late chunking</span>
+</div>
+</div>
+</div>
+
+<h3>Parámetros críticos</h3>
+<table>
+<tr>
+<th>Parámetro</th>
+<th>Rango típico</th>
+<th>Efecto</th>
+</tr>
+<tr>
+<td><code>chunk_size</code></td>
+<td>256 – 1024 tokens</td>
+<td>Mayor → más contexto pero peor precisión; Menor → más preciso pero pierde contexto</td>
+</tr>
+<tr>
+<td><code>chunk_overlap</code></td>
+<td>10–20% del chunk_size</td>
+<td>Evita cortar información en los bordes. Demasiado overlap = duplicación.</td>
+</tr>
+<tr>
+<td><code>min_chunk_size</code></td>
+<td>50 tokens</td>
+<td>Descartar chunks demasiado pequeños que no aportan contexto suficiente</td>
+</tr>
+</table>
+
+<h3>Semantic chunking</h3>
+<p>En lugar de dividir por tamaño fijo, el semantic chunking divide cuando hay un salto semántico
+significativo
+entre oraciones consecutivas. Se mide como la distancia coseno entre embeddings de oraciones
+adyacentes. Si la
+distancia supera un umbral θ, se crea un nuevo chunk.</p>
+
+<div class="formula">
+<div class="formula-label">Condición de corte semántico</div>
+nuevo_chunk = 1 si 1 - cos(E(sᵢ), E(sᵢ₊₁)) > θ
+</div>
+
+<h3>Propositions chunking</h3>
+<p>Técnica avanzada donde se usa un LLM para destilar cada chunk en proposiciones atómicas (frases con
+un único
+hecho). Cada proposición se embeddea independientemente, pero al recuperarla se retorna el chunk
+completo
+original. Esto mejora el recall a costo de mayor procesamiento en ingesta.</p>
+
+<h3>Estrategias de recuperación por jerarquía</h3>
+<div class="card-grid">
+<div class="card accent-green"><div class="card-title">Parent-child (small-to-big)</div><p class="card-body">Se indexan chunks pequeños para buscar con precisión, pero se entrega al modelo el bloque padre más grande para que tenga contexto.</p></div>
+<div class="card accent-green"><div class="card-title">Sentence window</div><p class="card-body">Se busca por oración y se devuelve la oración con N oraciones alrededor. Muy útil en documentos densos y normativos.</p></div>
+<div class="card accent-green"><div class="card-title">Por estructura del documento</div><p class="card-body">Se respeta la jerarquía (título, artículo, cláusula) y se añade la ruta de encabezados al chunk: "Reglamento &gt; Capítulo 3 &gt; Art. 12".</p></div>
+</div>

@@ -1,0 +1,136 @@
+<p>La fase de generación construye el prompt final combinando la consulta del usuario con los chunks
+recuperados, y pasa todo al LLM. El diseño del prompt de generación es crítico para la fidelidad de
+la
+respuesta.</p>
+
+<h3>Prompt template canónico para RAG</h3>
+<pre><span class="cls">SYSTEM</span>:
+Eres un asistente útil y preciso. Responde ÚNICAMENTE basándote en el
+contexto proporcionado. Si la respuesta no está en el contexto, di
+explícitamente que no tienes esa información. No inventes datos.
+
+Para cada afirmación importante, cita el fragmento de origen usando
+[Fuente N] al final de la oración.
+
+<span class="cls">USER</span>:
+<span class="kw">### Contexto</span>
+[Fuente 1] {chunk_1}
+[Fuente 2] {chunk_2}
+[Fuente 3] {chunk_3}
+
+<span class="kw">### Pregunta</span>
+{user_question}
+<span class="lang-label">PROMPT</span></pre>
+
+<h3>HyDE — Hypothetical Document Embeddings</h3>
+<p>En lugar de embeddear directamente la query del usuario, se usa el LLM para generar un documento
+hipotético
+que respondería a esa pregunta. Luego se embeddea ese documento hipotético y se usa para buscar. La
+intuición
+es que el documento hipotético está más cerca en el espacio de embeddings a los documentos
+relevantes reales
+que la query original (que puede ser muy corta).</p>
+
+<div class="flow">
+<div class="flow-step">Query<span class="step-sub">"¿Cuánto…?"</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">LLM<span class="step-sub">genera hipotético</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Embed<span class="step-sub">doc hipotético</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Search<span class="step-sub">retrieval</span></div>
+</div>
+
+<h3>Query rewriting</h3>
+<p>Las queries de los usuarios suelen ser cortas, ambiguas o mal formuladas. El query rewriting usa un
+LLM para
+transformar la query original en versiones más ricas antes del retrieval. Variantes:</p>
+<ul>
+<li><strong>Multi-query:</strong> generar 3-5 queries alternativas y hacer retrieval con todas,
+unificando los
+resultados con RRF.</li>
+<li><strong>Step-back prompting:</strong> generar primero una pregunta más genérica/abstracta para
+recuperar
+contexto de alto nivel.</li>
+<li><strong>Query decomposition:</strong> descomponer una pregunta compleja en sub-preguntas más
+simples (útil
+para preguntas multi-hop).</li>
+</ul>
+
+<h3>RAPTOR — Recursive Abstractive Processing</h3>
+<p>RAPTOR construye un árbol jerárquico de resúmenes. Los chunks originales se agrupan por similitud
+semántica
+(clustering), se resumen con un LLM, y esos resúmenes se agrupan y resumen de nuevo recursivamente.
+El árbol
+resultante se indexa completo. Queries de alto nivel recuperan resúmenes; queries específicas
+recuperan chunks
+originales.</p>
+
+<div class="callout tip">
+<div class="callout-label">Cuándo usar RAPTOR</div>
+<p>RAPTOR es especialmente útil para preguntas que requieren síntesis a través de muchos documentos
+("¿cuál es
+la tendencia general en todos los informes trimestrales?"). Para preguntas factuales
+específicas, el RAG
+estándar suele ser suficiente.</p>
+</div>
+
+<h3>Contextual retrieval (Anthropic)</h3>
+<p>Antes de indexar, se usa Claude para generar un párrafo de contexto para cada chunk que explica cómo
+encaja
+en el documento completo. Este contexto se prepende al chunk antes de embeddearlo. Reportan
+reducciones del
+49–67% en retrieval failures frente al RAG estándar.</p>
+
+<pre><span class="cm"># Prompt para generación de contexto por chunk</span>
+prompt = <span class="str">f"""
+&lt;document&gt;
+{full_document}
+&lt;/document&gt;
+
+Aquí está el fragmento a contextualizar:
+&lt;chunk&gt;
+{chunk_text}
+&lt;/chunk&gt;
+
+Proporciona un contexto conciso (2-3 oraciones) que sitúe este fragmento
+dentro del documento completo. Sé específico sobre qué información
+provee y cómo se relaciona con el tema central.
+"""</span>
+<span class="lang-label">Python</span></pre>
+
+<h3>Más allá del RAG clásico</h3>
+<div class="card-grid">
+<div class="card">
+<h4>Hybrid Search</h4>
+<p>Combina búsqueda vectorial (semántica) con búsqueda léxica (BM25/keyword). Recupera mejor términos exactos como códigos, IDs o nombres propios que el embedding puede diluir.</p>
+</div>
+<div class="card">
+<h4>Graph RAG</h4>
+<p>Indexa relaciones entre entidades como grafo de conocimiento, no solo texto plano. Útil cuando las preguntas requieren conectar múltiples entidades relacionadas.</p>
+</div>
+<div class="card">
+<h4>Agentic RAG</h4>
+<p>El propio modelo decide cuándo y qué recuperar, iterando la búsqueda si el primer resultado no es suficiente, en vez de un único paso de retrieval fijo.</p>
+</div>
+<div class="card">
+<h4>Contextual Retrieval</h4>
+<p>Cada chunk se enriquece con contexto explicativo generado antes de indexarlo, reduciendo la ambigüedad de fragmentos aislados.</p>
+</div>
+</div>
+
+<h3>Cuándo usar cada técnica</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Síntoma</th><th>Técnica que suele ayudar</th></tr></thead>
+<tbody>
+<tr><td>Consultas cortas o ambiguas recuperan mal</td><td>Query rewriting, multi-query, HyDE</td></tr>
+<tr><td>Falla con códigos, IDs o nombres exactos</td><td>Retrieval híbrido (BM25 + vectorial)</td></tr>
+<tr><td>Chunks recuperados son correctos pero incompletos</td><td>Parent-child, sentence window, contextual retrieval</td></tr>
+<tr><td>Preguntas que requieren síntesis global ("tendencias en todos los informes")</td><td>RAPTOR, resúmenes jerárquicos, map-reduce</td></tr>
+<tr><td>Preguntas que conectan entidades ("qué clientes comparten director con X")</td><td>Graph RAG o consulta estructurada vía herramienta</td></tr>
+<tr><td>Preguntas multi-paso que dependen de resultados intermedios</td><td>Agentic RAG: el modelo decide cuándo y qué buscar</td></tr>
+<tr><td>Datos tabulares o numéricos</td><td>Text-to-SQL con herramienta y validación, no embeddings de tablas</td></tr>
+</tbody>
+</table>
+</div>

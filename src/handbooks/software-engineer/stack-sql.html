@@ -1,0 +1,392 @@
+<!-- JUNIOR SQL -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-junior">Junior</span> <span class="level-title">SQL esencial y T-SQL básico</span></h3>
+
+<details class="concept" id="s-j1">
+<summary><span><span class="concept-name">JOINs — tipos y cuándo usar cada uno</span><br><span class="concept-tagline">INNER · LEFT · RIGHT · FULL OUTER · CROSS</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc"><strong>INNER JOIN</strong>: solo filas que tienen coincidencia en ambas
+tablas.
+<strong>LEFT JOIN</strong>: todas las filas de la izquierda, con NULL donde no hay
+coincidencia en la
+derecha. El tipo más usado en la práctica. <strong>RIGHT JOIN</strong>: igual pero al revés
+(evitable
+reescribiendo como LEFT). <strong>FULL OUTER JOIN</strong>: todos los registros de ambas
+tablas.
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">T-SQL</span></div>
+<pre"><span class="cm">-- INNER JOIN: solo clientes que tienen pedidos</span>
+                                <span class="kw">SELECT</span> c.Nombre, COUNT(p.Id) <span class="kw">AS</span>
+                                TotalPedidos
+                                <span class="kw">FROM</span> Clientes c
+                                <span class="kw">INNER JOIN</span> Pedidos p <span class="kw">ON</span> c.Id =
+                                p.ClienteId
+                                <span class="kw">GROUP BY</span> c.Nombre;
+
+                                <span class="cm">-- LEFT JOIN: TODOS los clientes, con 0 si no tienen pedidos</span>
+                                <span class="kw">SELECT</span> c.Nombre, COUNT(p.Id) <span class="kw">AS</span>
+                                TotalPedidos
+                                <span class="kw">FROM</span> Clientes c
+                                <span class="kw">LEFT JOIN</span> Pedidos p <span class="kw">ON</span> c.Id =
+                                p.ClienteId
+                                <span class="kw">GROUP BY</span> c.Nombre;
+
+                                <span class="cm">-- Encontrar clientes SIN pedidos (anti-join)</span>
+                                <span class="kw">SELECT</span> c.Nombre
+                                <span class="kw">FROM</span> Clientes c
+                                <span class="kw">LEFT JOIN</span> Pedidos p <span class="kw">ON</span> c.Id =
+                                p.ClienteId
+                                <span class="kw">WHERE</span> p.Id <span class="kw">IS NULL</span>; <span class="cm">--
+                                    filas sin
+                                    coincidencia</span></pre>
+</div>
+</div>
+</details>
+
+<details class="concept" id="s-j2">
+<summary><span><span class="concept-name">Stored Procedures y funciones</span><br><span class="concept-tagline">sp · UDF · TVF · parámetros de salida</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Los <strong>Stored Procedures</strong> son bloques de T-SQL compilados
+en el
+servidor. Las <strong>funciones escalares</strong> devuelven un valor; las <strong>funciones
+de tabla
+(TVF)</strong> devuelven un conjunto de filas y son muy útiles para reutilizar lógica de
+consulta.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">T-SQL</span></div>
+<pre><span class="cm">-- Stored Procedure con parámetros</span>
+<span class="kw">CREATE OR ALTER PROCEDURE</span> <span class="fn">usp_GetOrdersByClient</span>
+    <span class="attr">@ClienteId</span>  <span class="kw">INT</span>,
+    <span class="attr">@FechaDesde</span> <span class="kw">DATE</span> = <span class="kw">NULL</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">SET NOCOUNT ON</span>;
+
+    <span class="kw">SELECT</span>
+        p.Id,
+        p.Total,
+        p.FechaCreacion,
+        c.Nombre <span class="kw">AS</span> Cliente
+    <span class="kw">FROM</span> Pedidos p
+    <span class="kw">INNER JOIN</span> Clientes c <span class="kw">ON</span> c.Id = p.ClienteId
+    <span class="kw">WHERE</span> p.ClienteId = <span class="attr">@ClienteId</span>
+      <span class="kw">AND</span> (<span class="attr">@FechaDesde</span> <span class="kw">IS NULL OR</span> p.FechaCreacion >= <span class="attr">@FechaDesde</span>)
+    <span class="kw">ORDER BY</span> p.FechaCreacion <span class="kw">DESC</span>;
+<span class="kw">END</span>;
+
+<span class="cm">-- Table-Valued Function reutilizable</span>
+<span class="kw">CREATE FUNCTION</span> <span class="fn">fn_GetTopProducts</span>(<span class="attr">@n</span> <span class="kw">INT</span>)
+<span class="kw">RETURNS TABLE AS RETURN</span>
+(
+    <span class="kw">SELECT TOP</span> (<span class="attr">@n</span>) Id, Nombre, Ventas
+    <span class="kw">FROM</span> Productos
+    <span class="kw">ORDER BY</span> Ventas <span class="kw">DESC</span>
+);</pre>
+</div>
+<div class="tip tip-sql"><span class="tip-icon">💡</span> Siempre incluye
+<code>SET NOCOUNT ON</code> en
+stored procedures para evitar que se envíen mensajes de "N rows affected" innecesarios que
+pueden afectar
+el rendimiento.</div>
+</div>
+</details>
+</div>
+
+<!-- MID SQL -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-mid">Mid</span> <span class="level-title">Índices, transacciones y concurrencia</span></h3>
+
+<details class="concept" id="s-m1">
+<summary><span><span class="concept-name">Índices: Clustered vs Non-Clustered</span><br><span class="concept-tagline">B-Tree · Seek vs Scan · Include columns · covering index</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">El <strong>Clustered Index</strong> determina el orden físico de los
+datos en disco
+(solo puede haber uno por tabla; suele ser la PK). Los <strong>Non-Clustered Index</strong>
+son
+estructuras B-Tree separadas que apuntan a la fila. Un <strong>Covering Index</strong>
+incluye todas las
+columnas necesarias para satisfacer una query sin ir a la tabla base (seek eficiente).</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">T-SQL</span></div>
+<pre"><span class="cm">-- Non-clustered con included columns (covering index)</span>
+                                <span class="cm">-- Query frecuente: filtrar por ClienteId, mostrar Total y Fecha</span>
+                                <span class="kw">CREATE NONCLUSTERED INDEX</span> <span
+                                    class="fn">IX_Pedidos_ClienteId</span>
+                                <span class="kw">ON</span> Pedidos (ClienteId)
+                                <span class="kw">INCLUDE</span> (Total, FechaCreacion);
+                                <span class="cm">-- Las columnas de INCLUDE no son parte del key,</span>
+                                <span class="cm">-- pero SQL Server las guarda en las hojas del índice,</span>
+                                <span class="cm">-- evitando un Key Lookup a la tabla base.</span>
+
+                                <span class="cm">-- Ver el Execution Plan para diagnosticar</span>
+                                <span class="kw">SET STATISTICS IO ON</span>;
+                                <span class="kw">SELECT</span> ClienteId, <span class="kw">SUM</span>(Total)
+                                <span class="kw">FROM</span> Pedidos
+                                <span class="kw">WHERE</span> ClienteId = <span class="num">42</span>
+                                <span class="kw">GROUP BY</span> ClienteId;
+                                <span class="cm">-- Buscar: Index Seek (bueno) vs Table Scan (malo)</span>
+
+                                <span class="cm">-- Índice filtrado — solo para estados activos</span>
+                                <span class="kw">CREATE NONCLUSTERED INDEX</span> <span
+                                    class="fn">IX_Pedidos_Activos</span>
+                                <span class="kw">ON</span> Pedidos (FechaCreacion)
+                                <span class="kw">WHERE</span> Estado = <span class="str">'Activo'</span>; <span
+                                    class="cm">-- mucho más
+                                    pequeño</span></pre>
+</div>
+<div class="tip tip-sql"><span class="tip-icon">💡</span> Demasiados índices ralentizan los
+INSERT/UPDATE/DELETE porque todos deben actualizarse. Cada índice tiene un costo de
+mantenimiento. Crea
+índices basados en queries reales, no por intuición.</div>
+</div>
+</details>
+
+<details class="concept" id="s-m2">
+<summary><span><span class="concept-name">Transacciones y niveles de aislamiento</span><br><span class="concept-tagline">ACID · READ COMMITTED · SNAPSHOT · Deadlock</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc"><strong>ACID</strong> garantiza integridad: Atomicity (todo o nada),
+Consistency
+(reglas siempre válidas), Isolation (transacciones no se interfieren), Durability (lo
+guardado persiste).
+Los <strong>niveles de aislamiento</strong> controlan qué tan estricta es esa I: más
+estricto = más
+consistencia pero más bloqueos.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">T-SQL</span></div>
+<pre><span class="cm">-- READ COMMITTED (default): lee solo datos confirmados</span>
+<span class="kw">SET TRANSACTION ISOLATION LEVEL READ COMMITTED</span>;
+
+<span class="cm">-- SNAPSHOT: lecturas consistentes sin bloquear escrituras</span>
+<span class="cm">-- Requiere habilitarlo en la DB primero:</span>
+<span class="kw">ALTER DATABASE</span> MiDB <span class="kw">SET ALLOW_SNAPSHOT_ISOLATION ON</span>;
+<span class="kw">SET TRANSACTION ISOLATION LEVEL SNAPSHOT</span>;
+
+<span class="cm">-- Transacción explícita para operaciones múltiples</span>
+<span class="kw">BEGIN TRANSACTION</span>;
+<span class="kw">BEGIN TRY</span>
+    <span class="kw">UPDATE</span> CuentaBancaria <span class="kw">SET</span> Saldo -= <span class="num">100</span> <span class="kw">WHERE</span> Id = <span class="num">1</span>;
+    <span class="kw">UPDATE</span> CuentaBancaria <span class="kw">SET</span> Saldo += <span class="num">100</span> <span class="kw">WHERE</span> Id = <span class="num">2</span>;
+    <span class="kw">COMMIT TRANSACTION</span>;
+<span class="kw">END TRY</span>
+<span class="kw">BEGIN CATCH</span>
+    <span class="kw">ROLLBACK TRANSACTION</span>;
+    <span class="kw">THROW</span>;
+<span class="kw">END CATCH</span>;</pre>
+</div>
+<div class="tip tip-warn"><span class="tip-icon">⚠️</span> Los <strong>deadlocks</strong>
+ocurren cuando dos
+transacciones se esperan mutuamente. Solución: acceder siempre a las tablas en el mismo
+orden, mantener
+transacciones cortas, y habilitar SNAPSHOT Isolation para lecturas.</div>
+</div>
+</details>
+
+<details class="concept" id="s-m3">
+<summary><span><span class="concept-name">CTEs y Window Functions</span><br><span class="concept-tagline">WITH · ROW_NUMBER · RANK · LAG/LEAD · PARTITION BY</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Las <strong>CTEs</strong> (Common Table Expressions) hacen las queries
+más legibles
+dividiéndolas en partes nombradas. Las <strong>Window Functions</strong> calculan sobre un
+conjunto de
+filas relacionadas sin colapsar el resultado como GROUP BY.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">T-SQL</span></div>
+<pre><span class="cm">-- CTE para query legible</span>
+<span class="kw">WITH</span> PedidosPorCliente <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> ClienteId, <span class="kw">SUM</span>(Total) <span class="kw">AS</span> TotalAnual
+    <span class="kw">FROM</span>  Pedidos
+    <span class="kw">WHERE</span> YEAR(FechaCreacion) = <span class="num">2024</span>
+    <span class="kw">GROUP BY</span> ClienteId
+),
+Ranking <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> *, <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> TotalAnual <span class="kw">DESC</span>) <span class="kw">AS</span> Posicion
+    <span class="kw">FROM</span>  PedidosPorCliente
+)
+<span class="kw">SELECT</span> c.Nombre, r.TotalAnual, r.Posicion
+<span class="kw">FROM</span>  Ranking r
+<span class="kw">JOIN</span>  Clientes c <span class="kw">ON</span> c.Id = r.ClienteId
+<span class="kw">WHERE</span> r.Posicion <= <span class="num">10</span>;
+
+<span class="cm">-- Window function: comparar con mes anterior</span>
+<span class="kw">SELECT</span>
+    Mes,
+    Ventas,
+    <span class="fn">LAG</span>(Ventas) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> Mes) <span class="kw">AS</span> VentasMesAnterior,
+    Ventas - <span class="fn">LAG</span>(Ventas) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> Mes) <span class="kw">AS</span> Diferencia
+<span class="kw">FROM</span> VentasMensuales;</pre>
+</div>
+</div>
+</details>
+</div>
+
+<!-- SENIOR SQL -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-senior">Senior</span> <span class="level-title">Query tuning y diseño escalable</span></h3>
+
+<details class="concept" id="s-s1">
+<summary><span><span class="concept-name">Execution Plans — leer e interpretar</span><br><span class="concept-tagline">Table Scan · Index Seek · Key Lookup · Estimated vs Actual</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">El Execution Plan muestra cómo SQL Server ejecuta una query. Los
+operadores se leen
+de <strong>derecha a izquierda, arriba a abajo</strong>. El grosor de las flechas indica el
+volumen de
+datos. Los warnings (iconos amarillos) señalan problemas. <strong>Estimated rows vs Actual
+rows</strong>:
+una gran diferencia indica estadísticas desactualizadas.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">T-SQL</span></div>
+<pre><span class="cm">-- Ver plan estimado (no ejecuta)</span>
+<span class="kw">SET SHOWPLAN_XML ON</span>;
+
+<span class="cm">-- Ver plan real (ejecuta la query)</span>
+<span class="kw">SET STATISTICS IO ON</span>;
+<span class="kw">SET STATISTICS TIME ON</span>;
+
+<span class="cm">-- Query que genera Key Lookup (problema)</span>
+<span class="kw">SELECT</span> Nombre, Email, Telefono
+<span class="kw">FROM</span> Clientes
+<span class="kw">WHERE</span> Ciudad = <span class="str">'Madrid'</span>;
+<span class="cm">-- Si Ciudad tiene índice pero Email/Telefono no están incluidas,</span>
+<span class="cm">-- habrá un Key Lookup por cada fila — caro.</span>
+
+<span class="cm">-- Solución: Covering Index</span>
+<span class="kw">CREATE INDEX</span> <span class="fn">IX_Clientes_Ciudad</span> <span class="kw">ON</span> Clientes(Ciudad)
+<span class="kw">INCLUDE</span> (Nombre, Email, Telefono);
+
+<span class="cm">-- Query Store: ver queries regresadas en performance</span>
+<span class="kw">SELECT TOP</span> <span class="num">10</span> qt.query_sql_text, qs.avg_duration
+<span class="kw">FROM</span> sys.query_store_query_text qt
+<span class="kw">JOIN</span> sys.query_store_plan qp <span class="kw">ON</span> qt.query_text_id = qp.query_text_id
+<span class="kw">JOIN</span> sys.query_store_runtime_stats qs <span class="kw">ON</span> qp.plan_id = qs.plan_id
+<span class="kw">ORDER BY</span> qs.avg_duration <span class="kw">DESC</span>;</pre>
+</div>
+<div class="pill-row">
+<span class="pill">Table Scan = malo</span>
+<span class="pill">Index Seek = bueno</span>
+<span class="pill">Key Lookup = optimizable</span>
+<span class="pill">Hash Match = JOIN sin índice</span>
+<span class="pill">Nested Loop = JOINs pequeños</span>
+</div>
+</div>
+</details>
+
+<details class="concept" id="s-s2">
+<summary><span><span class="concept-name">Parameter Sniffing</span><br><span class="concept-tagline">plan cache · OPTION RECOMPILE · optimize for unknown</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">SQL Server compila un plan de ejecución la primera vez que ejecuta un
+SP, basándose
+en los parámetros de esa primera llamada. Si esos parámetros son atípicos (ej: un cliente
+con millones de
+pedidos cuando la mayoría tiene 10), el plan queda "sniffed" y será malo para el resto de
+ejecuciones.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">T-SQL</span></div>
+<pre><span class="cm">-- ❌ Vulnerable a Parameter Sniffing</span>
+<span class="kw">CREATE PROCEDURE</span> <span class="fn">GetPedidosByCliente</span> <span class="attr">@ClienteId</span> <span class="kw">INT</span>
+<span class="kw">AS</span>
+    <span class="kw">SELECT</span> * <span class="kw">FROM</span> Pedidos <span class="kw">WHERE</span> ClienteId = <span class="attr">@ClienteId</span>;
+
+<span class="cm">-- ✅ Solución 1: OPTION RECOMPILE (recompila cada vez)</span>
+<span class="cm">--    Bueno para SPs que varían mucho en distribución</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> Pedidos <span class="kw">WHERE</span> ClienteId = <span class="attr">@ClienteId</span>
+<span class="kw">OPTION</span> (<span class="kw">RECOMPILE</span>);
+
+<span class="cm">-- ✅ Solución 2: Variables locales (rompe el sniffing)</span>
+<span class="kw">DECLARE</span> <span class="attr">@LocalId</span> <span class="kw">INT</span> = <span class="attr">@ClienteId</span>;
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> Pedidos <span class="kw">WHERE</span> ClienteId = <span class="attr">@LocalId</span>;
+
+<span class="cm">-- ✅ Solución 3: OPTIMIZE FOR UNKNOWN</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> Pedidos <span class="kw">WHERE</span> ClienteId = <span class="attr">@ClienteId</span>
+<span class="kw">OPTION</span> (<span class="kw">OPTIMIZE FOR</span> (<span class="attr">@ClienteId</span> <span class="kw">UNKNOWN</span>));</pre>
+</div>
+</div>
+</details>
+
+<details class="concept" id="s-s3">
+<summary><span><span class="concept-name">Temporal Tables</span><br><span class="concept-tagline">system-versioned · historial automático · point-in-time query</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Las <strong>Temporal Tables</strong> (SQL Server 2016+) registran
+automáticamente el
+historial de cambios de cada fila. SQL Server mantiene una tabla de historial paralela con
+las versiones
+anteriores. Ideal para auditoría, "undo", o consultas de "¿cómo era esto hace 6 meses?"</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">T-SQL</span></div>
+<pre"><span class="cm">-- Crear tabla temporal</span>
+                                <span class="kw">CREATE TABLE</span> Productos
+                                (
+                                Id <span class="kw">INT PRIMARY KEY</span>,
+                                Nombre <span class="kw">NVARCHAR</span>(<span class="num">100</span>),
+                                Precio <span class="kw">DECIMAL</span>(<span class="num">18</span>,<span
+                                    class="num">2</span>),
+                                ValidFrom <span class="kw">DATETIME2</span> <span class="kw">GENERATED ALWAYS AS ROW
+                                    START</span>,
+                                ValidTo <span class="kw">DATETIME2</span> <span class="kw">GENERATED ALWAYS AS ROW
+                                    END</span>,
+                                <span class="kw">PERIOD FOR SYSTEM_TIME</span> (ValidFrom, ValidTo)
+                                )
+                                <span class="kw">WITH</span> (<span class="kw">SYSTEM_VERSIONING = ON</span>);
+
+                                <span class="cm">-- Consultar estado en un punto del tiempo</span>
+                                <span class="kw">SELECT</span> * <span class="kw">FROM</span> Productos
+                                <span class="kw">FOR SYSTEM_TIME AS OF</span> <span class="str">'2024-01-01
+                                    00:00:00'</span>;
+
+                                <span class="cm">-- Ver todos los cambios de un producto</span>
+                                <span class="kw">SELECT</span> *, ValidFrom, ValidTo
+                                <span class="kw">FROM</span> Productos
+                                <span class="kw">FOR SYSTEM_TIME ALL</span>
+                                <span class="kw">WHERE</span> Id = <span class="num">42</span>
+                                <span class="kw">ORDER BY</span> ValidFrom;</pre>
+</div>
+</div>
+</details>
+</div>
+
+<!-- LEAD SQL -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-lead">Lead / Arch</span> <span class="level-title">Alta disponibilidad y arquitectura de datos</span></h3>
+
+<details class="concept" id="s-l1">
+<summary><span><span class="concept-name">Always On Availability Groups</span><br><span class="concept-tagline">primary · secondary · failover · read scale-out</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Los <strong>Always On AG</strong> son el mecanismo de alta
+disponibilidad de SQL
+Server. Un primario sincroniza transacciones con uno o más secundarios. El <strong>failover
+automático</strong> mueve el rol primario si el nodo falla. Los secundarios pueden
+configurarse para
+<strong>lecturas</strong> (read scale-out), descargando queries pesadas del primario.
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">T-SQL · Connection String</span><button
+class="copy-btn">copiar</button></div>
+<pre"><span class="cm">-- Monitorear estado del AG</span>
+                                <span class="kw">SELECT</span>
+                                ag.name <span class="kw">AS</span> AGNombre,
+                                rs.role_desc <span class="kw">AS</span> Rol,
+                                rs.synchronization_health_desc <span class="kw">AS</span> Salud,
+                                rs.log_send_queue_size <span class="kw">AS</span> ColaSinEnviar_KB
+                                <span class="kw">FROM</span> sys.dm_hadr_availability_replica_states rs
+                                <span class="kw">JOIN</span> sys.availability_groups ag <span class="kw">ON</span>
+                                rs.group_id =
+                                ag.group_id;
+
+                                <span class="cm">-- Connection String para aplicaciones</span>
+                                <span class="cm">-- Escribe siempre en primario, lee en secundario</span>
+                                <span class="str">Server=tcp:AGListener,1433;
+                                    Database=MiDB;
+                                    ApplicationIntent=ReadOnly; -- o ReadWrite
+                                    MultiSubnetFailover=True; -- failover rápido
+                                    ConnectTimeout=30;</span></pre>
+</div>
+<div class="pill-row">
+<span class="pill">Synchronous commit</span>
+<span class="pill">Asynchronous commit</span>
+<span class="pill">Readable secondary</span>
+<span class="pill">Listener</span>
+<span class="pill">Automatic failover</span>
+</div>
+</div>
+</details>
+</div>

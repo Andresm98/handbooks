@@ -1,0 +1,111 @@
+<p>El retrieval híbrido combina búsqueda densa (por embeddings) con búsqueda dispersa (por keywords).
+Cada modo
+captura un tipo diferente de relevancia, y su combinación supera sistemáticamente a cualquiera de
+los dos
+solos.</p>
+
+<div class="compare">
+<div class="compare-col good">
+<div class="compare-header">Búsqueda densa (vectorial)</div>
+<ul>
+<li>Captura similitud semántica</li>
+<li>Funciona con sinónimos y paráfrasis</li>
+<li>Robusta ante variaciones lingüísticas</li>
+<li>Ideal para preguntas abiertas</li>
+</ul>
+</div>
+<div class="compare-col bad">
+<div class="compare-header">Búsqueda dispersa (BM25)</div>
+<ul>
+<li>Captura matches exactos de keywords</li>
+<li>Excelente para nombres propios, IDs, fechas</li>
+<li>Interpretable y predecible</li>
+<li>No requiere GPU ni modelo de embeddings</li>
+</ul>
+</div>
+</div>
+
+<h3>Reciprocal Rank Fusion (RRF)</h3>
+<p>RRF es el método estándar para combinar rankings de múltiples retrievers. En lugar de combinar scores
+(que
+tienen escalas incompatibles), combina los <em>rankings</em> de cada resultado.</p>
+
+<div class="formula">
+<div class="formula-label">Reciprocal Rank Fusion</div>
+RRF_score(d) = Σᵣ 1 / (k + rankᵣ(d)) donde k = 60 (constante estándar)
+</div>
+
+<p>Con <code>k=60</code>, un documento rankeado primero en un retriever obtiene
+<code>1/61 ≈ 0.016</code>
+puntos. Esta constante suaviza el impacto de posiciones extremas y evita que un buen rank en un solo
+retriever
+domine el resultado.
+</p>
+
+<pre><span class="kw">def</span> <span class="fn">reciprocal_rank_fusion</span>(result_lists: list[list[str]], k: int = <span class="num">60</span>) -> list[str]:
+    scores = {}
+    <span class="kw">for</span> results <span class="kw">in</span> result_lists:
+        <span class="kw">for</span> rank, doc_id <span class="kw">in</span> <span class="fn">enumerate</span>(results, start=<span class="num">1</span>):
+            scores[doc_id] = scores.<span class="fn">get</span>(doc_id, <span class="num">0</span>) + <span class="num">1</span> / (k + rank)
+    <span class="kw">return</span> <span class="fn">sorted</span>(scores, key=<span class="kw">lambda</span> x: scores[x], reverse=<span class="kw">True</span>)
+<span class="lang-label">Python</span></pre>
+
+<h3>Re-ranking</h3>
+<p>El re-ranking es una segunda etapa de ordenamiento que usa un modelo más expresivo para re-evaluar la
+relevancia de los chunks candidatos devueltos por el retriever. Funciona en modo
+<strong>cross-encoder</strong>: analiza el par (query, chunk) conjuntamente, a diferencia de los
+bi-encoders
+de embeddings que los procesan por separado.
+</p>
+
+<div class="flow">
+<div class="flow-step">Query<span class="step-sub">usuario</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Retriever<span class="step-sub">top-100</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Candidates<span class="step-sub">100 chunks</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Re-ranker<span class="step-sub">cross-encoder</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Top-k<span class="step-sub">5–10 chunks</span></div>
+</div>
+
+<h3>Cross-encoder vs Bi-encoder</h3>
+<table>
+<tr>
+<th></th>
+<th>Bi-encoder (embedding)</th>
+<th>Cross-encoder (reranker)</th>
+</tr>
+<tr>
+<td><strong>Input</strong></td>
+<td>Query y doc por separado</td>
+<td>[Query; Doc] concatenados</td>
+</tr>
+<tr>
+<td><strong>Velocidad</strong></td>
+<td>Muy rápida (precomputable)</td>
+<td>Lenta (O(n) inferencias)</td>
+</tr>
+<tr>
+<td><strong>Calidad</strong></td>
+<td>Alta</td>
+<td>Muy alta (gold standard)</td>
+</tr>
+<tr>
+<td><strong>Uso</strong></td>
+<td>Retrieval inicial (millones)</td>
+<td>Re-ranking (decenas)</td>
+</tr>
+</table>
+
+<h3>Opciones de re-rankers</h3>
+<div class="card-grid">
+<div class="card accent-blue"><div class="card-title">Re-rankers como servicio</div><p class="card-body">APIs gestionadas de re-ranking (por ejemplo Cohere Rerank, Voyage) con soporte multilingüe. Fáciles de integrar; costo por consulta y los datos salen de tu perímetro.</p></div>
+<div class="card accent-green"><div class="card-title">Cross-encoders abiertos</div><p class="card-body">Modelos como la familia BGE-reranker o Jina reranker multilingües. Corren en tu infraestructura (CPU o GPU) con control total de los datos.</p></div>
+<div class="card accent-gold"><div class="card-title">LLM como re-ranker</div><p class="card-body">Pedir a un LLM que ordene o puntúe candidatos. Máxima flexibilidad y criterio de dominio; más caro y lento: resérvalo para pocos candidatos.</p></div>
+</div>
+<p class="muted">Compara opciones con Recall@k y NDCG sobre tu golden dataset antes y después del re-ranking: si no mejora la métrica, quítalo y ahórrate la latencia.</p>
+
+<h3>Filtrado por metadatos</h3>
+<p>Antes o durante la búsqueda vectorial se aplican filtros duros: tenant, permisos del usuario, idioma, rango de fechas, tipo de documento. El <strong>pre-filtrado</strong> (filtrar y luego buscar) garantiza que nada fuera de permiso se recupere; el post-filtrado (buscar y luego filtrar) puede devolver menos de k resultados o, peor, depender de que el filtro no se olvide. Para permisos, usa siempre pre-filtrado aplicado por el servidor, nunca por el modelo.</p>

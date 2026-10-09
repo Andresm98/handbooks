@@ -1,0 +1,35 @@
+<p>Los asistentes de código y los agentes de programación cambiaron el día a día del ingeniero: escriben borradores, refactorizan, generan pruebas y navegan bases de código grandes. No cambiaron lo que hace valioso a un ingeniero senior: entender el problema, diseñar, verificar y responsabilizarse del resultado. Este capítulo trata la IA como herramienta de trabajo; para construir productos con IA, ve al handbook de <a href="ia-generativa.html">IA Generativa, RAG y Sistemas Agénticos</a>.</p>
+
+<h3>Dónde aporta más</h3>
+<div class="card-grid">
+<div class="card accent-green"><div class="card-title">Exploración de código</div><p class="card-body">Preguntar "dónde se valida X" o "qué rutas llaman a este servicio" en un repositorio desconocido ahorra horas de lectura.</p></div>
+<div class="card accent-green"><div class="card-title">Tareas mecánicas</div><p class="card-body">Migraciones repetitivas, cambios de API en muchos archivos, boilerplate, conversión entre formatos.</p></div>
+<div class="card accent-green"><div class="card-title">Pruebas</div><p class="card-body">Generar casos borde y pruebas de regresión a partir de una especificación o de un bug.</p></div>
+<div class="card accent-green"><div class="card-title">Primer borrador</div><p class="card-body">Scripts, consultas SQL, expresiones regulares, documentación: rápido de generar, rápido de revisar.</p></div>
+</div>
+
+<h3>Dónde hay que tener más cuidado</h3>
+<ul>
+<li><strong>Código plausible pero incorrecto:</strong> compila, se ve idiomático y falla en el caso borde. La revisión debe ser tan rigurosa como con código de un colega nuevo.</li>
+<li><strong>APIs inventadas o desactualizadas:</strong> funciones o parámetros que no existen en la versión que usas. Verifica contra la documentación y deja que el compilador y las pruebas hablen.</li>
+<li><strong>Seguridad:</strong> inyección SQL, secretos en código, validación ausente, dependencias inexistentes que alguien puede registrar con código malicioso.</li>
+<li><strong>Diseño:</strong> el asistente optimiza el cambio local; la coherencia de la arquitectura sigue siendo tu responsabilidad.</li>
+<li><strong>Datos confidenciales:</strong> respeta la política de tu organización sobre qué código y datos pueden enviarse a cada herramienta.</li>
+</ul>
+
+<h3>Cómo trabajar bien con un agente de código</h3>
+<ol>
+<li><strong>Da contexto como a un colega:</strong> objetivo, restricciones, archivos relevantes, convenciones del repositorio y cómo verificar el resultado.</li>
+<li><strong>Pide un plan antes de cambios grandes</strong> y revísalo: es más barato corregir el plan que el código.</li>
+<li><strong>Exige verificación ejecutable:</strong> pruebas, linters y build deben correr y pasar; "debería funcionar" no es evidencia.</li>
+<li><strong>Cambios pequeños y revisables:</strong> un pull request de 2 000 líneas generado es tan difícil de revisar como uno escrito a mano.</li>
+<li><strong>Documenta las convenciones</strong> en archivos que la herramienta lea (instrucciones del repositorio, guías de estilo) en lugar de repetirlas en cada sesión.</li>
+</ol>
+
+<div class="callout axiom">
+<span class="callout-label">La responsabilidad no se delega</span>
+Si lo mergeas, es tu código. La IA acelera la escritura; la comprensión, la verificación y el criterio siguen siendo el trabajo del ingeniero. Los equipos que más ganan son los que ya tenían buenas pruebas, CI rápido y revisiones serias: la IA amplifica la disciplina que ya existe.
+</div>
+
+<h3>Del uso a la construcción</h3>
+<p>Si quieres pasar de usar IA a construir sistemas con IA (rol de AI Software Engineer), el camino empieza por el <a href="ia-generativa.html#competencias">mapa de competencias</a> y el capítulo de <a href="ia-generativa.html#integracion-apis">integración de LLMs en software</a>.</p>

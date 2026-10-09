@@ -1,0 +1,186 @@
+<p>No necesitas diseñar Kafka para necesitar entender sistemas distribuidos. Cada vez que tu código
+hace una
+llamada HTTP a un servicio externo, lee de una base de datos remota, o escribe en una cola —
+estás operando
+en un sistema distribuido con todos sus problemas: fallos de red, latencia variable, mensajes
+duplicados, y
+estados inconsistentes.</p>
+
+<h3 id="idempotency">Idempotencia: El Principio que Salva Datos</h3>
+
+<div class="diagram">
+<pre><code>
+  Por qué los retries ocurren aunque el servidor respondió exitosamente
+
+  Cliente                    Red                    Servidor
+     │                        │                         │
+     │──POST /payments──────►│──────────────────────►  │
+     │                        │                         │ Procesa pago ✓
+     │                        │◄─── Timeout / Drop ──   │ Envía 200 OK
+     │                        │  (respuesta perdida)    │
+     │   Timeout!             │                         │
+     │──POST /payments──────►│──────────────────────►  │
+     │  (retry)               │                         │ Procesa pago OTRA VEZ ❌
+     │◄──────────────────────│◄────────────────────────│ 201 Created
+
+  El cliente nunca recibió el 200 original.
+  El servidor procesó el pago DOS veces.
+  El cliente tiene razón al reintentar.
+  El servidor tiene razón al procesar.
+  Resultado: cobro duplicado.
+
+  Solución: Idempotency Key
+  El cliente genera un UUID antes del primer intento.
+  Lo envía en cada retry con el MISMO UUID.
+  El servidor: "¿Ya vi este UUID? → Retornar el resultado anterior."
+</code></pre>
+</div>
+
+<pre data-lang="typescript"><code><span class="cm">// Implementación de idempotency keys en servidor</span>
+<span class="kw">async function</span> <span class="fn">processPayment</span>(
+  req: Request,
+  paymentData: PaymentDTO
+): Promise&lt;PaymentResult&gt; {
+
+  <span class="kw">const</span> idempotencyKey = req.headers[<span class="str">'idempotency-key'</span>]
+  <span class="kw">if</span> (!idempotencyKey) {
+    <span class="kw">throw new</span> BadRequestError(<span class="str">'Idempotency-Key header required'</span>)
+  }
+
+  <span class="cm">// Verificar si ya procesamos esta operación</span>
+  <span class="kw">const</span> cached = <span class="kw">await</span> redis.get(<span class="str">`idempotency:payment:${idempotencyKey}`</span>)
+  <span class="kw">if</span> (cached) {
+    <span class="cm">// Retornar el resultado original — sin re-procesar</span>
+    <span class="kw">return</span> JSON.parse(cached) <span class="kw">as</span> PaymentResult
+  }
+
+  <span class="cm">// Primer intento: procesar y guardar resultado</span>
+  <span class="kw">const</span> result = <span class="kw">await</span> paymentProvider.charge(paymentData)
+
+  <span class="cm">// Guardar por 24 horas (ventana de retries del cliente)</span>
+  <span class="kw">await</span> redis.setex(
+    <span class="str">`idempotency:payment:${idempotencyKey}`</span>,
+    <span class="nm">86400</span>,
+    JSON.stringify(result)
+  )
+
+  <span class="kw">return</span> result
+}
+
+<span class="cm">// Cliente: generar la key ANTES del primer request</span>
+<span class="kw">async function</span> <span class="fn">chargeWithRetry</span>(paymentData: PaymentDTO): Promise&lt;PaymentResult&gt; {
+  <span class="kw">const</span> idempotencyKey = crypto.randomUUID()  <span class="cm">// Generado una vez</span>
+
+  <span class="kw">for</span> (<span class="kw">let</span> attempt = <span class="nm">0</span>; attempt &lt; <span class="nm">3</span>; attempt++) {
+    <span class="kw">try</span> {
+      <span class="kw">return await</span> fetch(<span class="str">'/payments'</span>, {
+        method: <span class="str">'POST'</span>,
+        headers: {
+          <span class="str">'Idempotency-Key'</span>: idempotencyKey,  <span class="cm">// Misma key en cada retry</span>
+          <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>
+        },
+        body: JSON.stringify(paymentData)
+      })
+    } <span class="kw">catch</span> (error) {
+      <span class="kw">if</span> (attempt === <span class="nm">2</span>) <span class="kw">throw</span> error
+      <span class="kw">await</span> sleep(<span class="nm">Math.pow</span>(<span class="nm">2</span>, attempt) * <span class="nm">1000</span>)  <span class="cm">// Exponential backoff</span>
+    }
+  }
+}</code></pre>
+
+<h3 id="retry">Retry con Backoff Exponencial y Circuit Breaker</h3>
+
+<pre data-lang="python"><code><span class="cm"># Retry con exponential backoff + jitter — el estándar de producción</span>
+<span class="kw">import</span> asyncio
+<span class="kw">import</span> random
+<span class="kw">from</span> typing <span class="kw">import</span> TypeVar, Callable
+
+T = TypeVar(<span class="str">'T'</span>)
+
+<span class="kw">async def</span> <span class="fn">retry_with_backoff</span>(
+    func: Callable[[], T],
+    max_attempts: int = <span class="nm">3</span>,
+    base_delay: float = <span class="nm">1.0</span>,
+    max_delay: float = <span class="nm">30.0</span>,
+    retryable_exceptions: tuple = (ConnectionError, TimeoutError)
+) -> T:
+    <span class="str">"""
+    Exponential backoff con jitter:
+    intento 1: espera 1s + random(0-0.5s)
+    intento 2: espera 2s + random(0-1s)
+    intento 3: espera 4s + random(0-2s)
+
+    El jitter evita el "thundering herd": si 1000 clientes fallan
+    al mismo tiempo y todos esperan exactamente 2s, el servidor
+    recibe 1000 requests simultáneos al segundo 2 → otro fallo.
+    Con jitter: los 1000 se distribuyen en una ventana de tiempo.
+    """</span>
+    last_exception = None
+
+    <span class="kw">for</span> attempt <span class="kw">in</span> range(max_attempts):
+        <span class="kw">try</span>:
+            <span class="kw">return await</span> func()
+        <span class="kw">except</span> retryable_exceptions <span class="kw">as</span> e:
+            last_exception = e
+            <span class="kw">if</span> attempt == max_attempts - <span class="nm">1</span>:
+                <span class="kw">break</span>
+            delay = min(base_delay * (<span class="nm">2</span> ** attempt), max_delay)
+            jitter = random.uniform(<span class="nm">0</span>, delay * <span class="nm">0.5</span>)
+            <span class="kw">await</span> asyncio.sleep(delay + jitter)
+
+    <span class="kw">raise</span> last_exception
+
+<span class="cm"># ─────────────────────────────────────────────────────────
+# Circuit Breaker: evitar llamadas a servicios que están caídos</span>
+
+<span class="kw">from</span> enum <span class="kw">import</span> Enum
+
+<span class="kw">class</span> <span class="fn">CircuitState</span>(Enum):
+    CLOSED = <span class="str">"closed"</span>       <span class="cm"># Normal: deja pasar las llamadas</span>
+    OPEN = <span class="str">"open"</span>           <span class="cm"># Fallo: rechaza inmediatamente</span>
+    HALF_OPEN = <span class="str">"half_open"</span> <span class="cm"># Probando: deja pasar una llamada</span>
+
+<span class="kw">class</span> <span class="fn">CircuitBreaker</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, failure_threshold=<span class="nm">5</span>, recovery_timeout=<span class="nm">60</span>):
+        self.state = CircuitState.CLOSED
+        self.failure_count = <span class="nm">0</span>
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.last_failure_time = None
+
+    <span class="kw">async def</span> <span class="fn">call</span>(self, func):
+        <span class="kw">if</span> self.state == CircuitState.OPEN:
+            <span class="kw">if</span> self.<span class="fn">_should_attempt_recovery</span>():
+                self.state = CircuitState.HALF_OPEN
+            <span class="kw">else</span>:
+                <span class="kw">raise</span> CircuitOpenError(<span class="str">"Circuit is OPEN — service unavailable"</span>)
+        <span class="kw">try</span>:
+            result = <span class="kw">await</span> func()
+            self.<span class="fn">_on_success</span>()
+            <span class="kw">return</span> result
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            self.<span class="fn">_on_failure</span>()
+            <span class="kw">raise</span>
+
+    <span class="kw">def</span> <span class="fn">_on_success</span>(self):
+        self.failure_count = <span class="nm">0</span>
+        self.state = CircuitState.CLOSED
+
+    <span class="kw">def</span> <span class="fn">_on_failure</span>(self):
+        self.failure_count += <span class="nm">1</span>
+        self.last_failure_time = time.time()
+        <span class="kw">if</span> self.failure_count >= self.failure_threshold:
+            self.state = CircuitState.OPEN</code></pre>
+
+<div class="arch-rel">
+<span class="arch-rel-lbl">Conexión técnica</span>
+<p>Los patrones de sistemas distribuidos del día a día implementan principios arquitectónicos
+fundamentales:
+la idempotencia hace posible el <strong>at-least-once delivery</strong> seguro. El circuit
+breaker es el
+patrón que implementa la <strong>resiliencia y tolerancia a fallos</strong> a nivel de
+código. El
+exponential backoff con jitter evita el <strong>thundering herd</strong> que puede convertir
+un fallo
+temporal en un fallo total en cascada.</p>
+</div>

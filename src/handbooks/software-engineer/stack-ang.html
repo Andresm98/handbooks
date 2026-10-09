@@ -1,0 +1,434 @@
+<!-- JUNIOR ANG -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-junior">Junior</span> <span class="level-title">Componentes, templates y routing</span></h3>
+
+<details class="concept" id="a-j1">
+<summary><span><span class="concept-name">Data Binding — los 4 tipos</span><br><span class="concept-tagline">interpolation · property · event · two-way</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Angular tiene cuatro formas de conectar el componente con la vista:
+<strong>Interpolación</strong> muestra valores. <strong>Property binding</strong> pasa datos
+al DOM.
+<strong>Event binding</strong> escucha eventos del DOM. <strong>Two-way binding</strong>
+sincroniza en
+ambas direcciones (típico en formularios).
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Angular Template HTML</span><button
+class="copy-btn">copiar</button></div>
+<pre><span class="cm">&lt;!-- 1. Interpolación: Component → DOM (solo texto) --&gt;</span>
+&lt;h1&gt;Hola, {{ usuario.nombre }}&lt;/h1&gt;
+&lt;p&gt;Total: {{ precio * cantidad | currency }}&lt;/p&gt;
+
+<span class="cm">&lt;!-- 2. Property binding: Component → DOM (cualquier prop) --&gt;</span>
+&lt;img [src]="usuario.avatar" [alt]="usuario.nombre"&gt;
+&lt;button [disabled]="!formulario.valid"&gt;Guardar&lt;/button&gt;
+
+<span class="cm">&lt;!-- 3. Event binding: DOM → Component --&gt;</span>
+&lt;button (click)="guardar()"&gt;Guardar&lt;/button&gt;
+&lt;input (input)="onInput($event)"&gt;
+
+<span class="cm">&lt;!-- 4. Two-way binding: sincronización bidireccional --&gt;</span>
+&lt;input [(ngModel)]="usuario.nombre"&gt;
+<span class="cm">&lt;!-- Equivale a: --&gt;</span>
+&lt;input [ngModel]="usuario.nombre" (ngModelChange)="usuario.nombre = $event"&gt;</pre>
+</div>
+</div>
+</details>
+
+<details class="concept" id="a-j2">
+<summary><span><span class="concept-name">Comunicación entre componentes</span><br><span class="concept-tagline">@Input · @Output · EventEmitter · padre-hijo</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc"><code>@Input()</code> pasa datos del padre al hijo.
+<code>@Output()</code> con
+<code>EventEmitter</code> emite eventos del hijo al padre. Para comunicación entre
+componentes no
+relacionados, usar un servicio con <code>Subject</code> o <code>BehaviorSubject</code>.
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">TypeScript · Angular</span><button
+class="copy-btn">copiar</button></div>
+<pre"><span class="dec">@Component</span>({ selector: <span
+                                    class="str">'app-producto'</span>, template:
+                                <span class="str">`
+                                    &lt;div&gt;{{ producto.nombre }} — {{ producto.precio | currency }}&lt;/div&gt;
+                                    &lt;button (click)="agregar()"&gt;Agregar al carrito&lt;/button&gt;
+                                    `</span> })
+                                <span class="kw">export class</span> <span class="cls">ProductoComponent</span> {
+                                <span class="dec">@Input</span>({ required: <span class="kw">true</span> }) producto!:
+                                <span class="cls">Producto</span>;
+                                <span class="dec">@Output</span>() agregado = <span class="kw">new</span> <span
+                                    class="cls">EventEmitter</span>&lt;<span class="cls">Producto</span>&gt;();
+
+                                <span class="fn">agregar</span>() { <span class="kw">this</span>.agregado.<span
+                                    class="fn">emit</span>(<span class="kw">this</span>.producto); }
+                                }
+
+                                <span class="cm">// En el padre:</span>
+                                <span class="cm">// &lt;app-producto [producto]="item"
+                                    (agregado)="onAgregado($event)"&gt;</span></pre>
+</div>
+</div>
+</details>
+
+<details class="concept" id="a-j3">
+<summary><span><span class="concept-name">Routing y Lazy Loading</span><br><span class="concept-tagline">RouterModule · loadComponent · Guards · ActivatedRoute</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">El router de Angular gestiona la navegación SPA sin recargar la página.
+El
+<strong>Lazy Loading</strong> carga los módulos/componentes solo cuando el usuario navega a
+esa ruta,
+reduciendo el bundle inicial. Los <strong>Guards</strong> protegen rutas (autenticación,
+permisos).
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">TypeScript · app.routes.ts (Angular
+17+)</span></div>
+<pre"><span class="kw">export const</span> routes: <span class="cls">Routes</span> = [
+                                { path: <span class="str">''</span>, redirectTo: <span class="str">'/home'</span>,
+                                pathMatch: <span class="str">'full'</span> },
+
+                                <span class="cm">// Lazy loading de standalone component</span>
+                                {
+                                path: <span class="str">'productos'</span>,
+                                loadComponent: () => <span class="kw">import</span>(<span
+                                    class="str">'./productos/productos.component'</span>)
+                                .<span class="fn">then</span>(m => m.<span class="cls">ProductosComponent</span>)
+                                },
+
+                                <span class="cm">// Ruta protegida con guard funcional</span>
+                                {
+                                path: <span class="str">'admin'</span>,
+                                canActivate: [<span class="fn">authGuard</span>],
+                                loadComponent: () => <span class="kw">import</span>(<span
+                                    class="str">'./admin/admin.component'</span>)
+                                .<span class="fn">then</span>(m => m.<span class="cls">AdminComponent</span>)
+                                }
+                                ];
+
+                                <span class="cm">// Guard funcional (Angular 15+)</span>
+                                <span class="kw">export const</span> <span class="fn">authGuard</span>: <span
+                                    class="cls">CanActivateFn</span> = () => {
+                                <span class="kw">const</span> auth = <span class="fn">inject</span>(<span
+                                    class="cls">AuthService</span>);
+                                <span class="kw">const</span> router = <span class="fn">inject</span>(<span
+                                    class="cls">Router</span>);
+                                <span class="kw">return</span> auth.isLoggedIn() || router.<span
+                                    class="fn">createUrlTree</span>([<span class="str">'/login'</span>]);
+                                };</pre>
+</div>
+</div>
+</details>
+</div>
+
+<!-- MID ANG -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-mid">Mid</span> <span class="level-title">RxJS, estado y formularios reactivos</span></h3>
+
+<details class="concept" id="a-m1">
+<summary><span><span class="concept-name">RxJS — operadores esenciales</span><br><span class="concept-tagline">switchMap · mergeMap · combineLatest · takeUntilDestroyed</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">RxJS gestiona flujos de datos asíncronos. <strong>switchMap</strong>
+cancela la
+petición anterior si llega una nueva (ideal para búsquedas). <strong>mergeMap</strong> no
+cancela, ejecuta
+todas en paralelo. <strong>combineLatest</strong> combina múltiples observables emitiendo
+cuando
+cualquiera cambia.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">TypeScript · Angular</span><button
+class="copy-btn">copiar</button></div>
+<pre"><span class="dec">@Component</span>({ ... })
+                                <span class="kw">export class</span> <span class="cls">BuscadorComponent</span> {
+                                <span class="kw">private</span> destroyRef = <span class="fn">inject</span>(<span
+                                    class="cls">DestroyRef</span>);
+
+                                productos$ = <span class="fn">toObservable</span>(<span
+                                    class="kw">this</span>.searchTerm).pipe(
+                                <span class="fn">debounceTime</span>(<span class="num">300</span>),
+                                <span class="fn">distinctUntilChanged</span>(),
+                                <span class="fn">switchMap</span>(term => <span class="cm">// cancela búsqueda
+                                    anterior</span>
+                                term.length > <span class="num">2</span>
+                                ? <span class="kw">this</span>._api.<span class="fn">search</span>(term)
+                                : <span class="fn">of</span>([])
+                                ),
+                                <span class="fn">takeUntilDestroyed</span>(<span class="kw">this</span>.destroyRef)
+                                <span class="cm">//
+                                    auto-unsubscribe</span>
+                                );
+
+                                <span class="cm">// Combinar múltiples fuentes</span>
+                                vm$ = <span class="fn">combineLatest</span>({
+                                usuario: <span class="kw">this</span>._auth.currentUser$,
+                                permisos: <span class="kw">this</span>._permisos.permisos$,
+                                config: <span class="kw">this</span>._config.config$
+                                }).<span class="fn">pipe</span>(
+                                <span class="fn">map</span>(({ usuario, permisos, config }) => ({
+                                nombre: usuario.nombre,
+                                puedeEditar: permisos.<span class="fn">includes</span>(<span
+                                    class="str">'editar'</span>),
+                                theme: config.theme
+                                }))
+                                );
+                                }</pre>
+</div>
+<div class="tip tip-ang"><span class="tip-icon">💡</span> Usa el <code>async</code> pipe en el
+template
+(<code>*ngIf="vm$ | async as vm"</code>) — maneja la suscripción y desuscripción
+automáticamente. Es la
+forma más segura de consumir observables en templates.</div>
+</div>
+</details>
+
+<details class="concept" id="a-m2">
+<summary><span><span class="concept-name">Reactive Forms</span><br><span class="concept-tagline">FormGroup · FormControl · validators · FormBuilder</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Los <strong>Reactive Forms</strong> definen la estructura del formulario
+en
+TypeScript, no en el template. Esto da control total sobre validaciones, valores dinámicos,
+y hace el
+código testeable. Son la opción recomendada para formularios complejos.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">TypeScript · Angular</span><button
+class="copy-btn">copiar</button></div>
+<pre"><span class="kw">export class</span> <span class="cls">RegistroComponent</span> {
+                                <span class="kw">private</span> fb = <span class="fn">inject</span>(<span
+                                    class="cls">FormBuilder</span>);
+
+                                form = <span class="kw">this</span>.fb.<span class="fn">group</span>({
+                                nombre: [<span class="str">''</span>, [<span class="cls">Validators</span>.required,
+                                <span class="cls">Validators</span>.<span class="fn">minLength</span>(<span
+                                    class="num">3</span>)]],
+                                email: [<span class="str">''</span>, [<span class="cls">Validators</span>.required,
+                                <span class="cls">Validators</span>.email]],
+                                password: <span class="kw">this</span>.fb.<span class="fn">group</span>({
+                                valor: [<span class="str">''</span>, <span class="cls">Validators</span>.<span
+                                    class="fn">minLength</span>(<span class="num">8</span>)],
+                                confirmar: <span class="str">''</span>
+                                }, { validators: <span class="fn">passwordsMatch</span> }) <span class="cm">// validator
+                                    de grupo</span>
+                                });
+
+                                <span class="fn">submit</span>() {
+                                <span class="kw">if</span> (<span class="kw">this</span>.form.invalid) <span
+                                    class="kw">return</span>;
+                                <span class="kw">const</span> data = <span class="kw">this</span>.form.<span
+                                    class="attr">getRawValue</span>();
+                                <span class="cm">// data está completamente tipado</span>
+                                }
+                                }
+
+                                <span class="cm">// Custom validator</span>
+                                <span class="kw">const</span> <span class="fn">passwordsMatch</span>: <span
+                                    class="cls">ValidatorFn</span> = (group) => {
+                                <span class="kw">const</span> pass = group.<span class="fn">get</span>(<span
+                                    class="str">'valor'</span>)?.value;
+                                <span class="kw">const</span> confirm = group.<span class="fn">get</span>(<span
+                                    class="str">'confirmar'</span>)?.value;
+                                <span class="kw">return</span> pass === confirm ? <span class="kw">null</span> : {
+                                noCoinciden: <span class="kw">true</span> };
+                                };</pre>
+</div>
+</div>
+</details>
+</div>
+
+<!-- SENIOR ANG -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-senior">Senior</span> <span class="level-title">Signals, performance y Angular moderno</span></h3>
+
+<details class="concept" id="a-s1">
+<summary><span><span class="concept-name">Signals — reactividad granular</span><br><span class="concept-tagline">signal() · computed() · effect() · toSignal()</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Los <strong>Signals</strong> (Angular 17+) son el nuevo modelo de
+reactividad. A
+diferencia de los Observables, son síncronos y Angular sabe exactamente qué componentes
+dependen de cada
+signal. Esto permite actualizaciones <strong>quirúrgicas</strong> sin necesidad de Zone.js
+ni
+<code>markForCheck()</code>.
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">TypeScript · Angular 17+</span><button
+class="copy-btn">copiar</button></div>
+<pre"><span class="dec">@Component</span>({
+                                template: <span class="str">`
+                                    &lt;p&gt;Contador: {{ contador() }}&lt;/p&gt;
+                                    &lt;p&gt;Doble: {{ doble() }}&lt;/p&gt;
+                                    &lt;button (click)="incrementar()"&gt;+1&lt;/button&gt;
+                                    `</span>
+                                })
+                                <span class="kw">export class</span> <span class="cls">ContadorComponent</span> {
+                                <span class="cm">// Signal writable</span>
+                                contador = <span class="fn">signal</span>(<span class="num">0</span>);
+
+                                <span class="cm">// Computed: se recalcula solo cuando contador cambia</span>
+                                doble = <span class="fn">computed</span>(() => <span class="kw">this</span>.<span
+                                    class="fn">contador</span>() * <span class="num">2</span>);
+
+                                <span class="fn">incrementar</span>() {
+                                <span class="kw">this</span>.contador.<span class="fn">update</span>(v => v + <span
+                                    class="num">1</span>);
+                                <span class="cm">// o: this.contador.set(this.contador() + 1);</span>
+                                }
+                                }
+
+                                <span class="cm">// Interop con RxJS</span>
+                                <span class="kw">private</span> _usuario$ = <span class="fn">inject</span>(<span
+                                    class="cls">AuthService</span>).currentUser$;
+                                usuario = <span class="fn">toSignal</span>(<span class="kw">this</span>._usuario$, {
+                                initialValue: <span class="kw">null</span> });
+
+                                <span class="cm">// Effect: código que corre cuando un signal cambia</span>
+                                <span class="fn">constructor</span>() {
+                                <span class="fn">effect</span>(() => {
+                                console.<span class="fn">log</span>(<span class="str">'Contador cambió a:'</span>, <span
+                                    class="kw">this</span>.<span class="fn">contador</span>());
+                                });
+                                }</pre>
+</div>
+</div>
+</details>
+
+<details class="concept" id="a-s2">
+<summary><span><span class="concept-name">Change Detection OnPush</span><br><span class="concept-tagline">zona · markForCheck · immutability · performance</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Por defecto, Angular verifica <em>todos</em> los componentes en cada
+evento. Con
+<strong>OnPush</strong>, un componente solo se re-renderiza si sus <code>@Input()</code>
+cambian por
+referencia, si un observable emite, o si llamas <code>markForCheck()</code> manualmente.
+Esencial para
+apps de alto rendimiento.
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">TypeScript · Angular</span><button
+class="copy-btn">copiar</button></div>
+<pre"><span class="dec">@Component</span>({
+                                selector: <span class="str">'app-lista-productos'</span>,
+                                changeDetection: <span class="cls">ChangeDetectionStrategy</span>.OnPush,
+                                template: <span class="str">`
+                                    @for (p of productos(); track p.id) {
+                                    &lt;app-producto [producto]="p" /&gt;
+                                    }
+                                    `</span>
+                                })
+                                <span class="kw">export class</span> <span class="cls">ListaProductosComponent</span> {
+                                <span class="cm">// Signal como @Input — OnPush detecta el cambio</span>
+                                productos = <span class="fn">input</span>.required&lt;<span
+                                    class="cls">Producto</span>[]&gt;();
+
+                                <span class="cm">// Con Observable: usar async pipe + OnPush es la combinación
+                                    ideal</span>
+                                <span class="cm">// El async pipe llama markForCheck() automáticamente</span>
+                                }
+
+                                <span class="cm">// ❌ Trampa: mutaciones no disparan OnPush</span>
+                                <span class="kw">this</span>.productos.<span class="fn">push</span>(nuevoProducto);
+                                <span class="cm">//
+                                    NO actualiza la vista</span>
+
+                                <span class="cm">// ✅ Crear nueva referencia</span>
+                                <span class="kw">this</span>.productos = [...<span class="kw">this</span>.productos,
+                                nuevoProducto];
+                                </pre>
+</div>
+<div class="tip tip-ang"><span class="tip-icon">💡</span> Con Signals + Standalone Components +
+OnPush,
+Angular puede eventualmente funcionar sin Zone.js (<code>zoneless</code>). Es la dirección
+del framework
+para el futuro.</div>
+</div>
+</details>
+
+<details class="concept" id="a-s3">
+<summary><span><span class="concept-name">Deferrable Views (@defer)</span><br><span class="concept-tagline">lazy rendering · @placeholder · @loading · interaction trigger</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">El bloque <code>@defer</code> (Angular 17+) carga componentes de forma
+diferida
+directamente desde el template, con control de cuándo hacerlo (al hacer scroll, al
+interactuar, tras N ms)
+y qué mostrar mientras tanto.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Angular Template HTML</span><button
+class="copy-btn">copiar</button></div>
+<pre">&lt;!-- Cargar solo cuando el usuario llega a este elemento --&gt;
+                                @defer (on viewport) {
+                                &lt;app-grafico-complejo [data]="data" /&gt;
+                                } @loading {
+                                &lt;div class="skeleton"&gt;Cargando gráfico...&lt;/div&gt;
+                                } @placeholder {
+                                &lt;div&gt;Haz scroll para ver el gráfico&lt;/div&gt;
+                                } @error {
+                                &lt;p&gt;Error al cargar el gráfico&lt;/p&gt;
+                                }
+
+                                &lt;!-- Cargar al hacer hover --&gt;
+                                @defer (on hover) {
+                                &lt;app-detalle-producto [id]="productoId" /&gt;
+                                }
+
+                                &lt;!-- Cargar después de 2 segundos --&gt;
+                                @defer (after 2s) {
+                                &lt;app-chat-widget /&gt;
+                                }</pre>
+</div>
+</div>
+</details>
+</div>
+
+<!-- LEAD ANG -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-lead">Lead / Arch</span> <span class="level-title">Arquitectura frontend y Module Federation</span></h3>
+
+<details class="concept" id="a-l1">
+<summary><span><span class="concept-name">Micro Frontends con Module Federation</span><br><span class="concept-tagline">shell · remote · shared · Nx workspace</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Module Federation (Webpack 5) permite que múltiples apps Angular se
+carguen en
+runtime compartiendo dependencias. Un <strong>shell</strong> carga <strong>remotes</strong>
+(otros
+deploys) como si fueran módulos locales. Cada equipo deploya su micro-frontend
+independientemente.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">TypeScript · webpack.config.js
+(Shell)</span>
+</div>
+<pre"><span class="kw">const</span> { <span class="cls">ModuleFederationPlugin</span> } =
+                                <span class="fn">require</span>(<span
+                                    class="str">'webpack/lib/container/ModuleFederationPlugin'</span>);
+
+                                module.exports = {
+                                plugins: [
+                                <span class="kw">new</span> <span class="cls">ModuleFederationPlugin</span>({
+                                name: <span class="str">'shell'</span>,
+                                remotes: {
+                                pedidos: <span class="str">'pedidos@http://localhost:4201/remoteEntry.js'</span>,
+                                catalogo: <span class="str">'catalogo@http://localhost:4202/remoteEntry.js'</span>
+                                },
+                                shared: {
+                                <span class="str">'@angular/core'</span>: { singleton: <span class="kw">true</span>,
+                                strictVersion:
+                                <span class="kw">true</span> },
+                                <span class="str">'@angular/router'</span>: { singleton: <span class="kw">true</span> }
+                                }
+                                })
+                                ]
+                                };
+
+                                <span class="cm">// En las routes del shell — lazy load de remote</span>
+                                {
+                                path: <span class="str">'pedidos'</span>,
+                                loadComponent: () => <span class="kw">import</span>(<span
+                                    class="str">'pedidos/PedidosComponent'</span>)
+                                .<span class="fn">then</span>(m => m.<span class="cls">PedidosComponent</span>)
+                                }</pre>
+</div>
+<div class="tip tip-ang"><span class="tip-icon">💡</span> Con <strong>Nx</strong>, gestionar un
+monorepo con
+múltiples apps Angular y librerías compartidas es mucho más manejable. Usa
+<code>nx graph</code> para
+visualizar dependencias y <code>affected</code> para solo buildear lo que cambió.</div>
+</div>
+</details>
+</div>

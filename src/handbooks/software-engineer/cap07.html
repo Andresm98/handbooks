@@ -1,0 +1,159 @@
+<p>El objetivo del testing no es tener un número alto de coverage. Es tener la <strong>confianza de
+que el
+código hace lo que se supone que debe hacer</strong>, y la certeza de que si alguien lo
+cambia y algo se
+rompe, los tests lo detectarán. Un 95% de coverage con tests que nunca fallan aunque introduzcas
+bugs es
+peor que un 60% con tests que detectan regresiones reales.</p>
+
+<div class="callout axiom">
+<div class="callout-icon"></div>
+<p><strong>Axioma de testing:</strong> Un test que nunca puede fallar es inútil. Un test que
+solo puede
+fallar cuando el código tiene un bug real — eso tiene valor. Antes de escribir un test,
+pregúntate: "¿De
+qué bug me protege este test?"</p>
+</div>
+
+<h3 id="test-confidence">Tests que Dan Confianza Real</h3>
+
+<pre data-lang="typescript"><code><span class="cm">// ❌ Test que pasa siempre — zero valor, false confidence</span>
+describe(<span class="str">'calculateTotal'</span>, () => {
+  it(<span class="str">'should return a number'</span>, () => {
+    <span class="kw">const</span> result = calculateTotal([{ price: <span class="nm">10</span>, qty: <span class="nm">2</span> }])
+    expect(<span class="kw">typeof</span> result).toBe(<span class="str">'number'</span>)  <span class="cm">// ¿Qué bug detecta esto?</span>
+  })
+})
+
+<span class="cm">// ❌ Test que verifica implementación, no comportamiento</span>
+it(<span class="str">'should call repository.save once'</span>, () => {
+  <span class="kw">const</span> mockRepo = { save: jest.fn() }
+  createUser(mockRepo, userData)
+  expect(mockRepo.save).toHaveBeenCalledTimes(<span class="nm">1</span>)  <span class="cm">// Testa el cómo, no el qué</span>
+  <span class="cm">// Si refactorizas para llamar save() dos veces con los mismos datos,
+  // el test falla aunque el comportamiento sea correcto</span>
+})
+
+<span class="cm">// ✓ Test que verifica comportamiento observable</span>
+describe(<span class="str">'OrderService'</span>, () => {
+  describe(<span class="str">'createOrder'</span>, () => {
+    it(<span class="str">'calculates correct total including tax'</span>, async () => {
+      <span class="kw">const</span> order = <span class="kw">await</span> orderService.create({
+        items: [
+          { productId: <span class="str">'p1'</span>, quantity: <span class="nm">2</span>, unitPrice: <span class="nm">100</span> },
+          { productId: <span class="str">'p2'</span>, quantity: <span class="nm">1</span>, unitPrice: <span class="nm">50</span>  },
+        ],
+        taxRate: <span class="nm">0.21</span>
+      })
+
+      expect(order.subtotal).toBe(<span class="nm">250</span>)
+      expect(order.tax).toBe(<span class="nm">52.50</span>)
+      expect(order.total).toBe(<span class="nm">302.50</span>)
+    })
+
+    it(<span class="str">'rejects order with out-of-stock items'</span>, async () => {
+      stockService.setStock(<span class="str">'p1'</span>, <span class="nm">0</span>)  <span class="cm">// Setup: sin stock</span>
+
+      <span class="kw">await</span> expect(
+        orderService.create({ items: [{ productId: <span class="str">'p1'</span>, quantity: <span class="nm">1</span> }] })
+      ).rejects.toThrow(InsufficientStockError)
+    })
+
+    it(<span class="str">'emits OrderCreated event after successful creation'</span>, async () => {
+      <span class="kw">const</span> events: OrderEvent[] = []
+      eventBus.on(<span class="str">'OrderCreated'</span>, (e) => events.push(e))
+
+      <span class="kw">await</span> orderService.create(validOrderData)
+
+      expect(events).toHaveLength(<span class="nm">1</span>)
+      expect(events[<span class="nm">0</span>].orderId).toBeDefined()
+    })
+  })
+})</code></pre>
+
+<h3 id="tdd">TDD como Herramienta de Diseño</h3>
+<p>TDD (Test-Driven Development) no es escribir tests antes del código por disciplina. Es usar los
+tests para
+diseñar la interfaz pública de tu código antes de implementarla. Cuando escribes el test
+primero, estás
+forzado a pensar desde el punto de vista del consumidor del código — lo que produce APIs más
+limpias y más
+usables.</p>
+
+<div class="diagram">
+<pre><code>
+  Red-Green-Refactor: El ciclo de TDD
+
+  RED   → Escribir el test que describe el comportamiento deseado
+          El test FALLA porque el código no existe aún
+          Esto confirma que el test puede detectar el bug
+
+  GREEN → Escribir el código MÁS SIMPLE posible que hace pasar el test
+          No importa si es "feo" — el objetivo es pasar el test
+          "Fake it till you make it" está permitido aquí
+
+  REFACTOR → Con el test verde como red de seguridad,
+             mejorar el código sin cambiar el comportamiento
+             Si el test sigue verde, el refactor fue correcto
+
+  Repetir para cada comportamiento nuevo.
+
+  El beneficio real no es tener tests — es que el diseño
+  emergente de escribir tests primero produce código
+  más modular, más testeable, y más bajo acoplamiento.
+
+  Señal de que el diseño es incorrecto: si es difícil
+  escribir el test, la función tiene demasiadas dependencias.
+  El dolor de testing es información de diseño.
+</code></pre>
+</div>
+
+<pre data-lang="python"><code><span class="cm"># TDD real: diseñando un validador de contraseñas</span>
+
+<span class="cm"># PASO 1: RED — escribir el test que describe el comportamiento</span>
+<span class="kw">def</span> <span class="fn">test_password_must_be_at_least_8_characters</span>():
+    result = validate_password(<span class="str">"short"</span>)
+    assert result.is_valid == <span class="kw">False</span>
+    assert <span class="str">"at least 8 characters"</span> <span class="kw">in</span> result.errors
+
+<span class="kw">def</span> <span class="fn">test_password_must_contain_uppercase</span>():
+    result = validate_password(<span class="str">"alllowercase1!"</span>)
+    assert result.is_valid == <span class="kw">False</span>
+    assert <span class="str">"uppercase letter"</span> <span class="kw">in</span> result.errors
+
+<span class="kw">def</span> <span class="fn">test_valid_password_passes_all_rules</span>():
+    result = validate_password(<span class="str">"ValidPass1!"</span>)
+    assert result.is_valid == <span class="kw">True</span>
+    assert len(result.errors) == <span class="nm">0</span>
+
+<span class="cm"># PASO 2: GREEN — implementación mínima que pasa los tests</span>
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, field
+
+<span class="k2">@dataclass</span>
+<span class="kw">class</span> <span class="fn">ValidationResult</span>:
+    is_valid: bool
+    errors: list[str] = field(default_factory=list)
+
+<span class="kw">def</span> <span class="fn">validate_password</span>(password: str) -> ValidationResult:
+    errors = []
+    <span class="kw">if</span> len(password) < <span class="nm">8</span>:
+        errors.append(<span class="str">"Password must be at least 8 characters"</span>)
+    <span class="kw">if not</span> any(c.isupper() <span class="kw">for</span> c <span class="kw">in</span> password):
+        errors.append(<span class="str">"Password must contain at least one uppercase letter"</span>)
+    <span class="kw">return</span> ValidationResult(is_valid=len(errors) == <span class="nm">0</span>, errors=errors)
+
+<span class="cm"># PASO 3: REFACTOR — el diseño ya es correcto gracias a los tests
+# Podemos añadir reglas, cambiar la implementación, sin miedo
+# El test es la especificación viva del comportamiento esperado</span></code></pre>
+
+<div class="arch-rel">
+<span class="arch-rel-lbl">Conexión técnica</span>
+<p>El testing está directamente relacionado con el diseño. El <strong>Dependency Inversion
+Principle</strong> hace que el código sea testeable: si el código depende de
+abstracciones inyectadas,
+se pueden reemplazar con implementaciones de test. La <strong>Hexagonal
+Architecture</strong> tiene este
+beneficio por diseño: el dominio no tiene dependencias de infraestructura, por lo que se
+puede testear sin
+BD ni servicios externos.</p>
+</div>

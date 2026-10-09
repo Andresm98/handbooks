@@ -1,0 +1,163 @@
+<div class="case-study">
+<div class="case-study-header">
+<span class="company-badge">NETFLIX</span>
+<h4>Microservicios + Cloud-Native + Chaos Engineering</h4>
+</div>
+<p>Netflix migró de un monolito on-premise a más de <strong>1,000 microservicios en AWS</strong>
+entre 2008 y 2016. Inventaron el Chaos Monkey para probar resiliencia deliberadamente. Usan
+Cassandra como base de datos distribuida para streaming, y Kafka para analytics en tiempo
+real.</p>
+<div class="tags">
+<span class="tag blue">AWS</span>
+<span class="tag green">Microservicios</span>
+<span class="tag orange">Chaos Engineering</span>
+<span class="tag purple">Cassandra</span>
+<span class="tag">Kafka</span>
+<span class="tag">Zuul API Gateway</span>
+</div>
+<p><strong>Lección:</strong> A gran escala, la resiliencia se debe probar activamente, no
+asumir. El "Netflix OSS" (Hystrix, Zuul, Eureka) inspiró patrones adoptados en toda la
+industria.</p>
+</div>
+
+<div class="case-study">
+<div class="case-study-header">
+<span class="company-badge">AMAZON</span>
+<h4>SOA → Microservicios + Two-Pizza Teams</h4>
+</div>
+<p>Amazon fue pionero en la transformación a microservicios. La famosa directiva de Jeff Bezos
+(2002) mandó que todos los equipos debían exponer sus datos y funcionalidades a través de
+<strong>interfaces de servicio</strong> sin excepciones. AWS fue el resultado natural de
+tener que operar esta infraestructura a escala.</p>
+<div class="tags">
+<span class="tag blue">AWS Multi-Service</span>
+<span class="tag green">DynamoDB (AP)</span>
+<span class="tag orange">SQS/SNS</span>
+<span class="tag">Two-Pizza Teams</span>
+</div>
+<p><strong>Lección:</strong> La organización del equipo (Conway's Law) debe alinearse con la
+arquitectura. Equipos pequeños y autónomos producen servicios pequeños y autónomos.</p>
+</div>
+
+<div class="case-study">
+<div class="case-study-header">
+<span class="company-badge">UBER</span>
+<h4>Monolito → Microservicios → Domain-Oriented Microservices</h4>
+</div>
+<p>Uber pasó por tres fases: monolito inicial, explosión de microservicios (&gt;2000 servicios),
+y finalmente DOMA (<em>Domain-Oriented Microservice Architecture</em>) para reducir la
+complejidad. DOMA agrupa servicios en "layers" y "domains" con propiedad clara.</p>
+<div class="tags">
+<span class="tag blue">DOMA</span>
+<span class="tag green">Go / Python</span>
+<span class="tag orange">Kafka (real-time)</span>
+<span class="tag purple">Cadence (workflows)</span>
+</div>
+<p><strong>Lección:</strong> Más microservicios no siempre es mejor. La excesiva granularidad
+introduce complejidad organizacional. Agrupar por dominios de negocio mejora la
+mantenibilidad.</p>
+</div>
+
+<div class="case-study">
+<div class="case-study-header">
+<span class="company-badge">SHOPIFY</span>
+<h4>Monolito Modular (Modular Monolith)</h4>
+</div>
+<p>Shopify eligió <strong>no descomponer su monolito Ruby on Rails</strong> en microservicios.
+En cambio, introdujeron boundaries estrictos entre módulos usando su framework "Packwerk".
+Esto les permitió escalar a millones de tiendas con un equipo productivo sin la complejidad
+operativa de los microservicios.</p>
+<div class="tags">
+<span class="tag green">Rails Monolith</span>
+<span class="tag blue">Packwerk</span>
+<span class="tag orange">MySQL (Vitess)</span>
+<span class="tag">Kafka</span>
+</div>
+<p><strong>Lección:</strong> El monolito modular es una alternativa válida y frecuentemente
+mejor que los microservicios para muchas organizaciones. La clave es los boundaries, no el
+despliegue.</p>
+</div>
+
+<div class="case-study">
+<div class="case-study-header">
+<span class="company-badge">AIRBNB</span>
+<h4>Microservicios + SOA + Data Platform</h4>
+</div>
+<p>Airbnb construyó su infraestructura con <strong>servicios orientados a dominios</strong>
+(Listing, Booking, Payments, Trust). Su arquitectura de datos usa Airflow para pipelines,
+Druid y Presto para analytics, y Kafka como backbone de eventos en tiempo real para
+sincronizar servicios.</p>
+<div class="tags">
+<span class="tag blue">Microservicios</span>
+<span class="tag green">Airflow</span>
+<span class="tag orange">Kafka</span>
+<span class="tag purple">GraphQL (Unified API)</span>
+</div>
+<p><strong>Lección:</strong> Para plataformas de marketplace, separar el dominio de datos del
+dominio de aplicación permite escalar analytics e inteligencia de negocio de forma
+independiente.</p>
+</div>
+
+<hr class="divider">
+<h3>Guía de Selección: ¿Qué arquitectura usar?</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Contexto</th>
+<th>Arquitectura recomendada</th>
+<th>Razón</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MVP / Startup temprana</td>
+<td class="green">Monolito + Cloud PaaS</td>
+<td>Velocidad de desarrollo sobre todo</td>
+</tr>
+<tr>
+<td>E-commerce en crecimiento</td>
+<td class="blue">Monolito Modular → Microservicios progresivo</td>
+<td>Strangler Fig para migración segura</td>
+</tr>
+<tr>
+<td>Procesamiento de eventos IoT</td>
+<td class="green">Event-Driven + Serverless</td>
+<td>Miles de eventos/segundo, escala automática</td>
+</tr>
+<tr>
+<td>Sistema bancario core</td>
+<td class="orange">On-Premise + SOA + ACID</td>
+<td>Regulación, consistencia fuerte, latencia predecible</td>
+</tr>
+<tr>
+<td>API pública con tráfico variable</td>
+<td class="blue">Microservicios + Cloud + API Gateway</td>
+<td>Escalabilidad independiente por recurso</td>
+</tr>
+<tr>
+<td>ML Pipeline / Batch analytics</td>
+<td class="green">Serverless + Data Lake</td>
+<td>Costo cero en idle, escala en picos</td>
+</tr>
+<tr>
+<td>Plataforma SaaS multi-tenant</td>
+<td class="blue">Cloud-Native + Microservicios + CQRS</td>
+<td>Isolation, escalabilidad, despliegue continuo</td>
+</tr>
+<tr>
+<td>Sistema legacy que modernizar</td>
+<td class="orange">Strangler Fig + Hybrid Cloud</td>
+<td>Migración gradual sin big-bang rewrite</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout tip">
+<div class="callout-icon"></div>
+<p><strong>Regla de oro:</strong> Empieza simple. Un monolito bien estructurado es infinitamente
+preferible a microservicios prematuros. Migra hacia mayor complejidad solo cuando los
+problemas que resuelve sean más grandes que los que introduce.</p>
+</div>

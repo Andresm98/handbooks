@@ -1,0 +1,302 @@
+<!-- APIs -->
+<article>
+<h3>🔌 Tipos de API y Protocolos</h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Protocolo</th>
+<th>Estilo</th>
+<th>Formato</th>
+<th>Cuándo usar</th>
+<th>Trade-offs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>REST</strong></td>
+<td>Stateless, resource-based</td>
+<td>JSON/XML sobre HTTP/1.1</td>
+<td>APIs públicas, CRUD, web estándar</td>
+<td>Verboso, over/under-fetching, múltiples round-trips</td>
+</tr>
+<tr>
+<td><strong>GraphQL</strong></td>
+<td>Query language, client-driven</td>
+<td>JSON sobre HTTP</td>
+<td>UI complejas, múltiples clientes, BFF</td>
+<td>N+1 problem, caching complejo, curva de aprendizaje</td>
+</tr>
+<tr>
+<td><strong>gRPC</strong></td>
+<td>RPC, contract-first</td>
+<td>Protocol Buffers sobre HTTP/2</td>
+<td>Microservicios internos, baja latencia, streaming</td>
+<td>No legible por humanos, requiere codegen, browser support limitado</td>
+</tr>
+<tr>
+<td><strong>WebSockets</strong></td>
+<td>Bidireccional, stateful</td>
+<td>Frames sobre TCP</td>
+<td>Real-time (chat, gaming, trading)</td>
+<td>Conexión persistente, escalado complejo, no HTTP cache</td>
+</tr>
+<tr>
+<td><strong>Webhooks</strong></td>
+<td>Push-based, event-driven</td>
+<td>JSON sobre HTTP POST</td>
+<td>Notificaciones de eventos externos</td>
+<td>No hay garantía de entrega, requiere retry logic</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout callout-tip">
+<span class="callout-icon">✅</span>
+<div><strong>Long Polling</strong> es una alternativa a WebSockets: el cliente hace request y el
+servidor mantiene la conexión abierta hasta tener datos. Desventaja: latencia inherente y
+overhead HTTP por cada request.</div>
+</div>
+
+<h4>Versionado de APIs REST</h4>
+<p>Crítico para compatibilidad con clientes existentes al evolucionar la API. Estrategias:</p>
+<pre><code><span class="token-comment"># URL versioning (más común)</span>
+GET /api/v1/users
+GET /api/v2/users
+
+<span class="token-comment"># Header versioning</span>
+GET /api/users
+Accept: application/vnd.myapi.v2+json
+
+<span class="token-comment"># Query param versioning</span>
+GET /api/users?version=2</code></pre>
+</article>
+
+<!-- JWT & OAUTH -->
+<article>
+<h3>🔐 Autenticación y Autorización</h3>
+
+<h4>Flujo: Autenticación → Autorización</h4>
+<p><strong>Autenticación</strong> responde: <em>"¿Quién dice ser?"</em> | <strong>Autorización</strong>
+responde: <em>"¿Qué puede hacer?"</em> | <strong>Auditoría</strong> responde: <em>"¿Qué hizo?"</em>
+</p>
+
+<div class="two-col">
+<div>
+<h4>JWT — JSON Web Token</h4>
+<p>Token de 3 partes separadas por puntos: <code>Header.Payload.Signature</code></p>
+<ul>
+<li><strong>Header:</strong> algoritmo de firma (HS256, RS256)</li>
+<li><strong>Payload:</strong> claims (sub, exp, roles)</li>
+<li><strong>Signature:</strong> hash firmado con clave secreta</li>
+</ul>
+<p>Stateless: el servidor no guarda sesión. Verifica firma en cada request.</p>
+</div>
+<div>
+<h4>OAuth 2.0 Grants</h4>
+<ul>
+<li><strong>Authorization Code:</strong> apps web server-side (más seguro)</li>
+<li><strong>PKCE:</strong> apps móviles/SPA (sin client secret)</li>
+<li><strong>Client Credentials:</strong> machine-to-machine</li>
+<li><strong>Implicit:</strong> obsoleto, no usar</li>
+</ul>
+<p>OAuth 2.0 es un framework de <em>autorización</em>. OpenID Connect (OIDC) agrega
+<em>autenticación</em> encima.</p>
+</div>
+</div>
+
+<h4>Access Control Models</h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th>Descripción</th>
+<th>Uso típico</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RBAC</strong></td>
+<td>Role-Based: permisos asignados a roles</td>
+<td>Sistemas empresariales, admin panels</td>
+</tr>
+<tr>
+<td><strong>ABAC</strong></td>
+<td>Attribute-Based: políticas basadas en atributos del usuario/recurso</td>
+<td>Sistemas complejos, multi-tenant</td>
+</tr>
+<tr>
+<td><strong>DAC</strong></td>
+<td>Discretionary: el dueño del recurso decide quién accede</td>
+<td>Sistemas de archivos, Google Drive</td>
+</tr>
+<tr>
+<td><strong>MAC</strong></td>
+<td>Mandatory: el sistema decide según clasificación</td>
+<td>Sistemas militares/gubernamentales</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4>Mejores prácticas de Auth</h4>
+<ul>
+<li>✅ Hashear passwords con bcrypt/Argon2 (NUNCA plain text)</li>
+<li>✅ Rate limiting en login endpoints</li>
+<li>✅ HTTPS obligatorio (tokens interceptables en plain HTTP)</li>
+<li>✅ Tokens con expiración corta + refresh tokens</li>
+<li>✅ Usar secrets manager para claves (nunca en código fuente)</li>
+<li>✅ Estructurar roles (RBAC) desde el diseño inicial</li>
+<li>❌ Nunca almacenar passwords en plain text</li>
+<li>❌ No usar auth por IP (fácilmente spoofeable)</li>
+</ul>
+</article>
+
+<!-- ESCALABILIDAD -->
+<article>
+<h3>📈 Escalabilidad y Concurrencia</h3>
+<div class="two-col">
+<div>
+<h4>Vertical Scaling (Scale Up)</h4>
+<p>Más CPU/RAM al mismo servidor. Simple pero con límite físico. Sin particionamiento de datos.
+</p>
+</div>
+<div>
+<h4>Horizontal Scaling (Scale Out)</h4>
+<p>Más instancias/nodos. Cada nodo puede contener <em>parte</em> de los datos (sharding).
+Requiere stateless apps o sticky sessions.</p>
+</div>
+</div>
+
+<h4>Database Scaling</h4>
+<ul>
+<li><strong>Read Replicas:</strong> réplicas de solo lectura para distribuir queries</li>
+<li><strong>Sharding horizontal:</strong> particionar datos entre nodos (cada nodo = parte de los
+datos) — respuesta a la evaluación sobre el banco</li>
+<li><strong>Caching:</strong> Redis/Memcached para reducir carga en DB</li>
+<li><strong>Connection pooling:</strong> PgBouncer, HikariCP</li>
+</ul>
+
+<h4>Uptime y SLA</h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>SLA</th>
+<th>Downtime/año</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>99%</td>
+<td>~87.6 horas</td>
+<td style="color:var(--accent4)">Unhealthy</td>
+</tr>
+<tr>
+<td>99.9% (3 nines)</td>
+<td>~8.7 horas</td>
+<td style="color:var(--accent3)">✅ Healthy target</td>
+</tr>
+<tr>
+<td>99.99% (4 nines)</td>
+<td>~52 minutos</td>
+<td style="color:var(--accent3)">Excelente</td>
+</tr>
+<tr>
+<td>99.999% (5 nines)</td>
+<td>~5 minutos</td>
+<td style="color:var(--accent2)">Mission-critical</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>
+
+<!-- LOAD BALANCING -->
+<article>
+<h3>⚖️ Load Balancing</h3>
+<div class="card-grid">
+<div class="card">
+<h3>🌐 HTTP/L7 Load Balancer</h3>
+<p>Opera a nivel de aplicación. Puede enrutar por URL path, headers, cookies.</p>
+<ul>
+<li>AWS ALB, Azure Application Gateway</li>
+<li>Soporta SSL termination, WAF</li>
+</ul>
+</div>
+<div class="card">
+<h3>🔌 Network/L4 Load Balancer</h3>
+<p>Opera a nivel de transporte. Distribuye por <strong>protocolos específicos</strong>
+(TCP/UDP). Ultra-baja latencia.</p>
+<ul>
+<li>AWS NLB, Azure Load Balancer</li>
+<li>Ideal para gaming, VoIP, IoT</li>
+</ul>
+</div>
+<div class="card">
+<h3>💻 Virtual Load Balancer</h3>
+<p>Software-based, corre a nivel de <strong>OS del servidor</strong>. Distribuye según reglas
+configuradas.</p>
+<ul>
+<li>HAProxy, Nginx como LB</li>
+<li>Flexible, barato, configurable</li>
+</ul>
+</div>
+<div class="card">
+<h3>🔩 Hardware Load Balancer</h3>
+<p>Dispositivo físico dedicado. Máximo rendimiento, máximo costo.</p>
+<ul>
+<li>F5 BIG-IP, Citrix ADC</li>
+<li>Usado en grandes enterprises on-prem</li>
+</ul>
+</div>
+</div>
+
+<h4>Algoritmos de Balanceo</h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Algoritmo</th>
+<th>Descripción</th>
+<th>Caso de uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Round Robin</strong></td>
+<td>Distribuye secuencialmente entre servidores</td>
+<td>Servidores homogéneos, stateless</td>
+</tr>
+<tr>
+<td><strong>Weighted Round Robin</strong></td>
+<td>Más requests a servidores más potentes</td>
+<td>Servidores heterogéneos</td>
+</tr>
+<tr>
+<td><strong>Least Connections</strong></td>
+<td>Al servidor con menos conexiones activas</td>
+<td>Requests de duración variable</td>
+</tr>
+<tr>
+<td><strong>Weighted Least Connection</strong></td>
+<td>Least connections + peso por capacidad</td>
+<td>Microservicios con distinta capacidad</td>
+</tr>
+<tr>
+<td><strong>Source IP Hash</strong></td>
+<td>Hash de IP del cliente → mismo servidor siempre</td>
+<td><strong>Session persistence / Sticky sessions</strong></td>
+</tr>
+<tr>
+<td><strong>Weighted Response Time</strong></td>
+<td>Al servidor con menor tiempo de respuesta</td>
+<td>Optimización de latencia dinámica</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>

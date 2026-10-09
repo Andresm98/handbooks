@@ -1,0 +1,385 @@
+<!-- ESTILOS ARQUITECTÓNICOS -->
+<article>
+<h3>🧱 Estilos Arquitectónicos Principales</h3>
+<p>Un <strong>estilo arquitectónico</strong> define la organización global del sistema: cómo se dividen
+los componentes, cómo se comunican y cuáles son los trade-offs de la decisión.</p>
+
+<div class="card-grid">
+<div class="card">
+<h3>🏛️ Monolítico</h3>
+<p>Toda la funcionalidad se despliega como una sola unidad. Sencillo de desarrollar y debuggear
+inicialmente.</p>
+<h4>Cuándo usarlo</h4>
+<ul>
+<li>Equipos pequeños (&lt; 10 devs)</li>
+<li>Dominio poco entendido todavía</li>
+<li>MVP o prototipo</li>
+<li>Aplicaciones con bajo tráfico predecible</li>
+</ul>
+<h4>Desventajas</h4>
+<ul>
+<li>Escalado solo horizontal completo</li>
+<li>Deploy de todo el sistema por cambio mínimo</li>
+<li>Acoplamiento tecnológico</li>
+</ul>
+<span class="badge badge-junior">Junior</span>
+</div>
+
+<div class="card">
+<h3>🔬 Microservicios</h3>
+<p>El sistema se divide en servicios pequeños, independientes, desplegables de forma autónoma,
+organizados en torno a capacidades de negocio.</p>
+<h4>Principios clave</h4>
+<ul>
+<li>Single Responsibility por servicio</li>
+<li>Comunicación via APIs o mensajes</li>
+<li>Base de datos por servicio (DB per service)</li>
+<li>Despliegue independiente</li>
+<li>Failure isolation</li>
+</ul>
+<h4>Cuándo NO usarlo</h4>
+<ul>
+<li>Equipo pequeño sin madurez operacional</li>
+<li>Dominio no bien delimitado (riesgo: nano-servicios)</li>
+</ul>
+<span class="badge badge-senior">Senior</span>
+</div>
+
+<div class="card">
+<h3>⚡ Event-Driven Architecture</h3>
+<p>Los componentes se comunican a través de eventos asíncronos. Alta desacoplamiento temporal y
+espacial.</p>
+<h4>Patrones internos</h4>
+<ul>
+<li><strong>Event Notification:</strong> notifica que algo ocurrió</li>
+<li><strong>Event-Carried State Transfer:</strong> el evento lleva el estado completo</li>
+<li><strong>Event Sourcing:</strong> el estado es la secuencia de eventos</li>
+<li><strong>CQRS:</strong> separación de lectura y escritura</li>
+</ul>
+<h4>Herramientas</h4>
+<ul>
+<li>Apache Kafka, AWS SNS/SQS, Azure Service Bus, GCP Pub/Sub</li>
+</ul>
+<span class="badge badge-senior">Senior</span>
+</div>
+
+<div class="card">
+<h3>☁️ Serverless</h3>
+<p>El proveedor cloud gestiona completamente la infraestructura. El código se ejecuta en
+respuesta a eventos.</p>
+<h4>Modelos</h4>
+<ul>
+<li><strong>FaaS:</strong> AWS Lambda, Azure Functions, Cloud Run</li>
+<li><strong>BaaS:</strong> Firebase, Auth0, Stripe (lógica backend gestionada)</li>
+</ul>
+<h4>Trade-offs</h4>
+<ul>
+<li>✅ No gestión de servidores, pago por uso</li>
+<li>❌ Cold starts, límites de ejecución, vendor lock-in</li>
+<li>❌ Debugging complejo, stateless by design</li>
+</ul>
+<span class="badge badge-mid">Mid</span>
+</div>
+</div>
+</article>
+
+<!-- SOLID -->
+<article>
+<h3>🎯 Principios SOLID</h3>
+<p>SOLID es un conjunto de 5 principios para diseño orientado a objetos que guían la creación de
+software mantenible, extensible y testeable. Como Arquitecto, los aplicas a nivel de módulos y
+servicios, no solo clases.</p>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Principio</th>
+<th>Significado</th>
+<th>Aplicación en Arquitectura</th>
+<th>Nivel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong style="color:var(--accent)">S</strong>RP</td>
+<td>Single Responsibility — una clase/módulo = una razón para cambiar</td>
+<td>Microservicio por capacidad de negocio. Clase Square no debe calcular área Y mostrar
+output.</td>
+<td><span class="badge badge-junior">Junior</span></td>
+</tr>
+<tr>
+<td><strong style="color:var(--accent)">O</strong>CP</td>
+<td>Open/Closed — abierto a extensión, cerrado a modificación</td>
+<td>Plugins, strategy pattern, feature flags en arquitectura</td>
+<td><span class="badge badge-mid">Mid</span></td>
+</tr>
+<tr>
+<td><strong style="color:var(--accent)">L</strong>SP</td>
+<td>Liskov Substitution — subtipos sustituibles sin romper el sistema</td>
+<td>Contratos de API compatibles entre versiones (v1 → v2)</td>
+<td><span class="badge badge-mid">Mid</span></td>
+</tr>
+<tr>
+<td><strong style="color:var(--accent)">I</strong>SP</td>
+<td>Interface Segregation — interfaces específicas por cliente</td>
+<td>APIs granulares; no exponer endpoints innecesarios</td>
+<td><span class="badge badge-mid">Mid</span></td>
+</tr>
+<tr>
+<td><strong style="color:var(--accent)">D</strong>IP</td>
+<td>Dependency Inversion — depender de abstracciones, no implementaciones</td>
+<td>Service Mesh, abstracciones de storage, repositorio pattern</td>
+<td><span class="badge badge-senior">Senior</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>
+
+<!-- CAP THEOREM -->
+<article>
+<h3>📐 CAP Theorem</h3>
+<p>En un sistema distribuido, ante una partición de red (<strong>Partition Tolerance</strong>), debes
+elegir entre:</p>
+<div class="two-col">
+<div>
+<h4>CP — Consistency + Partition Tolerance</h4>
+<p>Prioriza datos consistentes. Puede no estar disponible durante una partición. Ejemplos:
+HBase, Zookeeper, MongoDB (configuración stricta).</p>
+<p><strong>Uso:</strong> Sistemas financieros, transacciones bancarias.</p>
+</div>
+<div>
+<h4>AP — Availability + Partition Tolerance</h4>
+<p>Siempre responde, pero puede dar datos stale. Ejemplos: Cassandra, DynamoDB, CouchDB.</p>
+<p><strong>Uso:</strong> Redes sociales, catálogos de productos, carritos de compra.</p>
+</div>
+</div>
+<div class="callout callout-warn">
+<span class="callout-icon">⚠️</span>
+<div>En la práctica, la partición de red es inevitable. La verdadera decisión es entre
+<strong>consistencia eventual (AP)</strong> vs <strong>indisponibilidad temporal (CP)</strong>.
+El teorema PACELC extiende CAP para considerar también latencia vs consistencia en condiciones
+normales.</div>
+</div>
+</article>
+
+<!-- 12-FACTOR APP -->
+<article>
+<h3>📋 12-Factor App</h3>
+<p>Metodología para construir aplicaciones SaaS modernas, cloud-native, altamente portables y
+mantenibles.</p>
+<div class="timeline">
+<div class="timeline-item">
+<h4>I. Codebase</h4>
+<p>Un repo, múltiples deploys (dev, staging, prod).</p>
+</div>
+<div class="timeline-item">
+<h4>II. Dependencies</h4>
+<p>Declaradas explícitamente y aisladas (requirements.txt, package.json).</p>
+</div>
+<div class="timeline-item">
+<h4>III. Config</h4>
+<p>Configuración en variables de entorno, no en código. Nunca hardcodear credenciales.</p>
+</div>
+<div class="timeline-item">
+<h4>IV. Backing Services</h4>
+<p>Bases de datos, queues, APIs externas tratadas como recursos adjuntos intercambiables.</p>
+</div>
+<div class="timeline-item">
+<h4>V. Build, Release, Run</h4>
+<p>Separación estricta de fases. Build → artifact; Release → artifact + config; Run → proceso.
+</p>
+</div>
+<div class="timeline-item">
+<h4>VI. Processes</h4>
+<p>Stateless, share-nothing. Estado en backing services (DB, cache).</p>
+</div>
+<div class="timeline-item">
+<h4>VII. Port Binding</h4>
+<p>La app es auto-contenida y exporta servicios via puerto. No depende de un servidor externo
+(Apache, Nginx).</p>
+</div>
+<div class="timeline-item">
+<h4>VIII. Concurrency</h4>
+<p>Escalar horizontalmente via procesos (process model).</p>
+</div>
+<div class="timeline-item">
+<h4>IX. Disposability</h4>
+<p>Inicio rápido, shutdown graceful. Resiliente a fallos repentinos.</p>
+</div>
+<div class="timeline-item">
+<h4>X. Dev/Prod Parity</h4>
+<p>Reducir diferencias entre entornos. Usar mismas versiones de DB/cache en local.</p>
+</div>
+<div class="timeline-item">
+<h4>XI. Logs</h4>
+<p>Logs como streams de eventos. La app no gestiona archivos de log; los agrega el entorno.</p>
+</div>
+<div class="timeline-item">
+<h4>XII. Admin Processes</h4>
+<p>Tareas de administración (migraciones, scripts) como procesos one-off.</p>
+</div>
+</div>
+</article>
+
+<!-- PATRONES ARQUITECTÓNICOS -->
+<article>
+<h3>🔄 Patrones de Arquitectura Distribuida</h3>
+
+<div class="card-grid">
+<div class="card">
+<h3>⚡ CQRS</h3>
+<p><strong>Command Query Responsibility Segregation.</strong> Separa las operaciones de
+escritura (Commands) de las de lectura (Queries) en modelos y bases de datos distintas.</p>
+<h4>Ventajas</h4>
+<ul>
+<li>Escalado independiente de lectura y escritura</li>
+<li>Modelos optimizados para cada operación</li>
+<li>Ideal con Event Sourcing</li>
+</ul>
+<h4>Desventaja clave</h4>
+<ul>
+<li>Eventual consistency entre read/write stores</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>📖 Event Sourcing</h3>
+<p>El estado de la aplicación se deriva de una secuencia inmutable de eventos, no de valores
+actuales en DB.</p>
+<h4>Ventajas</h4>
+<ul>
+<li>Auditoría completa del historial</li>
+<li>Reconstrucción de cualquier estado pasado</li>
+<li>Temporal decoupling</li>
+</ul>
+<h4>Uso típico</h4>
+<ul>
+<li>Sistemas bancarios, pedidos, auditoría</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>🔌 Circuit Breaker</h3>
+<p>Patrón de resiliencia. Cuando un servicio downstream falla repetidamente, el "breaker" se
+abre y deja de llamarlo temporalmente, evitando cascade failures.</p>
+<h4>Estados</h4>
+<ul>
+<li><strong>Closed:</strong> operación normal</li>
+<li><strong>Open:</strong> bloqueando llamadas (fallo)</li>
+<li><strong>Half-Open:</strong> probando recuperación</li>
+</ul>
+<h4>Implementaciones</h4>
+<ul>
+<li>Hystrix, Resilience4j, Polly, Istio</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>🔀 Saga Pattern</h3>
+<p>Gestión de transacciones distribuidas sin 2PC. Cada servicio ejecuta su transacción local y
+publica un evento; si falla, se ejecutan compensaciones.</p>
+<h4>Tipos</h4>
+<ul>
+<li><strong>Choreography:</strong> cada servicio reacciona a eventos</li>
+<li><strong>Orchestration:</strong> un orquestador dirige el flujo (Temporal, Camunda)</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>🚪 API Gateway</h3>
+<p>Punto de entrada único para clientes. Maneja routing, auth, rate limiting, logging,
+transformación de requests.</p>
+<h4>Funciones</h4>
+<ul>
+<li>Autenticación/Autorización centralizada</li>
+<li>Load balancing</li>
+<li>SSL termination</li>
+<li>Caching, rate limiting</li>
+<li>Request aggregation (BFF pattern)</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>🕸️ Service Mesh</h3>
+<p>Infraestructura dedicada a manejar la comunicación service-to-service. Se implementa como
+sidecar proxy por servicio o por nodo.</p>
+<h4>Capacidades</h4>
+<ul>
+<li>mTLS automático entre servicios</li>
+<li>Observabilidad (traces, metrics)</li>
+<li>Traffic management (canary, A/B)</li>
+<li>Circuit breaking, retries</li>
+</ul>
+<h4>Herramientas</h4>
+<ul>
+<li>Istio, Linkerd, Consul Connect</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>🏭 Producer-Consumer</h3>
+<p>Desacopla productores de mensajes de consumidores vía cola/broker. Ideal para baja
+acoplamiento en microservicios.</p>
+<h4>Herramientas</h4>
+<ul>
+<li>RabbitMQ, Apache Kafka, AWS SQS</li>
+<li>Azure Service Bus, GCP Pub/Sub</li>
+</ul>
+<h4>vs Pub/Sub</h4>
+<ul>
+<li>Queue: un consumer por mensaje</li>
+<li>Pub/Sub: múltiples subscribers por mensaje</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>🗄️ Database per Service</h3>
+<p>Cada microservicio es dueño de su propia base de datos. Ningún servicio accede directamente a
+la DB de otro.</p>
+<h4>Ventajas</h4>
+<ul>
+<li>Loose coupling real entre servicios</li>
+<li>Libertad de elegir DB por servicio</li>
+<li>Escalado independiente</li>
+</ul>
+<h4>Consecuencia</h4>
+<ul>
+<li>Joins distribuidos → Saga o API composition</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- SOLID + SRP EXAMPLE -->
+<article>
+<h3>💡 SRP en la Práctica — Ejemplo Real</h3>
+<p>La clase <code>Square</code> vista en la evaluación viola SRP porque tiene dos responsabilidades:
+calcular área Y formatear output.</p>
+<pre><code><span class="token-comment">// ❌ MAL: dos responsabilidades en una clase</span>
+<span class="token-keyword">class</span> Square {
+    <span class="token-keyword">public</span> $length;
+    <span class="token-keyword">function</span> __construct($pLength) { $this->length = $pLength; }
+    
+    <span class="token-keyword">public function</span> getArea() { <span class="token-keyword">return</span> pow($this->length, 2); }
+    
+    <span class="token-comment">// ❌ Responsabilidad de presentación mezclada</span>
+    <span class="token-keyword">public function</span> output() {
+        <span class="token-keyword">return</span> <span class="token-string">'The area of square is: '</span> . $this->getArea($this->length);
+    }
+}
+
+<span class="token-comment">// ✅ BIEN: separación de responsabilidades</span>
+<span class="token-keyword">class</span> Square {
+    <span class="token-keyword">public</span> $length;
+    <span class="token-keyword">function</span> __construct($pLength) { $this->length = $pLength; }
+    <span class="token-keyword">public function</span> getArea() { <span class="token-keyword">return</span> pow($this->length, 2); }
+}
+
+<span class="token-keyword">class</span> SquarePresenter {
+    <span class="token-keyword">public function</span> output(Square $square) {
+        <span class="token-keyword">return</span> <span class="token-string">'The area of square is: '</span> . $square->getArea();
+    }
+}</code></pre>
+</article>

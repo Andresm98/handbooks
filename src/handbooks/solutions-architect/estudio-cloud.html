@@ -1,0 +1,302 @@
+<!-- COMPARATIVA GENERAL -->
+<article>
+<h3>🗂️ Comparativa de Servicios por Categoría</h3>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Categoría</th>
+<th class="th-aws" style="color:var(--aws)">AWS</th>
+<th class="th-azure" style="color:var(--azure)">Azure</th>
+<th class="th-gcp" style="color:var(--gcp)">GCP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="concept-cell"><strong>Compute (VM)</strong></td>
+<td class="aws-cell">EC2 (Elastic Compute Cloud)</td>
+<td class="azure-cell">Virtual Machines</td>
+<td class="gcp-cell">Compute Engine</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>Container Orchestration</strong></td>
+<td class="aws-cell">EKS (Kubernetes) / ECS</td>
+<td class="azure-cell">AKS (Azure Kubernetes Service)</td>
+<td class="gcp-cell">GKE (Google Kubernetes Engine)</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>Serverless Functions</strong></td>
+<td class="aws-cell">Lambda</td>
+<td class="azure-cell">Azure Functions</td>
+<td class="gcp-cell">Cloud Functions / Cloud Run</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>Object Storage</strong></td>
+<td class="aws-cell">S3</td>
+<td class="azure-cell">Blob Storage</td>
+<td class="gcp-cell">Cloud Storage</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>SQL Database</strong></td>
+<td class="aws-cell">RDS / Aurora</td>
+<td class="azure-cell">Azure SQL Database</td>
+<td class="gcp-cell">Cloud SQL / Spanner</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>NoSQL Database</strong></td>
+<td class="aws-cell">DynamoDB</td>
+<td class="azure-cell">Cosmos DB</td>
+<td class="gcp-cell">Firestore / Bigtable</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>Message Queue</strong></td>
+<td class="aws-cell">SQS</td>
+<td class="azure-cell">Service Bus (Queue)</td>
+<td class="gcp-cell">Cloud Tasks / Pub/Sub</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>Pub/Sub / Streaming</strong></td>
+<td class="aws-cell">SNS / Kinesis</td>
+<td class="azure-cell">Event Hub / Event Grid</td>
+<td class="gcp-cell">Pub/Sub</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>Load Balancer</strong></td>
+<td class="aws-cell">ALB (L7) / NLB (L4) / CLB</td>
+<td class="azure-cell">Application Gateway / Load Balancer</td>
+<td class="gcp-cell">Cloud Load Balancing</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>CDN</strong></td>
+<td class="aws-cell">CloudFront</td>
+<td class="azure-cell">Azure CDN / Front Door</td>
+<td class="gcp-cell">Cloud CDN</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>DNS</strong></td>
+<td class="aws-cell">Route 53</td>
+<td class="azure-cell">Azure DNS</td>
+<td class="gcp-cell">Cloud DNS</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>IAM / Identity</strong></td>
+<td class="aws-cell">IAM + Cognito</td>
+<td class="azure-cell">Azure AD / Entra ID</td>
+<td class="gcp-cell">Cloud IAM + Identity Platform</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>Secrets Manager</strong></td>
+<td class="aws-cell">Secrets Manager / Parameter Store</td>
+<td class="azure-cell">Azure Key Vault</td>
+<td class="gcp-cell">Secret Manager</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>Monitoring / Observabilidad</strong></td>
+<td class="aws-cell">CloudWatch + X-Ray</td>
+<td class="azure-cell">Azure Monitor + App Insights</td>
+<td class="gcp-cell">Cloud Monitoring + Cloud Trace</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>IaC Nativo</strong></td>
+<td class="aws-cell">CloudFormation / CDK</td>
+<td class="azure-cell">ARM Templates / Bicep</td>
+<td class="gcp-cell">Deployment Manager / Config Connector</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>ML Platform</strong></td>
+<td class="aws-cell">SageMaker</td>
+<td class="azure-cell">Azure ML</td>
+<td class="gcp-cell">Vertex AI</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>Data Warehouse</strong></td>
+<td class="aws-cell">Redshift</td>
+<td class="azure-cell">Synapse Analytics</td>
+<td class="gcp-cell">BigQuery</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>Service Mesh</strong></td>
+<td class="aws-cell">App Mesh</td>
+<td class="azure-cell">Open Service Mesh</td>
+<td class="gcp-cell">Traffic Director / Anthos</td>
+</tr>
+<tr>
+<td class="concept-cell"><strong>Cache</strong></td>
+<td class="aws-cell">ElastiCache (Redis/Memcached)</td>
+<td class="azure-cell">Azure Cache for Redis</td>
+<td class="gcp-cell">Memorystore</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout callout-info">
+<span class="callout-icon">💡</span>
+<div><strong>AWS SNS ≠ Message Queue.</strong> SNS es un servicio Pub/Sub de notificaciones (push a
+subscribers), NO una cola. SQS es la cola de mensajes. En la evaluación, la respuesta correcta
+es que SNS no es un message queue.</div>
+</div>
+</article>
+
+<!-- TIPOS DE CLOUD -->
+<article>
+<h3>🌐 Tipos de Nube y Estrategias de Despliegue</h3>
+<div class="card-grid">
+<div class="card">
+<h3>🔒 Private Cloud / On-Premise</h3>
+<p>Infraestructura propia o gestionada exclusivamente para una organización. Control total,
+costos fijos altos.</p>
+<ul>
+<li>Cumplimiento regulatorio estricto</li>
+<li>Datos altamente sensibles</li>
+<li>Latencia ultra-baja requerida</li>
+</ul>
+</div>
+<div class="card">
+<h3>🌍 Public Cloud</h3>
+<p>Infraestructura compartida gestionada por el proveedor (AWS, Azure, GCP). Pago por uso,
+elasticidad máxima.</p>
+<ul>
+<li>Startups y proyectos con crecimiento variable</li>
+<li>Menor inversión inicial (CAPEX → OPEX)</li>
+</ul>
+</div>
+<div class="card">
+<h3>🔀 Hybrid Cloud</h3>
+<p>Integración de nubes de <strong>diferentes tipos</strong> (public + private/on-premise).
+Conectadas via VPN o Direct Connect.</p>
+<ul>
+<li>Mantener legacy systems críticos on-prem</li>
+<li>Migración gradual a la nube</li>
+<li>Datos sensibles on-prem + cómputo en cloud</li>
+</ul>
+</div>
+<div class="card">
+<h3>🌐 Multi-Cloud</h3>
+<p>Uso de múltiples nubes del <strong>mismo tipo</strong> (dos o más proveedores públicos) para
+diferentes propósitos.</p>
+<ul>
+<li>Evitar vendor lock-in</li>
+<li>Best-of-breed: mejor servicio de cada proveedor</li>
+<li>Redundancia geográfica/proveedor</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- MODELOS DE SERVICIO -->
+<article>
+<h3>📦 Modelos de Servicio Cloud</h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th>Gestión Usuario</th>
+<th>Gestión Proveedor</th>
+<th>Ejemplos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>IaaS</strong> — Infrastructure as a Service</td>
+<td>OS, runtime, apps, data</td>
+<td>Virtualización, servidores, storage, red</td>
+<td>EC2, Azure VMs, Compute Engine</td>
+</tr>
+<tr>
+<td><strong>PaaS</strong> — Platform as a Service</td>
+<td>Apps y data</td>
+<td>Todo el stack de infraestructura + OS</td>
+<td>Heroku, App Engine, Azure App Service</td>
+</tr>
+<tr>
+<td><strong>SaaS</strong> — Software as a Service</td>
+<td>Solo configuración de uso</td>
+<td>Todo el stack completo</td>
+<td>Gmail, Salesforce, Slack, Office 365</td>
+</tr>
+<tr>
+<td><strong>BaaS</strong> — Backend as a Service</td>
+<td>Lógica frontend + config</td>
+<td>Backend completo (auth, DB, storage)</td>
+<td>Firebase, Supabase, Auth0</td>
+</tr>
+<tr>
+<td><strong>FaaS</strong> — Function as a Service</td>
+<td>Solo código de función</td>
+<td>Runtime, escalado, infraestructura</td>
+<td>AWS Lambda, Azure Functions, Cloud Run</td>
+</tr>
+<tr>
+<td><strong>Serverless (general)</strong></td>
+<td>Lógica de negocio</td>
+<td>Toda la infraestructura + servers</td>
+<td>Lambda + API Gateway + DynamoDB</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>
+
+<!-- AWS WELL-ARCHITECTED -->
+<article>
+<h3>🏛️ AWS Well-Architected Framework</h3>
+<p>Marco de referencia de AWS para evaluar arquitecturas cloud. Compuesto por 6 pilares:</p>
+<div class="card-grid">
+<div class="card">
+<h3>🔒 Security</h3>
+<ul>
+<li>Least privilege IAM</li>
+<li>Encriptación at-rest y in-transit</li>
+<li>Detective controls (GuardDuty, CloudTrail)</li>
+<li>Defense in depth</li>
+</ul>
+</div>
+<div class="card">
+<h3>⚡ Reliability</h3>
+<ul>
+<li>Multi-AZ deployments</li>
+<li>Auto Scaling groups</li>
+<li>Circuit breakers y retries</li>
+<li>Disaster Recovery (RPO/RTO)</li>
+</ul>
+</div>
+<div class="card">
+<h3>🚀 Performance Efficiency</h3>
+<ul>
+<li>Right-sizing de instancias</li>
+<li>Caching (ElastiCache, CloudFront)</li>
+<li>Arquitectura event-driven</li>
+<li>Benchmarking continuo</li>
+</ul>
+</div>
+<div class="card">
+<h3>💰 Cost Optimization</h3>
+<ul>
+<li>Reserved Instances / Savings Plans</li>
+<li>Spot Instances para workloads tolerantes</li>
+<li>AWS Trusted Advisor</li>
+<li>Eliminar recursos ociosos</li>
+</ul>
+</div>
+<div class="card">
+<h3>⚙️ Operational Excellence</h3>
+<ul>
+<li>IaC para todas las operaciones</li>
+<li>Runbooks y playbooks automatizados</li>
+<li>Observabilidad completa</li>
+<li>Small, frequent, reversible changes</li>
+</ul>
+</div>
+<div class="card">
+<h3>🌱 Sustainability</h3>
+<ul>
+<li>Maximizar utilización de recursos</li>
+<li>Usar regiones más eficientes energéticamente</li>
+<li>Arquitecturas serverless (pago por uso real)</li>
+</ul>
+</div>
+</div>
+</article>

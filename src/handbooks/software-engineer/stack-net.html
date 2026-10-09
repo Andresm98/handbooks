@@ -1,0 +1,511 @@
+<!-- JUNIOR -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-junior">Junior</span> <span class="level-title">Fundamentos del lenguaje y la plataforma</span></h3>
+
+<details class="concept" id="n-j1">
+<summary><span><span class="concept-name">Tipos de valor vs. Tipos de referencia</span><br><span class="concept-tagline">value types · reference types · stack vs heap</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Los <strong>value types</strong> (<code>int</code>, <code>bool</code>,
+<code>struct</code>, <code>enum</code>) viven en el stack y se copian al asignarse. Los
+<strong>reference
+types</strong> (<code>class</code>, <code>string</code>, arrays) viven en el heap y la
+variable guarda
+una referencia. Esto afecta el comportamiento al pasar parámetros y comparar igualdad.
+</p>
+<div class="def-box">Stack: memoria rápida y ordenada (LIFO). Heap: memoria dinámica gestionada
+por el GC.
+Los value types en el stack no tienen overhead de GC.</div>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C#</span></div>
+<pre><span class="cm">// Value type — se copia</span>
+<span class="kw">int</span> a = <span class="num">10</span>;
+<span class="kw">int</span> b = a;
+b = <span class="num">20</span>;
+Console.<span class="fn">WriteLine</span>(a); <span class="cm">// 10 — no cambia</span>
+
+<span class="cm">// Reference type — apuntan al mismo objeto</span>
+<span class="kw">var</span> lista1 = <span class="kw">new</span> <span class="cls">List</span>&lt;<span class="kw">int</span>&gt; { <span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span> };
+<span class="kw">var</span> lista2 = lista1;
+lista2.<span class="fn">Add</span>(<span class="num">4</span>);
+Console.<span class="fn">WriteLine</span>(lista1.<span class="attr">Count</span>); <span class="cm">// 4 — sí cambia</span>
+
+<span class="cm">// Struct (value type personalizado)</span>
+<span class="kw">struct</span> <span class="cls">Punto</span> { <span class="kw">public int</span> X, Y; }
+<span class="cls">Punto</span> p1 = <span class="kw">new</span>() { X = <span class="num">1</span>, Y = <span class="num">2</span> };
+<span class="cls">Punto</span> p2 = p1; <span class="cm">// copia completa</span></pre>
+</div>
+<div class="tip tip-net"><span class="tip-icon">💡</span> Usa <code>record struct</code> en .NET
+6+ para
+value types inmutables con igualdad por valor automática. Ideal para coordenadas, money, IDs
+tipados.
+</div>
+</div>
+</details>
+
+<details class="concept" id="n-j2">
+<summary><span><span class="concept-name">async / await y el modelo de tareas</span><br><span class="concept-tagline">Task · async/await · no bloquear el thread</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc"><code>async/await</code> permite escribir código asíncrono con sintaxis
+síncrona.
+<code>Task</code> representa una operación que puede completarse en el futuro. El objetivo
+es liberar el
+thread mientras espera I/O (base de datos, HTTP, disco) en lugar de bloquearlo.
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C#</span></div>
+<pre><span class="cm">// ❌ Bloqueante — ocupa el thread esperando</span>
+<span class="kw">public</span> <span class="cls">Usuario</span> <span class="fn">ObtenerUsuario</span>(<span class="kw">int</span> id)
+{
+    <span class="kw">return</span> _db.<span class="cls">Usuarios</span>.<span class="fn">FirstOrDefault</span>(u => u.Id == id);
+}
+
+<span class="cm">// ✅ Asíncrono — libera el thread</span>
+<span class="kw">public async</span> <span class="cls">Task</span>&lt;<span class="cls">Usuario</span>?&gt; <span class="fn">ObtenerUsuarioAsync</span>(<span class="kw">int</span> id)
+{
+    <span class="kw">return await</span> _db.<span class="cls">Usuarios</span>
+        .<span class="fn">FirstOrDefaultAsync</span>(u => u.Id == id);
+}
+
+<span class="cm">// Llamar múltiples tareas en paralelo</span>
+<span class="kw">var</span> (usuario, pedidos) = <span class="kw">await</span> (
+    <span class="fn">ObtenerUsuarioAsync</span>(id),
+    <span class="fn">ObtenerPedidosAsync</span>(id)
+).<span class="fn">WhenAll</span>();  <span class="cm">// ambas en paralelo</span></pre>
+</div>
+<div class="tip tip-warn"><span class="tip-icon">⚠️</span> Nunca uses <code>.Result</code> o
+<code>.Wait()</code> en código async — puede causar deadlocks en ASP.NET. Siempre propaga el
+<code>await</code> hacia arriba.
+</div>
+</div>
+</details>
+
+<details class="concept" id="n-j3">
+<summary><span><span class="concept-name">Inyección de Dependencias (DI)</span><br><span class="concept-tagline">IoC container · Transient · Scoped · Singleton</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">La DI desacopla clases de sus dependencias. En lugar de que
+<code>OrderService</code> cree su propio <code>EmailService</code>, el contenedor lo
+inyecta. ASP.NET Core
+tiene un contenedor incorporado que gestiona el ciclo de vida: <strong>Transient</strong>
+(nueva instancia
+por uso), <strong>Scoped</strong> (una por request HTTP), <strong>Singleton</strong> (una
+por toda la vida
+de la app).
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C# · Program.cs</span><button
+class="copy-btn">copiar</button></div>
+<pre><span class="cm">// Registro en el contenedor</span>
+builder.<span class="cls">Services</span>.<span class="fn">AddScoped</span>&lt;<span class="cls">IOrderService</span>, <span class="cls">OrderService</span>&gt;();
+builder.<span class="cls">Services</span>.<span class="fn">AddSingleton</span>&lt;<span class="cls">IEmailSender</span>, <span class="cls">SmtpEmailSender</span>&gt;();
+builder.<span class="cls">Services</span>.<span class="fn">AddTransient</span>&lt;<span class="cls">IValidator</span>&lt;<span class="cls">OrderDto</span>&gt;, <span class="cls">OrderValidator</span>&gt;();
+
+<span class="cm">// Consumo vía constructor</span>
+<span class="kw">public class</span> <span class="cls">OrderController</span>(<span class="cls">IOrderService</span> orderService) : <span class="cls">ControllerBase</span>
+{
+    [<span class="dec">HttpPost</span>]
+    <span class="kw">public async</span> <span class="cls">Task</span>&lt;<span class="cls">IActionResult</span>&gt; <span class="fn">Create</span>(<span class="cls">OrderDto</span> dto)
+    {
+        <span class="kw">var</span> result = <span class="kw">await</span> orderService.<span class="fn">CreateAsync</span>(dto);
+        <span class="kw">return</span> <span class="fn">Ok</span>(result);
+    }
+}</pre>
+</div>
+<div class="tip tip-net"><span class="tip-icon">💡</span> Regla de oro: <strong>Scoped</strong>
+para casi
+todo (servicios, repos). <strong>Singleton</strong> solo para estado compartido thread-safe
+(cache,
+config). <strong>Transient</strong> para objetos ligeros sin estado.</div>
+</div>
+</details>
+
+<details class="concept" id="n-j4">
+<summary><span><span class="concept-name">LINQ — Language Integrated Query</span><br><span class="concept-tagline">IEnumerable · deferred execution · method syntax</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">LINQ permite consultar colecciones e IQueryable (EF Core) con sintaxis
+fluida. Tiene
+<strong>ejecución diferida</strong>: la query no se ejecuta hasta que iteras el resultado
+(<code>ToList()</code>, <code>FirstOrDefault()</code>). Sobre <code>IQueryable</code> se
+traduce a SQL;
+sobre <code>IEnumerable</code> se ejecuta en memoria.
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C#</span></div>
+<pre><span class="cm">// Sobre IEnumerable (en memoria)</span>
+<span class="kw">var</span> productos = _productos
+    .<span class="fn">Where</span>(p => p.Precio > <span class="num">100</span>)
+    .<span class="fn">OrderByDescending</span>(p => p.Precio)
+    .<span class="fn">Select</span>(p => <span class="kw">new</span> { p.Nombre, p.Precio })
+    .<span class="fn">Take</span>(<span class="num">10</span>)
+    .<span class="fn">ToList</span>();
+
+<span class="cm">// Sobre IQueryable (genera SQL)</span>
+<span class="kw">var</span> query = _db.<span class="cls">Pedidos</span>
+    .<span class="fn">Where</span>(p => p.FechaCreacion >= DateTime.<span class="attr">Today</span>.<span class="fn">AddDays</span>(-<span class="num">30</span>))
+    .<span class="fn">Include</span>(p => p.<span class="attr">Items</span>)
+    .<span class="fn">GroupBy</span>(p => p.<span class="attr">ClienteId</span>)
+    .<span class="fn">Select</span>(g => <span class="kw">new</span> {
+        ClienteId = g.<span class="attr">Key</span>,
+        Total = g.<span class="fn">Sum</span>(p => p.<span class="attr">Total</span>),
+        Cantidad = g.<span class="fn">Count</span>()
+    });
+
+<span class="cm">// La query aún no ejecuta — solo al llamar ToList()</span>
+<span class="kw">var</span> resultado = <span class="kw">await</span> query.<span class="fn">ToListAsync</span>();</pre>
+</div>
+</div>
+</details>
+</div>
+
+<!-- MID -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-mid">Mid</span> <span class="level-title">Patrones, arquitectura y Entity Framework</span></h3>
+
+<details class="concept" id="n-m1">
+<summary><span><span class="concept-name">Clean Architecture</span><br><span class="concept-tagline">Domain · Application · Infrastructure · Presentation</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Organiza el código en capas concéntricas donde las dependencias solo
+apuntan hacia
+adentro. El <strong>dominio</strong> no conoce nada externo. La <strong>aplicación</strong>
+orquesta casos
+de uso. La <strong>infraestructura</strong> implementa interfaces del dominio. La
+<strong>presentación</strong> (API) es el punto de entrada.
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C# · Estructura de proyecto</span><button
+class="copy-btn">copiar</button></div>
+<pre><span class="cm">// Domain/Entities/Order.cs — sin dependencias externas</span>
+<span class="kw">public class</span> <span class="cls">Order</span>
+{
+    <span class="kw">public</span> <span class="cls">Guid</span> Id { <span class="kw">get</span>; <span class="kw">private set</span>; }
+    <span class="kw">public</span> <span class="cls">Money</span> Total { <span class="kw">get</span>; <span class="kw">private set</span>; }
+    <span class="kw">private readonly</span> <span class="cls">List</span>&lt;<span class="cls">OrderItem</span>&gt; _items = [];
+
+    <span class="kw">public void</span> <span class="fn">AddItem</span>(<span class="cls">Product</span> product, <span class="kw">int</span> qty)
+    {
+        <span class="kw">if</span> (qty &lt;= <span class="num">0</span>) <span class="kw">throw new</span> <span class="cls">DomainException</span>(<span class="str">"Qty inválida"</span>);
+        _items.<span class="fn">Add</span>(<span class="kw">new</span> <span class="cls">OrderItem</span>(product, qty));
+        Total = _items.<span class="fn">Sum</span>(i => i.<span class="attr">Subtotal</span>);
+    }
+}
+
+<span class="cm">// Application/UseCases/CreateOrder/CreateOrderCommand.cs</span>
+<span class="kw">public record</span> <span class="cls">CreateOrderCommand</span>(<span class="cls">Guid</span> ClienteId, <span class="cls">List</span>&lt;<span class="cls">OrderItemDto</span>&gt; Items)
+    : <span class="cls">IRequest</span>&lt;<span class="cls">OrderDto</span>&gt;;
+
+<span class="cm">// Infrastructure/Persistence/OrderRepository.cs</span>
+<span class="kw">public class</span> <span class="cls">OrderRepository</span>(<span class="cls">AppDbContext</span> db) : <span class="cls">IOrderRepository</span>
+{
+    <span class="kw">public async</span> <span class="cls">Task</span> <span class="fn">SaveAsync</span>(<span class="cls">Order</span> order) =>
+        <span class="kw">await</span> db.<span class="fn">SaveChangesAsync</span>();
+}</pre>
+</div>
+<div class="pill-row">
+<span class="pill">Dependency Inversion</span>
+<span class="pill">Domain Model</span>
+<span class="pill">Use Cases</span>
+<span class="pill">Repository</span>
+<span class="pill">Ports &amp; Adapters</span>
+</div>
+</div>
+</details>
+
+<details class="concept" id="n-m2">
+<summary><span><span class="concept-name">Entity Framework Core — avanzado</span><br><span class="concept-tagline">Change Tracker · N+1 · AsNoTracking · Owned entities</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">El problema N+1 ocurre cuando una query carga N entidades y luego hace 1
+query
+adicional por cada una para cargar relaciones. Solución: <code>Include()</code>. Para
+queries de solo
+lectura, <code>AsNoTracking()</code> elimina el overhead del Change Tracker (~30% más
+rápido).</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C#</span></div>
+<pre><span class="cm">// ❌ Problema N+1 — 1 query + N queries de Items</span>
+<span class="kw">var</span> ordenes = <span class="kw">await</span> _db.<span class="cls">Orders</span>.<span class="fn">ToListAsync</span>();
+<span class="kw">foreach</span> (<span class="kw">var</span> o <span class="kw">in</span> ordenes)
+    Console.<span class="fn">WriteLine</span>(o.Items.<span class="attr">Count</span>); <span class="cm">// lazy load por cada orden</span>
+
+<span class="cm">// ✅ Eager loading — 1 query con JOIN</span>
+<span class="kw">var</span> ordenes = <span class="kw">await</span> _db.<span class="cls">Orders</span>
+    .<span class="fn">Include</span>(o => o.<span class="attr">Items</span>)
+        .<span class="fn">ThenInclude</span>(i => i.<span class="attr">Product</span>)
+    .<span class="fn">AsNoTracking</span>()   <span class="cm">// sin change tracking</span>
+    .<span class="fn">ToListAsync</span>();
+
+<span class="cm">// Owned Entity — value object en EF Core</span>
+<span class="kw">public class</span> <span class="cls">Order</span>
+{
+    <span class="kw">public</span> <span class="cls">Address</span> ShippingAddress { <span class="kw">get</span>; <span class="kw">set</span>; }  <span class="cm">// Owned</span>
+}
+<span class="cm">// En DbContext:</span>
+modelBuilder.<span class="cls">Entity</span>&lt;<span class="cls">Order</span>&gt;().<span class="fn">OwnsOne</span>(o => o.<span class="attr">ShippingAddress</span>);</pre>
+</div>
+<div class="tip tip-net"><span class="tip-icon">💡</span> Usa <code>AsNoTracking()</code> en
+todas las
+queries de lectura (GET endpoints). Solo omítelo cuando vayas a modificar las entidades
+cargadas.</div>
+</div>
+</details>
+
+<details class="concept" id="n-m3">
+<summary><span><span class="concept-name">Middleware Pipeline en ASP.NET Core</span><br><span class="concept-tagline">Use · Run · Map · orden importa</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">El pipeline es una cadena de middlewares que procesan cada request en
+orden. Cada
+middleware puede procesar la request, pasarla al siguiente (<code>next()</code>), o
+cortocircuitar la
+cadena. El orden de registro es crítico: Authentication debe ir antes de Authorization.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C# · Program.cs</span><button
+class="copy-btn">copiar</button></div>
+<pre><span class="cm">// Orden correcto del pipeline</span>
+app.<span class="fn">UseExceptionHandler</span>(<span class="str">"/error"</span>);  <span class="cm">// 1. Siempre primero</span>
+app.<span class="fn">UseHttpsRedirection</span>();
+app.<span class="fn">UseStaticFiles</span>();
+app.<span class="fn">UseRouting</span>();
+app.<span class="fn">UseAuthentication</span>();            <span class="cm">// 2. Auth antes que Authz</span>
+app.<span class="fn">UseAuthorization</span>();
+app.<span class="fn">MapControllers</span>();
+
+<span class="cm">// Middleware personalizado</span>
+app.<span class="fn">Use</span>(<span class="kw">async</span> (context, next) =>
+{
+    <span class="kw">var</span> sw = <span class="cls">Stopwatch</span>.<span class="fn">StartNew</span>();
+    <span class="kw">await</span> <span class="fn">next</span>(context);  <span class="cm">// pasa al siguiente</span>
+    <span class="attr">_logger</span>.<span class="fn">LogInformation</span>(<span class="str">"Request: {ms}ms"</span>, sw.<span class="attr">ElapsedMilliseconds</span>);
+});</pre>
+</div>
+</div>
+</details>
+</div>
+
+<!-- SENIOR -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-senior">Senior</span> <span class="level-title">CQRS, performance y diseño robusto</span></h3>
+
+<details class="concept" id="n-s1">
+<summary><span><span class="concept-name">CQRS + MediatR</span><br><span class="concept-tagline">Command · Query · Handler · PipelineBehavior</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc"><strong>CQRS</strong> (Command Query Responsibility Segregation) separa
+operaciones
+de escritura (Commands) de lectura (Queries). <strong>MediatR</strong> implementa el patrón
+Mediator: en
+lugar de llamar servicios directamente, lanzas un mensaje y el Handler apropiado lo procesa.
+Los
+<strong>PipelineBehaviors</strong> son middlewares para tus handlers (validación, logging,
+retry).
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C#</span></div>
+<pre><span class="cm">// Command — escribe, devuelve resultado</span>
+<span class="kw">public record</span> <span class="cls">CreateProductCommand</span>(
+    <span class="kw">string</span> Nombre, <span class="kw">decimal</span> Precio) : <span class="cls">IRequest</span>&lt;<span class="cls">Guid</span>&gt;;
+
+<span class="cm">// Handler</span>
+<span class="kw">public class</span> <span class="cls">CreateProductHandler</span>(
+    <span class="cls">IProductRepository</span> repo) : <span class="cls">IRequestHandler</span>&lt;<span class="cls">CreateProductCommand</span>, <span class="cls">Guid</span>&gt;
+{
+    <span class="kw">public async</span> <span class="cls">Task</span>&lt;<span class="cls">Guid</span>&gt; <span class="fn">Handle</span>(
+        <span class="cls">CreateProductCommand</span> cmd, <span class="cls">CancellationToken</span> ct)
+    {
+        <span class="kw">var</span> product = <span class="cls">Product</span>.<span class="fn">Create</span>(cmd.Nombre, cmd.Precio);
+        <span class="kw">await</span> repo.<span class="fn">AddAsync</span>(product, ct);
+        <span class="kw">return</span> product.Id;
+    }
+}
+
+<span class="cm">// PipelineBehavior — validación automática</span>
+<span class="kw">public class</span> <span class="cls">ValidationBehavior</span>&lt;<span class="cls">TRequest</span>, <span class="cls">TResponse</span>&gt;(
+    <span class="cls">IEnumerable</span>&lt;<span class="cls">IValidator</span>&lt;<span class="cls">TRequest</span>&gt;&gt; validators)
+    : <span class="cls">IPipelineBehavior</span>&lt;<span class="cls">TRequest</span>, <span class="cls">TResponse</span>&gt;
+{
+    <span class="kw">public async</span> <span class="cls">Task</span>&lt;<span class="cls">TResponse</span>&gt; <span class="fn">Handle</span>(
+        <span class="cls">TRequest</span> request, <span class="cls">RequestHandlerDelegate</span>&lt;<span class="cls">TResponse</span>&gt; next, <span class="cls">CancellationToken</span> ct)
+    {
+        <span class="kw">var</span> errors = validators
+            .<span class="fn">Select</span>(v => v.<span class="fn">Validate</span>(request))
+            .<span class="fn">SelectMany</span>(r => r.<span class="attr">Errors</span>)
+            .<span class="fn">ToList</span>();
+        <span class="kw">if</span> (errors.<span class="attr">Count</span> > <span class="num">0</span>)
+            <span class="kw">throw new</span> <span class="cls">ValidationException</span>(errors);
+        <span class="kw">return await</span> <span class="fn">next</span>();
+    }
+}</pre>
+</div>
+</div>
+</details>
+
+<details class="concept" id="n-s2">
+<summary><span><span class="concept-name">Result Pattern — sin excepciones para flujos de negocio</span><br><span class="concept-tagline">Result&lt;T&gt; · Error · Railway-oriented</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">Las excepciones son costosas (generan stack traces) y no deben usarse
+para flujo de
+negocio esperado (ej: "usuario no encontrado"). El <strong>Result Pattern</strong> retorna
+explícitamente
+éxito o error, haciendo el contrato del método honesto y el código más legible.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C#</span></div>
+<pre><span class="cm">// Tipo Result genérico</span>
+<span class="kw">public record</span> <span class="cls">Result</span>&lt;<span class="cls">T</span>&gt;
+{
+    <span class="kw">public bool</span> IsSuccess { <span class="kw">get</span>; }
+    <span class="kw">public</span> <span class="cls">T</span>? Value { <span class="kw">get</span>; }
+    <span class="kw">public</span> <span class="cls">Error</span>? Err { <span class="kw">get</span>; }
+
+    <span class="kw">public static</span> <span class="cls">Result</span>&lt;<span class="cls">T</span>&gt; <span class="fn">Ok</span>(<span class="cls">T</span> value) => <span class="kw">new</span>(value, <span class="kw">null</span>);
+    <span class="kw">public static</span> <span class="cls">Result</span>&lt;<span class="cls">T</span>&gt; <span class="fn">Fail</span>(<span class="cls">Error</span> error) => <span class="kw">new</span>(<span class="kw">default</span>, error);
+}
+
+<span class="cm">// Uso en un servicio</span>
+<span class="kw">public async</span> <span class="cls">Task</span>&lt;<span class="cls">Result</span>&lt;<span class="cls">UserDto</span>&gt;&gt; <span class="fn">GetUserAsync</span>(<span class="kw">int</span> id)
+{
+    <span class="kw">var</span> user = <span class="kw">await</span> _repo.<span class="fn">FindAsync</span>(id);
+    <span class="kw">if</span> (user <span class="kw">is null</span>)
+        <span class="kw">return</span> <span class="cls">Result</span>&lt;<span class="cls">UserDto</span>&gt;.<span class="fn">Fail</span>(<span class="cls">Errors</span>.UserNotFound);
+    <span class="kw">return</span> <span class="cls">Result</span>&lt;<span class="cls">UserDto</span>&gt;.<span class="fn">Ok</span>(_mapper.<span class="fn">Map</span>&lt;<span class="cls">UserDto</span>&gt;(user));
+}
+
+<span class="cm">// En el controller — mapeo a HTTP</span>
+<span class="kw">var</span> result = <span class="kw">await</span> _mediator.<span class="fn">Send</span>(<span class="kw">new</span> <span class="cls">GetUserQuery</span>(id));
+<span class="kw">return</span> result.IsSuccess ? <span class="fn">Ok</span>(result.Value) : <span class="fn">NotFound</span>(result.Err);</pre>
+</div>
+</div>
+</details>
+
+<details class="concept" id="n-s3">
+<summary><span><span class="concept-name">Performance: Span&lt;T&gt; y reducción de allocations</span><br><span class="concept-tagline">Span · stackalloc · object pooling · GC pressure</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc"><code>Span&lt;T&gt;</code> es una vista sobre memoria existente (array,
+stack,
+memoria nativa) sin copiarla. Reduce drásticamente las allocations en hot paths,
+disminuyendo la presión
+sobre el GC y mejorando la latencia en código de alto rendimiento.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C#</span></div>
+<pre><span class="cm">// ❌ Crea un string intermedio en heap</span>
+<span class="kw">string</span> input = <span class="str">"2024-01-15"</span>;
+<span class="kw">int</span> year = <span class="kw">int</span>.<span class="fn">Parse</span>(input.<span class="fn">Substring</span>(<span class="num">0</span>, <span class="num">4</span>));
+
+<span class="cm">// ✅ Zero allocation — Span es solo una vista</span>
+<span class="kw">int</span> year = <span class="kw">int</span>.<span class="fn">Parse</span>(input.<span class="fn">AsSpan</span>(<span class="num">0</span>, <span class="num">4</span>));
+
+<span class="cm">// Object Pool — reutilizar objetos costosos</span>
+<span class="kw">private readonly</span> <span class="cls">ObjectPool</span>&lt;<span class="cls">StringBuilder</span>&gt; _pool =
+    <span class="kw">new</span> <span class="cls">DefaultObjectPool</span>&lt;<span class="cls">StringBuilder</span>&gt;(<span class="kw">new</span> <span class="cls">StringBuilderPooledObjectPolicy</span>());
+
+<span class="kw">public string</span> <span class="fn">BuildMessage</span>(<span class="cls">IEnumerable</span>&lt;<span class="kw">string</span>&gt; parts)
+{
+    <span class="kw">var</span> sb = _pool.<span class="fn">Get</span>();
+    <span class="kw">try</span>
+    {
+        <span class="kw">foreach</span> (<span class="kw">var</span> p <span class="kw">in</span> parts) sb.<span class="fn">Append</span>(p);
+        <span class="kw">return</span> sb.<span class="fn">ToString</span>();
+    }
+    <span class="kw">finally</span> { _pool.<span class="fn">Return</span>(sb); }
+}</pre>
+</div>
+<div class="tip tip-net"><span class="tip-icon">💡</span> Usa BenchmarkDotNet para medir antes
+de optimizar.
+Las optimizaciones prematuras son costosas. Mide primero con <code>[MemoryDiagnoser]</code>
+para ver
+allocations reales.</div>
+</div>
+</details>
+</div>
+
+<!-- LEAD -->
+<div class="level-block">
+<h3 class="level-header"><span class="level-badge badge-lead">Lead / Arch</span> <span class="level-title">Microservicios y diseño de sistemas</span></h3>
+
+<details class="concept" id="n-l1">
+<summary><span><span class="concept-name">Outbox Pattern — mensajes confiables</span><br><span class="concept-tagline">exactly-once · at-least-once · transactional outbox</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">El problema: guardar en DB y publicar un evento en un bus de mensajes no
+es atómico.
+Si el sistema falla entre los dos, el evento se pierde. La solución: guardar el evento
+<em>dentro de la
+misma transacción</em> en una tabla Outbox, y un proceso separado lo publica al bus.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C#</span></div>
+<pre><span class="cm">// 1. Guardar orden + mensaje en la misma transacción</span>
+<span class="kw">await using var</span> tx = <span class="kw">await</span> _db.<span class="fn">BeginTransactionAsync</span>();
+
+_db.<span class="cls">Orders</span>.<span class="fn">Add</span>(order);
+_db.<span class="cls">OutboxMessages</span>.<span class="fn">Add</span>(<span class="kw">new</span> <span class="cls">OutboxMessage</span>
+{
+    Type = <span class="str">"OrderCreated"</span>,
+    Payload = <span class="cls">JsonSerializer</span>.<span class="fn">Serialize</span>(<span class="kw">new</span> <span class="cls">OrderCreatedEvent</span>(order.Id)),
+    CreatedAt = <span class="cls">DateTime</span>.<span class="attr">UtcNow</span>
+});
+
+<span class="kw">await</span> _db.<span class="fn">SaveChangesAsync</span>(); <span class="cm">// atómico</span>
+<span class="kw">await</span> tx.<span class="fn">CommitAsync</span>();
+
+<span class="cm">// 2. Worker publica mensajes pendientes (Background Service)</span>
+<span class="kw">var</span> pending = <span class="kw">await</span> _db.<span class="cls">OutboxMessages</span>
+    .<span class="fn">Where</span>(m => m.PublishedAt == <span class="kw">null</span>)
+    .<span class="fn">OrderBy</span>(m => m.CreatedAt)
+    .<span class="fn">Take</span>(<span class="num">50</span>)
+    .<span class="fn">ToListAsync</span>();
+
+<span class="kw">foreach</span> (<span class="kw">var</span> msg <span class="kw">in</span> pending)
+{
+    <span class="kw">await</span> _bus.<span class="fn">PublishAsync</span>(msg.Type, msg.Payload);
+    msg.PublishedAt = <span class="cls">DateTime</span>.<span class="attr">UtcNow</span>;
+}
+<span class="kw">await</span> _db.<span class="fn">SaveChangesAsync</span>();</pre>
+</div>
+<div class="tip tip-warn"><span class="tip-icon">⚠️</span> El Outbox garantiza
+<strong>at-least-once
+delivery</strong>. Los consumidores deben ser idempotentes (procesar el mismo mensaje
+dos veces debe ser
+seguro).</div>
+</div>
+</details>
+
+<details class="concept" id="n-l2">
+<summary><span><span class="concept-name">Circuit Breaker con Polly</span><br><span class="concept-tagline">resiliencia · retry · fallback · timeout</span></span></summary>
+<div class="concept-body">
+<p class="concept-desc">El patrón Circuit Breaker protege un servicio de cascada de fallos: si
+un servicio
+downstream falla repetidamente, el circuito se "abre" y las siguientes llamadas fallan
+rápido en lugar de
+esperar el timeout. Polly es la librería estándar para esto en .NET.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">C# · Polly v8 /
+Microsoft.Extensions.Http.Resilience</span></div>
+<pre"><span class="cm">// Configuración de resiliencia para HttpClient</span>
+                                builder.<span class="cls">Services</span>.<span class="fn">AddHttpClient</span>&lt;<span
+                                    class="cls">IPaymentService</span>, <span class="cls">PaymentService</span>&gt;()
+                                .<span class="fn">AddResilienceHandler</span>(<span
+                                    class="str">"payment-pipeline"</span>, pipeline =>
+                                {
+                                pipeline.<span class="fn">AddRetry</span>(<span class="kw">new</span> <span
+                                    class="cls">HttpRetryStrategyOptions</span>
+                                {
+                                MaxRetryAttempts = <span class="num">3</span>,
+                                Delay = <span class="cls">TimeSpan</span>.<span class="fn">FromMilliseconds</span>(<span
+                                    class="num">200</span>),
+                                BackoffType = <span class="cls">DelayBackoffType</span>.Exponential
+                                });
+
+                                pipeline.<span class="fn">AddCircuitBreaker</span>(<span class="kw">new</span> <span
+                                    class="cls">HttpCircuitBreakerStrategyOptions</span>
+                                {
+                                FailureRatio = <span class="num">0.5</span>, <span class="cm">// abre si 50%
+                                    falla</span>
+                                SamplingDuration = <span class="cls">TimeSpan</span>.<span
+                                    class="fn">FromSeconds</span>(<span class="num">30</span>),
+                                MinimumThroughput = <span class="num">10</span>, <span class="cm">// mínimo de calls
+                                    para evaluar</span>
+                                BreakDuration = <span class="cls">TimeSpan</span>.<span
+                                    class="fn">FromSeconds</span>(<span class="num">60</span>)
+                                });
+
+                                pipeline.<span class="fn">AddTimeout</span>(<span class="cls">TimeSpan</span>.<span
+                                    class="fn">FromSeconds</span>(<span class="num">5</span>));
+                                });</pre>
+</div>
+</div>
+</details>
+</div>

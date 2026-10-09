@@ -1,0 +1,145 @@
+<p><strong>Retrieval-Augmented Generation (RAG)</strong> es un paradigma arquitectónico que combina la
+capacidad
+generativa de un LLM con un sistema de recuperación de información externo. En lugar de depender
+exclusivamente del conocimiento paramétrico del modelo (lo que aprendió durante el entrenamiento),
+RAG permite
+al modelo <em>consultar una base de conocimiento actualizable en tiempo de inferencia</em>.</p>
+
+<div class="pullquote">
+<p>"RAG es la diferencia entre un experto que habla de memoria y uno que puede consultar su
+biblioteca antes
+de responder."</p>
+</div>
+
+<p>El ciclo fundamental tiene tres fases: el usuario formula una pregunta, el sistema recupera
+fragmentos
+relevantes de una base de conocimiento, y el LLM genera una respuesta condicionada tanto por la
+pregunta como
+por los fragmentos recuperados.</p>
+
+<div class="flow">
+<div class="flow-step">Consulta<span class="step-sub">user input</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Retrieval<span class="step-sub">vector search</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Context<span class="step-sub">top-k chunks</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">LLM<span class="step-sub">generation</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Respuesta<span class="step-sub">grounded output</span></div>
+</div>
+
+<h3>Motivación: limitaciones de los LLMs sin RAG</h3>
+<div class="card-grid">
+<div class="card accent-red">
+<div class="card-num">PROBLEMA #1</div>
+<div class="card-title">Knowledge cutoff</div>
+<p class="card-body">Los modelos no conocen eventos posteriores a su fecha de corte de
+entrenamiento. RAG
+provee conocimiento actualizado sin re-entrenar.</p>
+</div>
+<div class="card accent-red">
+<div class="card-num">PROBLEMA #2</div>
+<div class="card-title">Hallucinations</div>
+<p class="card-body">Sin fuente de verdad externa, los modelos inventan hechos plausibles pero
+incorrectos.
+RAG ancla las respuestas en documentos reales.</p>
+</div>
+<div class="card accent-red">
+<div class="card-num">PROBLEMA #3</div>
+<div class="card-title">Context window limitada</div>
+<p class="card-body">No es posible cargar toda una base de conocimiento en el prompt. RAG
+selecciona
+dinámicamente solo lo relevante.</p>
+</div>
+<div class="card accent-red">
+<div class="card-num">PROBLEMA #4</div>
+<div class="card-title">Conocimiento privado</div>
+<p class="card-body">Los modelos no conocen documentos internos de tu organización. RAG permite
+grounding en
+datos propietarios.</p>
+</div>
+</div>
+
+<h3>El pipeline completo</h3>
+<p>Un sistema RAG tiene dos pipelines con requisitos distintos: la <strong>indexación</strong> (offline o near-online, optimiza calidad y frescura) y la <strong>consulta</strong> (online, optimiza latencia y precisión).</p>
+<h3>El pipeline base</h3>
+<div class="diagram">Documento fuente
+│
+▼
+Chunking (división en fragmentos)
+│
+▼
+Embedding (vector semántico por chunk)
+│
+▼
+Vector Store (índice de búsqueda semántica)
+│
+▼
+Query del usuario ──► Embedding de la query
+│                        │
+└────────► Búsqueda por similitud ◄────┘
+│
+▼
+Top-k chunks relevantes
+│
+▼
+Inyección en el contexto del LLM
+│
+▼
+Respuesta generada</div>
+
+<h3>Decisiones de arquitectura que más impactan la calidad</h3>
+<table>
+<tr><th>Decisión</th><th>Impacto</th></tr>
+<tr><td>Tamaño y estrategia de chunking</td><td>Chunks muy pequeños pierden contexto; muy grandes diluyen la relevancia semántica</td></tr>
+<tr><td>Modelo de embeddings</td><td>Determina qué tan bien se capturan matices semánticos y multilingües</td></tr>
+<tr><td>Vector store</td><td>Latencia, costo, y soporte de filtros por metadata (tenant, fecha, permisos)</td></tr>
+<tr><td>Re-ranking posterior</td><td>Mejora precisión del top-k antes de inyectarlo al modelo</td></tr>
+<tr><td>Actualización del índice</td><td>Batch vs. streaming; define qué tan "fresco" es el conocimiento</td></tr>
+</table>
+
+<div class="callout">
+<div class="callout-label">Riesgo frecuente en banca / sector regulado</div>
+RAG mal diseñado sobre datos sensibles puede filtrar información entre tenants o entre niveles de permiso si el filtrado por metadata no está bien amarrado al control de acceso real del sistema origen, no solo al índice vectorial.
+</div>
+
+<h3>Axiomas de recuperación</h3>
+<div class="card-grid">
+<div class="card accent-blue">
+<div class="card-num">AXIOMA A1</div>
+<div class="card-title">Garbage in, garbage out</div>
+<p class="card-body">La calidad del output está acotada superiormente por la calidad del
+contexto
+recuperado. Un LLM perfecto con chunks irrelevantes produce respuestas incorrectas.</p>
+</div>
+<div class="card accent-blue">
+<div class="card-num">AXIOMA A2</div>
+<div class="card-title">Relevancia ≠ similitud semántica</div>
+<p class="card-body">El chunk más similar en el espacio de embeddings no siempre es el más útil.
+La
+similitud semántica es una proxy, no la verdad.</p>
+</div>
+<div class="card accent-blue">
+<div class="card-num">AXIOMA A3</div>
+<div class="card-title">Granularidad importa</div>
+<p class="card-body">El tamaño del chunk afecta drásticamente la precisión y el recall. No
+existe un tamaño
+óptimo universal: depende del dominio.</p>
+</div>
+<div class="card accent-blue">
+<div class="card-num">AXIOMA A4</div>
+<div class="card-title">Lost in the middle</div>
+<p class="card-body">Los LLMs atienden mejor información al inicio y al final del contexto. La
+información
+en el medio del prompt se degrada. Ordena los chunks estratégicamente.</p>
+</div>
+</div>
+
+<h3>Cuándo NO usar RAG</h3>
+<ul>
+<li>Cuando el conocimiento cabe cómodamente en el context window y no cambia con frecuencia (usar contexto directo es más simple y más preciso).</li>
+<li>Cuando la tarea es puramente transaccional (crear un ticket, ejecutar un cálculo): eso es un problema de <strong>tool use</strong>, no de recuperación de conocimiento.</li>
+<li>Cuando la latencia tolerada es muy baja y el corpus es pequeño: fine-tuning o prompting directo puede ser más eficiente.</li>
+</ul>
+

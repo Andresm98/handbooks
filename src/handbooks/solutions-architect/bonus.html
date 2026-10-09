@@ -1,0 +1,176 @@
+<p>Las decisiones arquitectónicas no se "toman" — se <strong>gestionan</strong>. Tienen un ciclo de
+vida: se proponen, se evalúan, se adoptan, se documentan, y se revisan. Los SA que no formalizan
+este proceso producen organizaciones donde las decisiones se toman implícitamente, se repiten
+los mismos debates, y nadie sabe por qué el sistema está como está.</p>
+
+<h3 id="adr">Architecture Decision Records (ADRs)</h3>
+<p>Un ADR es un documento breve que captura una decisión arquitectónica significativa, el contexto
+que la motivó, las opciones consideradas, y las consecuencias esperadas. Es la herramienta más
+simple y más poderosa del SA.</p>
+
+<pre data-lang="markdown"><code># ADR-0023: Migración del sistema de notificaciones a Event-Driven
+
+## Estado
+Aceptado — 2024-11-15
+
+## Contexto
+El sistema actual de notificaciones hace llamadas síncronas directas
+desde el servicio de Orders al servicio de Notifications. Esto causa:
+- Timeout en Orders cuando Notifications está lento (latencia p99: 2.3s)
+- Orders falla si Notifications está caído (availability coupling)
+- Imposible escalar Notifications independientemente de Orders
+- En Black Friday 2024, Notifications fue el single point of failure
+  que causó 23 minutos de degradación en el flujo de checkout
+
+## Decisión
+Migrar a arquitectura event-driven usando Kafka como broker:
+- Orders publica evento OrderConfirmed en Kafka
+- Notifications consume el evento de forma asíncrona
+- Las dos dependencias quedan completamente desacopladas
+
+## Opciones consideradas
+
+### Opción A: RabbitMQ (descartada)
+Pros: Más simple de operar que Kafka
+Cons: No ofrece replay de mensajes, que necesitamos para auditoría
+
+### Opción B: AWS SQS + SNS (descartada)  
+Pros: Managed service, zero-ops
+Cons: Vendor lock-in, más difícil de migrar en el futuro
+
+### Opción C: Kafka (ELEGIDA)
+Pros: Replay, retención configurable, ecosystem maduro, multi-consumer
+Cons: Mayor complejidad operacional que las alternativas
+
+## Consecuencias
+
+Positivas:
++ Orders ya no falla si Notifications está caído
++ Podemos escalar cada servicio independientemente
++ Los eventos quedan en Kafka 7 días — auditoría y replay disponibles
++ Futuras integraciones (Analytics, ML) consumen el mismo evento
+
+Negativas:
+- Añade Kafka como dependencia de infraestructura (Confluent Cloud elegido)
+- Notificaciones son ahora asíncronas — SLA cambia de "inmediata" a "30s"
+- El equipo necesita formación en Kafka (estimado: 2 semanas)
+
+## Revisión
+Revisar si la decisión sigue siendo correcta en Q3 2025 o si el
+volumen justifica migrar a Confluent Platform on-prem.
+</code></pre>
+
+<h3 id="presenting">Presentar Decisiones Arquitectónicas ante Ejecutivos</h3>
+
+<p>El 80% de las buenas arquitecturas son rechazadas porque el SA no sabe comunicarlas. La habilidad
+de traducir complejidad técnica a lenguaje ejecutivo es tan importante como la habilidad técnica
+misma.</p>
+
+<div class="diagram">
+<pre><code>
+  El Framework de Comunicación Ejecutiva para Arquitecturas
+
+  ESTRUCTURA DE LA PRESENTACIÓN (30 minutos máximo):
+
+  Minutos 1-5: El problema de negocio (NO la solución técnica)
+  "Actualmente, cuando el tráfico sube 3x en eventos (Black Friday),
+   nuestro sistema de checkout falla. El Q4 del año pasado perdimos
+   $340K en ventas por downtime. Este trimestre ese número podría
+   ser $600K."
+
+  Minutos 5-15: La propuesta y sus trade-offs
+  "Propongo 3 opciones. Las voy a comparar en los 3 criterios que
+   más os importan: costo, tiempo de implementación, y riesgo."
+  [Matriz de decisión visual]
+
+  Minutos 15-20: La recomendación con números
+  "Recomiendo la Opción B. Costo de implementación: $180K.
+   ROI break-even: Q2 2025. Riesgo: bajo (probado por Stripe y Shopify).
+   Necesito una decisión hoy para cumplir el timeline."
+
+  Minutos 20-30: Preguntas y objeciones
+  
+  LO QUE NUNCA DEBES HACER:
+  ❌ Empezar por la tecnología ("Vamos a usar Kafka...")
+  ❌ Usar jerga técnica sin definirla
+  ❌ Presentar solo una opción (parece que ya decidiste)
+  ❌ Ignorar el costo o presentarlo ambiguamente
+  ❌ No tener una recomendación clara ("depende...")
+</code></pre>
+</div>
+
+<h3>Architecture Review Boards (ARBs): Cómo Hacerlos Funcionar</h3>
+<p>Un ARB mal diseñado es una burocracia que ralentiza la organización. Un ARB bien diseñado es un
+mecanismo de aprendizaje organizacional y de evitar decisiones costosas repetidas.</p>
+
+<div class="when-box">
+<div class="when-use">
+<span class="when-label">ARB efectivo</span>
+<ul>
+<li>Revisiones asíncronas como default — reuniones solo para casos complejos</li>
+<li>Decisiones documentadas en ADRs accesibles a toda la organización</li>
+<li>Timeframe máximo de respuesta (48-72h para no bloquear)</li>
+<li>Criterios claros de qué requiere revisión (Type 1 decisions)</li>
+<li>SA representado por el equipo que propone, no por el ARB</li>
+<li>Resultado: aprobado / aprobado con condiciones / rechazado con alternativa</li>
+</ul>
+</div>
+<div class="when-avoid">
+<span class="when-label">ARB disfuncional (anti-patterns)</span>
+<ul>
+<li>Revisión de todo (incluyendo decisiones triviales)</li>
+<li>Sin criterios claros de lo que requiere revisión</li>
+<li>Reuniones semanales obligatorias sin agenda definida</li>
+<li>Los mismos debates repetidos sin decisiones registradas</li>
+<li>ARB como gatekeeping político, no técnico</li>
+<li>Decisiones sin fundamento documentado</li>
+</ul>
+</div>
+</div>
+
+<h3>Capacity Planning: La Habilidad Subvalorada</h3>
+
+<pre data-lang="python"><code><span class="cm"># Modelo de capacity planning para una API de pagos</span>
+
+<span class="cm"># Parámetros de negocio (obtenidos de negocio, no inventados)</span>
+usuarios_activos_diarios  = <span class="nm">50_000</span>
+transacciones_por_usuario = <span class="nm">2.5</span>    <span class="cm"># promedio histórico</span>
+pico_factor               = <span class="nm">3.0</span>    <span class="cm"># Black Friday / eventos</span>
+crecimiento_anual         = <span class="nm">1.40</span>   <span class="cm"># 40% growth proyectado</span>
+
+<span class="cm"># Carga actual</span>
+txn_por_dia  = usuarios_activos_diarios * transacciones_por_usuario
+txn_por_hora = txn_por_dia / <span class="nm">8</span>         <span class="cm"># 8h de horario peak</span>
+txn_por_seg  = txn_por_hora / <span class="nm">3600</span>     <span class="cm"># = ~4.3 TPS promedio</span>
+peak_tps     = txn_por_seg * pico_factor <span class="cm"># = ~13 TPS en pico</span>
+
+<span class="cm"># Sizing del servidor (con mediciones reales del servicio)
+# 1 instancia c5.xlarge puede manejar 50 TPS con latencia &lt;100ms p99</span>
+tps_por_instancia = <span class="nm">50</span>
+instancias_peak   = peak_tps / tps_por_instancia * <span class="nm">1.5</span>  <span class="cm"># 50% overhead</span>
+
+print(f<span class="str">"Instancias necesarias hoy (peak): {instancias_peak:.1f}"</span>)
+print(f<span class="str">"Instancias en 12 meses (con crecimiento): {instancias_peak * crecimiento_anual:.1f}"</span>)
+print(f<span class="str">"Costo mensual (12 meses): ${instancias_peak * crecimiento_anual * 200:.0f}/mes"</span>)
+<span class="cm"># Presentar esto ante ejecutivos: "El crecimiento proyectado requiere
+# escalar de 2 a 4 instancias en el próximo año, con un incremento
+# de costo de $400 a $800/mes — dentro del budget planificado."</span></code></pre>
+
+<div class="callout axiom">
+<div class="callout-icon"></div>
+<p><strong>Axioma final del SA:</strong> La mejor arquitectura no es la más elegante
+técnicamente. Es la que el equipo existente puede construir, operar, y evolucionar — dentro
+del presupuesto disponible, cumpliendo los requerimientos de negocio, con el nivel de riesgo
+que la organización puede aceptar. Todo lo demás es sobreingeniería.</p>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Síntesis</span>
+<p>El ciclo de vida de una decisión arquitectónica conecta todos los capítulos anteriores: los
+<strong>Mental Models</strong> informan cómo evaluar opciones, los <strong>fundamentos de
+sistemas distribuidos</strong> definen los límites físicos, la <strong>alineación al
+negocio</strong> determina los criterios de decisión, y los <strong>estilos
+arquitectónicos</strong> son las opciones entre las que elegir. El ADR es el artefacto
+que captura todo este razonamiento para que la organización aprenda de él.
+</p>
+</div>

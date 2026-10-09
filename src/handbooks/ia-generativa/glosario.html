@@ -1,0 +1,52 @@
+<p>Términos que aparecen en el handbook y en conversaciones técnicas sobre IA, en orden alfabético.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Término</th><th>Definición</th></tr></thead>
+<tbody>
+<tr><td><strong>A2A</strong></td><td>Protocolo Agent2Agent para comunicación y delegación de tareas entre agentes de distintos sistemas.</td></tr>
+<tr><td><strong>Agente</strong></td><td>Sistema donde un LLM decide en un loop qué herramientas usar y cuándo ha terminado.</td></tr>
+<tr><td><strong>AI Gateway</strong></td><td>Punto central por donde pasan las llamadas a modelos: autenticación, cuotas, routing, caché, trazas y costos.</td></tr>
+<tr><td><strong>Alucinación</strong></td><td>Contenido plausible pero falso o no soportado por las fuentes.</td></tr>
+<tr><td><strong>ANN</strong></td><td>Approximate Nearest Neighbors: búsqueda aproximada de vecinos más cercanos (HNSW, IVF) en bases vectoriales.</td></tr>
+<tr><td><strong>BM25</strong></td><td>Algoritmo clásico de ranking léxico por coincidencia de términos.</td></tr>
+<tr><td><strong>Chunk</strong></td><td>Fragmento de documento que se indexa y recupera como unidad.</td></tr>
+<tr><td><strong>Context engineering</strong></td><td>Diseño de qué información entra en la ventana del modelo en cada llamada.</td></tr>
+<tr><td><strong>Context window</strong></td><td>Máximo de tokens (entrada + salida) que el modelo procesa en una llamada.</td></tr>
+<tr><td><strong>Cross-encoder</strong></td><td>Modelo que evalúa conjuntamente consulta y documento; base de los re-rankers.</td></tr>
+<tr><td><strong>Cuantización</strong></td><td>Representar pesos con menos bits para reducir memoria y acelerar inferencia.</td></tr>
+<tr><td><strong>Destilación</strong></td><td>Entrenar un modelo pequeño con salidas de uno grande.</td></tr>
+<tr><td><strong>DPO</strong></td><td>Direct Preference Optimization: alineamiento con pares de respuestas preferidas y rechazadas.</td></tr>
+<tr><td><strong>Embedding</strong></td><td>Vector numérico que representa el significado de un texto u otro objeto.</td></tr>
+<tr><td><strong>Evals</strong></td><td>Evaluaciones automatizadas de la calidad de un sistema de IA sobre un conjunto de casos.</td></tr>
+<tr><td><strong>Few-shot</strong></td><td>Incluir ejemplos de entrada y salida en el prompt.</td></tr>
+<tr><td><strong>Fine-tuning</strong></td><td>Continuar el entrenamiento de un modelo con datos propios para ajustar su comportamiento.</td></tr>
+<tr><td><strong>Golden dataset</strong></td><td>Conjunto curado de casos con respuestas o criterios esperados, usado para evaluar.</td></tr>
+<tr><td><strong>Grounding</strong></td><td>Anclar la respuesta en fuentes provistas en el contexto.</td></tr>
+<tr><td><strong>Guardrails</strong></td><td>Controles de entrada y salida (filtros, validaciones, límites, aprobaciones) alrededor del modelo.</td></tr>
+<tr><td><strong>HNSW</strong></td><td>Índice vectorial basado en grafos jerárquicos; alto recall con más memoria.</td></tr>
+<tr><td><strong>Human-in-the-loop</strong></td><td>Punto de aprobación o revisión humana dentro de un flujo automatizado.</td></tr>
+<tr><td><strong>HyDE</strong></td><td>Generar un documento hipotético para usarlo como consulta de búsqueda.</td></tr>
+<tr><td><strong>Inferencia</strong></td><td>Ejecutar un modelo entrenado para obtener una salida.</td></tr>
+<tr><td><strong>KV cache</strong></td><td>Keys y values de atención guardados para no recalcular el prefijo al generar cada token.</td></tr>
+<tr><td><strong>LLM-as-judge</strong></td><td>Usar un modelo con una rúbrica para calificar salidas de otro.</td></tr>
+<tr><td><strong>LoRA / QLoRA</strong></td><td>Fine-tuning eficiente que entrena matrices pequeñas añadidas al modelo congelado (QLoRA: sobre modelo cuantizado).</td></tr>
+<tr><td><strong>MCP</strong></td><td>Model Context Protocol: estándar abierto para exponer herramientas, recursos y prompts a aplicaciones con modelos.</td></tr>
+<tr><td><strong>MoE</strong></td><td>Mixture of Experts: arquitectura que activa solo algunos sub-bloques por token.</td></tr>
+<tr><td><strong>MRR / NDCG</strong></td><td>Métricas de ranking: posición del primer resultado relevante / calidad del orden ponderada por posición.</td></tr>
+<tr><td><strong>Prompt caching</strong></td><td>Reutilización del procesamiento de un prefijo de prompt idéntico entre llamadas.</td></tr>
+<tr><td><strong>Prompt injection</strong></td><td>Instrucciones maliciosas, directas o dentro de contenido leído, que alteran el comportamiento del modelo.</td></tr>
+<tr><td><strong>RAG</strong></td><td>Retrieval-Augmented Generation: recuperar información relevante e incluirla en el contexto antes de generar.</td></tr>
+<tr><td><strong>ReAct</strong></td><td>Patrón de agente que alterna razonamiento, acción y observación.</td></tr>
+<tr><td><strong>Re-ranking</strong></td><td>Reordenar candidatos recuperados con un modelo más preciso.</td></tr>
+<tr><td><strong>RLHF</strong></td><td>Aprendizaje por refuerzo con retroalimentación humana para alinear el modelo.</td></tr>
+<tr><td><strong>RRF</strong></td><td>Reciprocal Rank Fusion: combina rankings de varios buscadores.</td></tr>
+<tr><td><strong>SFT</strong></td><td>Supervised Fine-Tuning con pares instrucción → respuesta.</td></tr>
+<tr><td><strong>Structured outputs</strong></td><td>Salida del modelo validada contra un esquema (normalmente JSON Schema).</td></tr>
+<tr><td><strong>Temperature</strong></td><td>Parámetro que controla la aleatoriedad del muestreo.</td></tr>
+<tr><td><strong>Token</strong></td><td>Unidad mínima de texto que procesa el modelo.</td></tr>
+<tr><td><strong>Tool use / function calling</strong></td><td>Capacidad del modelo de solicitar la ejecución de funciones definidas por la aplicación.</td></tr>
+<tr><td><strong>TTFT</strong></td><td>Time to first token: tiempo hasta el primer token de la respuesta.</td></tr>
+<tr><td><strong>Vector store</strong></td><td>Base de datos optimizada para almacenar y buscar embeddings.</td></tr>
+</tbody>
+</table>
+</div>

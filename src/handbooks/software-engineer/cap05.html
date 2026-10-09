@@ -1,0 +1,259 @@
+<p>El frontend es el único lugar del stack donde el código se ejecuta en un entorno que no
+controlas: el
+navegador del usuario. Con CPU variable, conexión variable, sistema operativo variable, y el
+usuario
+haciendo cosas que nunca anticipaste. Diseñar para esta incertidumbre es el arte central del
+frontend
+engineering.</p>
+
+<h3 id="browser">El Navegador como Plataforma Real</h3>
+
+<div class="diagram">
+<pre><code>
+  Cómo el Navegador Renderiza una Página: El Critical Rendering Path
+
+  HTML recibido
+      │
+      ▼
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  PARSING HTML → DOM Tree                                        │
+  │  Bloqueado por: &lt;script&gt; sin async/defer (parser blocking)      │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  PARSING CSS → CSSOM Tree                                       │
+  │  Bloqueado por: stylesheets no cargados                         │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  DOM + CSSOM → Render Tree (solo nodos visibles)                │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  LAYOUT (Reflow): calcular posición y tamaño de cada elemento   │
+  │  Costoso: triggereado por cambios de dimensiones                │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  PAINT: rellenar píxeles en capas                               │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  COMPOSITE: combinar capas en la imagen final (GPU)             │
+  └──────────────────────────────────────────────────────────────────┘
+
+  Propiedades que solo triggean Composite (más baratas):
+  transform, opacity → animarlas es smooth (60fps)
+
+  Propiedades que triggean Layout (caras):
+  width, height, top, left, margin → causan reflow completo
+
+  Propiedades que triggean Paint (medias):
+  color, background, box-shadow → repinta sin recalcular layout
+</code></pre>
+</div>
+
+<pre data-lang="javascript"><code><span class="cm">// Layout thrashing: el error de performance más común en JS</span>
+
+<span class="cm">// ❌ Fuerza reflow en cada iteración — O(n) reflows</span>
+<span class="kw">const</span> elements = document.<span class="fn">querySelectorAll</span>(<span class="str">'.item'</span>)
+elements.<span class="fn">forEach</span>(el => {
+  <span class="kw">const</span> height = el.offsetHeight   <span class="cm">// Lee → fuerza reflow</span>
+  el.style.height = (height * <span class="nm">2</span>) + <span class="str">'px'</span>  <span class="cm">// Escribe → invalida layout</span>
+  <span class="cm">// En el siguiente .offsetHeight, el browser DEBE recalcular</span>
+  <span class="cm">// antes de devolver el valor → thrashing</span>
+})
+
+<span class="cm">// ✓ Batch reads, then batch writes — un solo reflow</span>
+<span class="kw">const</span> elements = document.<span class="fn">querySelectorAll</span>(<span class="str">'.item'</span>)
+<span class="cm">// Fase 1: leer todos los valores (un solo reflow)</span>
+<span class="kw">const</span> heights = [...elements].<span class="fn">map</span>(el => el.offsetHeight)
+<span class="cm">// Fase 2: escribir todos los valores (un solo repaint)</span>
+elements.<span class="fn">forEach</span>((el, i) => {
+  el.style.height = (heights[i] * <span class="nm">2</span>) + <span class="str">'px'</span>
+})
+
+<span class="cm">// ✓ Para animaciones: requestAnimationFrame + CSS transforms</span>
+<span class="kw">function</span> <span class="fn">animateElement</span>(el: HTMLElement, distance: number) {
+  <span class="kw">let</span> start: number
+  <span class="kw">function</span> <span class="fn">step</span>(timestamp: number) {
+    <span class="kw">if</span> (!start) start = timestamp
+    <span class="kw">const</span> progress = Math.<span class="fn">min</span>((timestamp - start) / <span class="nm">300</span>, <span class="nm">1</span>)
+    <span class="cm">// transform: solo Composite — no reflow ni repaint</span>
+    el.style.transform = <span class="str">`translateX(${progress * distance}px)`</span>
+    <span class="kw">if</span> (progress &lt; <span class="nm">1</span>) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}</code></pre>
+
+<h3 id="state">Estado: El Problema Central del Frontend</h3>
+<p>La mayoría de los bugs de frontend son bugs de estado: la UI muestra algo que no refleja la
+realidad, o dos
+partes de la UI muestran estados inconsistentes. Gestionar el estado con disciplina es la
+habilidad más
+importante del frontend engineer.</p>
+
+<div class="diagram">
+<pre><code>
+  Tipos de Estado y Dónde Vivirlos
+
+  ┌────────────────────────────────────────────────────────────────┐
+  │  Estado LOCAL (useState, signals)                              │
+  │  • Estado UI: ¿está abierto el dropdown? ¿qué tab es activa?  │
+  │  • Solo importa a un componente o árbol pequeño               │
+  │  • No compartir en global si no es necesario                   │
+  ├────────────────────────────────────────────────────────────────┤
+  │  Estado de SERVIDOR (React Query, SWR, TanStack Query)         │
+  │  • Datos que viven en el backend                               │
+  │  • Tienen cache, loading, error states automáticos             │
+  │  • NO duplicar en Redux/Zustand — eso es el error más común   │
+  │  • Invalidación automática tras mutaciones                     │
+  ├────────────────────────────────────────────────────────────────┤
+  │  Estado GLOBAL de UI (Zustand, Jotai, Redux Toolkit)           │
+  │  • Tema, idioma, usuario autenticado, notificaciones           │
+  │  • Solo lo que realmente necesita ser global                   │
+  │  • Redux para: estado complejo con muchas transiciones         │
+  │  • Zustand para: estado simple compartido entre componentes    │
+  ├────────────────────────────────────────────────────────────────┤
+  │  Estado en URL (query params, route params)                    │
+  │  • Filtros, búsquedas, paginación, estado de modales           │
+  │  • Permite compartir y bookmarkear el estado de la app         │
+  │  • Subestimado — debería usarse mucho más                      │
+  └────────────────────────────────────────────────────────────────┘
+
+  Error más común: poner TODO en Redux/estado global
+  cuando el 80% debería ser estado de servidor o local.
+</code></pre>
+</div>
+
+<pre data-lang="typescript"><code><span class="cm">// TanStack Query: estado de servidor correcto</span>
+<span class="cm">// En lugar de: useEffect + useState + loading + error + refetch manual</span>
+
+<span class="cm">// ❌ El patrón que todos escriben y que tiene 10 bugs sutiles</span>
+<span class="kw">function</span> <span class="fn">UserProfile</span>({ userId }: { userId: string }) {
+  <span class="kw">const</span> [user, setUser] = useState&lt;User | null&gt;(null)
+  <span class="kw">const</span> [loading, setLoading] = useState(true)
+  <span class="kw">const</span> [error, setError] = useState&lt;Error | null&gt;(null)
+
+  useEffect(() => {
+    setLoading(true)
+    fetchUser(userId)
+      .then(setUser)
+      .catch(setError)
+      .finally(() => setLoading(false))
+  }, [userId])
+  <span class="cm">// Bugs: stale closure, race condition si userId cambia,
+  // no hay cache, no hay refetch, no hay retry automático</span>
+}
+
+<span class="cm">// ✓ TanStack Query: cache, loading, error, retry, refetch — todo incluido</span>
+<span class="kw">function</span> <span class="fn">UserProfile</span>({ userId }: { userId: string }) {
+  <span class="kw">const</span> { data: user, isLoading, error } = useQuery({
+    queryKey: [<span class="str">'user'</span>, userId],          <span class="cm">// Cache key</span>
+    queryFn: () => fetchUser(userId),
+    staleTime: <span class="nm">5</span> * <span class="nm">60</span> * <span class="nm">1000</span>,            <span class="cm">// 5 min frescos</span>
+    retry: <span class="nm">3</span>,                              <span class="cm">// 3 reintentos automáticos</span>
+  })
+
+  <span class="kw">if</span> (isLoading) <span class="kw">return</span> &lt;UserSkeleton /&gt;
+  <span class="kw">if</span> (error)     <span class="kw">return</span> &lt;ErrorBoundary error={error} /&gt;
+  <span class="kw">return</span> &lt;UserCard user={user} /&gt;
+}
+
+<span class="cm">// Mutación con invalidación automática del cache</span>
+<span class="kw">function</span> <span class="fn">UpdateUserForm</span>({ userId }: { userId: string }) {
+  <span class="kw">const</span> queryClient = useQueryClient()
+  <span class="kw">const</span> mutation = useMutation({
+    mutationFn: (data: UpdateUserDTO) => updateUser(userId, data),
+    onSuccess: () => {
+      <span class="cm">// Invalida el cache → refetch automático del perfil</span>
+      queryClient.invalidateQueries({ queryKey: [<span class="str">'user'</span>, userId] })
+    }
+  })
+}</code></pre>
+
+<h3 id="perf-fe">Performance Frontend: Lo que Realmente Importa</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Métrica</th>
+<th>Qué mide</th>
+<th>Objetivo</th>
+<th>Cómo mejorarla</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FCP</strong> — First Contentful Paint</td>
+<td>Cuándo el usuario ve algo</td>
+<td class="g">&lt; 1.8s</td>
+<td>Server-side rendering, critical CSS inline, preload fonts</td>
+</tr>
+<tr>
+<td><strong>LCP</strong> — Largest Contentful Paint</td>
+<td>Cuándo carga el elemento principal</td>
+<td class="g">&lt; 2.5s</td>
+<td>Optimizar imágenes, CDN, preload LCP image</td>
+</tr>
+<tr>
+<td><strong>CLS</strong> — Cumulative Layout Shift</td>
+<td>Cuánto se mueve el contenido</td>
+<td class="g">&lt; 0.1</td>
+<td>Dimensiones en imágenes/videos, skeleton screens</td>
+</tr>
+<tr>
+<td><strong>INP</strong> — Interaction to Next Paint</td>
+<td>Responsividad a interacciones</td>
+<td class="g">&lt; 200ms</td>
+<td>Debounce, web workers, code splitting, avoid long tasks</td>
+</tr>
+<tr>
+<td><strong>TTFB</strong> — Time to First Byte</td>
+<td>Tiempo de respuesta del servidor</td>
+<td class="g">&lt; 800ms</td>
+<td>CDN, SSR/SSG, edge functions, caching</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<pre data-lang="typescript"><code><span class="cm">// Code splitting: cargar solo lo necesario cuando se necesita</span>
+
+<span class="cm">// ❌ Un bundle gigante — todo el código al cargar la app</span>
+<span class="kw">import</span> { AdminDashboard } <span class="kw">from</span> <span class="str">'./AdminDashboard'</span>  <span class="cm">// 200KB innecesarios para usuarios normales</span>
+<span class="kw">import</span> { ReportGenerator } <span class="kw">from</span> <span class="str">'./ReportGenerator'</span>  <span class="cm">// Solo lo usan 5% de usuarios</span>
+
+<span class="cm">// ✓ Lazy loading — cargar solo cuando el usuario necesita ese código</span>
+<span class="kw">const</span> AdminDashboard = lazy(() => <span class="kw">import</span>(<span class="str">'./AdminDashboard'</span>))
+<span class="kw">const</span> ReportGenerator = lazy(() => <span class="kw">import</span>(<span class="str">'./ReportGenerator'</span>))
+
+<span class="kw">function</span> <span class="fn">App</span>() {
+  <span class="kw">return</span> (
+    &lt;Suspense fallback={&lt;PageSkeleton /&gt;}&gt;
+      &lt;Routes&gt;
+        &lt;Route path=<span class="str">"/admin"</span> element={&lt;AdminDashboard /&gt;} /&gt;
+        &lt;Route path=<span class="str">"/reports"</span> element={&lt;ReportGenerator /&gt;} /&gt;
+      &lt;/Routes&gt;
+    &lt;/Suspense&gt;
+  )
+}
+<span class="cm">// Resultado: bundle inicial 40% más pequeño → FCP significativamente mejor</span>
+
+<span class="cm">// ─────────────────────────────────────────────────────────
+// Virtualización: renderizar solo lo visible</span>
+<span class="kw">import</span> { useVirtualizer } <span class="kw">from</span> <span class="str">'@tanstack/react-virtual'</span>
+
+<span class="kw">function</span> <span class="fn">LargeList</span>({ items }: { items: Item[] }) {
+  <span class="kw">const</span> virtualizer = useVirtualizer({
+    count: items.length,    <span class="cm">// 50,000 items</span>
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => <span class="nm">50</span>,  <span class="cm">// altura estimada por item</span>
+  })
+  <span class="cm">// Renderiza ~20 items (los visibles) aunque haya 50,000
+  // Sin virtualización: 50,000 DOM nodes → app completamente inutilizable</span>
+}</code></pre>
+
+<div class="arch-rel">
+<span class="arch-rel-lbl">Conexión técnica</span>
+<p>El frontend engineering conecta con <strong>Backend Engineering</strong> a través del diseño
+de API: una
+API que devuelve exactamente los campos que el frontend necesita (no más, no menos) es la
+diferencia entre
+un FCP de 1s y de 4s. Los patrones de estado de servidor (TanStack Query) implementan los
+mismos
+principios de <strong>caching y eventual consistency</strong> que los sistemas distribuidos
+del backend.
+</p>
+</div>

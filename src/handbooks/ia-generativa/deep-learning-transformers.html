@@ -1,0 +1,101 @@
+<p>Casi todo el comportamiento "extraño" de un LLM en producción —que cueste más con contextos largos, que la latencia del primer token sea distinta a la del resto, que confunda dígitos o letras, que olvide lo que está en medio de un documento largo— se explica con tres ideas: <strong>tokens</strong>, <strong>atención</strong> y <strong>generación autoregresiva</strong>. Este capítulo las cubre al nivel que necesita alguien que diseña o integra sistemas.</p>
+
+<h3>Redes neuronales en tres párrafos</h3>
+<p>Una red neuronal es una composición de capas; cada capa multiplica su entrada por una matriz de pesos, suma un sesgo y aplica una función no lineal. Apilar capas permite aproximar funciones muy complejas. El entrenamiento ajusta millones o miles de millones de pesos con <strong>descenso de gradiente</strong>, y <strong>backpropagation</strong> es el algoritmo que calcula eficientemente cuánto contribuye cada peso al error.</p>
+<p>Las arquitecturas se especializaron por tipo de dato: redes convolucionales para imágenes, recurrentes (RNN, LSTM) para secuencias. Las recurrentes procesaban el texto palabra por palabra, lo que impedía paralelizar el entrenamiento y degradaba la memoria de largo alcance.</p>
+<p>En 2017, el paper <em>Attention Is All You Need</em> propuso el <strong>Transformer</strong>: una arquitectura sin recurrencia donde cada posición de la secuencia mira directamente a todas las demás. Se volvió la base de los LLM actuales porque entrena en paralelo sobre GPUs y escala de forma predecible con más datos y cómputo.</p>
+
+<h3>Tokens y tokenización</h3>
+<p>Un modelo no ve caracteres ni palabras: ve <strong>tokens</strong>, fragmentos de texto definidos por un tokenizador (normalmente BPE o variantes). Una palabra común en inglés suele ser un token; palabras largas, poco frecuentes o en otros idiomas se parten en varios. Como regla aproximada, en inglés 1 token ≈ 0,75 palabras; en español la relación suele ser algo peor, y el código y los datos con muchos símbolos consumen más tokens por carácter.</p>
+<div class="card-grid">
+<div class="card accent-blue"><div class="card-title">Por qué importa en costo</div><p class="card-body">Se factura por token de entrada y de salida. El mismo contenido puede costar distinto según idioma y formato, y cada familia de modelos tiene su tokenizador: re-mide al cambiar de modelo.</p></div>
+<div class="card accent-blue"><div class="card-title">Por qué importa en calidad</div><p class="card-body">Contar letras, invertir cadenas o hacer aritmética larga es difícil porque el modelo ve fragmentos, no caracteres. Para cálculos exactos, dale una herramienta.</p></div>
+<div class="card accent-blue"><div class="card-title">Por qué importa en límites</div><p class="card-body">La ventana de contexto y <code>max_tokens</code> se miden en tokens. Usa el endpoint de conteo de tokens del proveedor en lugar de estimar con el tokenizador de otro modelo.</p></div>
+</div>
+
+<h3>Embeddings: significado como geometría</h3>
+<p>Cada token se convierte en un vector de números (su <strong>embedding</strong>). Durante el entrenamiento, los vectores se organizan de forma que conceptos relacionados quedan cerca. Esta misma idea, aplicada a frases o documentos completos, es la base de la búsqueda semántica y del RAG (capítulo de embeddings).</p>
+
+<h3>Atención: cada token mira a todos los demás</h3>
+<p>En cada capa, cada token produce tres vectores: una <strong>query</strong> (qué busco), una <strong>key</strong> (qué ofrezco) y un <strong>value</strong> (qué información aporto). La relevancia de un token para otro es el producto punto entre la query de uno y la key del otro; esas relevancias se normalizan con softmax y se usan para mezclar los values.</p>
+<div class="formula">
+<div class="formula-label">Scaled dot-product attention</div>
+Attention(Q, K, V) = softmax( Q·Kᵀ / √d<sub>k</sub> ) · V
+</div>
+<ul>
+<li><strong>Multi-head attention:</strong> varias "cabezas" de atención en paralelo aprenden relaciones distintas (sintaxis, correferencias, formato).</li>
+<li><strong>Costo cuadrático:</strong> comparar cada token con todos los demás crece con n². Es la raíz del costo de los contextos largos; hay optimizaciones (FlashAttention, atención dispersa o por ventanas) pero el contexto nunca es gratis.</li>
+<li><strong>Codificación posicional:</strong> la atención por sí sola no sabe el orden; se añade información de posición (p. ej. RoPE). Su comportamiento en posiciones lejanas influye en el fenómeno <em>lost in the middle</em>.</li>
+</ul>
+
+<h3>Arquitecturas: encoder, decoder y encoder-decoder</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Tipo</th><th>Cómo atiende</th><th>Ejemplos</th><th>Uso típico</th></tr></thead>
+<tbody>
+<tr><td>Encoder-only</td><td>Bidireccional: cada token ve todo el texto</td><td>BERT y derivados</td><td>Embeddings, clasificación, re-rankers (cross-encoders).</td></tr>
+<tr><td>Decoder-only</td><td>Causal: cada token solo ve los anteriores</td><td>Casi todos los LLM conversacionales</td><td>Generación de texto, código, agentes.</td></tr>
+<tr><td>Encoder-decoder</td><td>Encoder bidireccional + decoder causal</td><td>T5, modelos de traducción</td><td>Traducción, resumen, tareas seq2seq.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Generación autoregresiva y el KV cache</h3>
+<p>Un LLM decoder genera <strong>un token a la vez</strong>: calcula una distribución de probabilidad sobre el vocabulario, elige un token (según temperature y top-p), lo agrega a la secuencia y repite. No puede "volver atrás" a corregir lo ya generado en la misma pasada; por eso pedir que razone antes de concluir, o revisar en una segunda llamada, mejora la calidad.</p>
+<div class="flow">
+<div class="flow-step">Prefill<span class="step-sub">procesa todo el prompt</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Primer token<span class="step-sub">TTFT</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Decode<span class="step-sub">token a token</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Fin<span class="step-sub">stop / max_tokens</span></div>
+</div>
+<p>La fase de <strong>prefill</strong> procesa el prompt completo en paralelo y determina el <em>time to first token</em> (TTFT). La fase de <strong>decode</strong> genera token a token y determina el tiempo por token de salida. Para no recalcular la atención de todo el prefijo en cada paso, el servidor guarda las keys y values ya calculados: el <strong>KV cache</strong>. Esto explica tres cosas prácticas:</p>
+<ul>
+<li>Los tokens de salida son más lentos y más caros que los de entrada.</li>
+<li>El <strong>prompt caching</strong> del proveedor reutiliza el prefill de un prefijo idéntico entre requests: abarata y acelera, pero solo si el prefijo es byte a byte igual.</li>
+<li>La memoria de GPU limita cuántas conversaciones concurrentes y de qué longitud puede servir un servidor (clave al hacer self-hosting).</li>
+</ul>
+
+<h3>Escala, mezcla de expertos y capacidades emergentes</h3>
+<p>Las <strong>leyes de escalamiento</strong> observadas empíricamente indican que la pérdida baja de forma predecible al aumentar parámetros, datos y cómputo en proporción. Algunos modelos usan <strong>Mixture of Experts (MoE)</strong>: muchos sub-bloques "expertos" de los que solo se activan unos pocos por token, lo que da la capacidad de un modelo grande con el costo de inferencia de uno más pequeño.</p>
+<h3>Axiomas de los LLMs</h3>
+<div class="card-grid">
+<div class="card accent-gold">
+<div class="card-num">AXIOMA B1</div>
+<div class="card-title">Autoregresividad</div>
+<p class="card-body">Los LLMs generan token a token, condicionando cada token en todos los
+anteriores. No
+pueden "revisar" texto ya generado en la misma pasada.</p>
+</div>
+<div class="card accent-gold">
+<div class="card-num">AXIOMA B2</div>
+<div class="card-title">Sycophancy bias</div>
+<p class="card-body">Los modelos RLHF tienden a confirmar lo que el usuario parece creer. Los
+sistemas
+agénticos deben diseñarse para resistir este sesgo.</p>
+</div>
+<div class="card accent-gold">
+<div class="card-num">AXIOMA B3</div>
+<div class="card-title">Prompt sensitivity</div>
+<p class="card-body">Cambios mínimos en el wording del prompt producen cambios significativos en
+el output.
+Los sistemas de producción deben versionar prompts.</p>
+</div>
+<div class="card accent-gold">
+<div class="card-num">AXIOMA B4</div>
+<div class="card-title">Emergencia de capacidades</div>
+<p class="card-body">Ciertas capacidades (chain-of-thought, in-context learning) emergen solo a
+ciertos
+tamaños de modelo. No se puede asumir que un modelo pequeño tendrá esas capacidades.</p>
+</div>
+</div>
+
+<h3>Modelos multimodales</h3>
+<p>Los modelos actuales aceptan imágenes, PDFs y en algunos casos audio, convirtiéndolos a representaciones que el transformer procesa junto al texto. Para arquitectura esto significa: los documentos escaneados, gráficos y capturas de pantalla pueden entrar directo al modelo, pero cada imagen consume tokens, y la extracción de tablas complejas sigue requiriendo validación.</p>
+
+<div class="callout">
+<span class="callout-label">Qué llevarte de este capítulo</span>
+El modelo es una función de probabilidad sobre el siguiente token, condicionada por todo lo que está en su contexto. Todo lo que no está en el contexto no existe para él, todo lo que sí está compite por su atención, y cada token cuesta. El resto del handbook es ingeniería alrededor de esos tres hechos.
+</div>

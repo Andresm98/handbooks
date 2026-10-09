@@ -1,0 +1,89 @@
+{
+  "id": "arquitectura-software",
+  "title": "Arquitectura de Software",
+  "short": "Arquitectura de Software",
+  "eyebrow": "Handbook · Patrones, paradigmas y decisiones de diseño",
+  "heading_html": "Arquitectura de Software: <em>patrones, paradigmas y decisiones</em>",
+  "lede": "Un compendio técnico y práctico sobre principios, estilos, patrones y trade-offs de diseño en sistemas de software a escala. Es la referencia única de patrones para los demás handbooks: Software Engineer, Solutions Architect e IA enlazan aquí en lugar de repetirlos.",
+  "description": "Handbook de arquitectura de software: principios, estilos arquitectónicos, patrones distribuidos, arquitectura frontend, comparativas y casos reales.",
+  "revised": "octubre 2026",
+  "parts": [
+    {
+      "label": "Parte I",
+      "title": "Principios",
+      "chapters": [
+        {
+          "id": "principios",
+          "file": "principios.html",
+          "title": "Modelos y principios fundamentales"
+        },
+        {
+          "id": "axiomas",
+          "file": "axiomas.html",
+          "title": "Axiomas y buenas prácticas"
+        }
+      ]
+    },
+    {
+      "label": "Parte II",
+      "title": "Estilos y paradigmas",
+      "chapters": [
+        {
+          "id": "infra",
+          "file": "infra.html",
+          "title": "Tipos de arquitectura según la infraestructura"
+        },
+        {
+          "id": "paradigmas",
+          "file": "paradigmas.html",
+          "title": "Paradigmas de arquitectura de software"
+        },
+        {
+          "id": "estilos-decision",
+          "file": "estilos-decision.html",
+          "title": "Estilos arquitectónicos como herramientas de decisión",
+          "lede": "Desde la perspectiva del Solutions Architect: matriz de decisión, espectro monolito → microservicios y anti-patrones por estilo."
+        },
+        {
+          "id": "comparativas",
+          "file": "comparativas.html",
+          "title": "Comparativas clave"
+        }
+      ]
+    },
+    {
+      "label": "Parte III",
+      "title": "Patrones",
+      "chapters": [
+        {
+          "id": "patrones",
+          "file": "patrones.html",
+          "title": "Patrones de diseño arquitectónico"
+        },
+        {
+          "id": "estudio-fundamentos",
+          "file": "estudio-fundamentos.html",
+          "title": "Referencia rápida: estilos, SOLID, CAP y patrones distribuidos",
+          "lede": "Ficha de estudio con los conceptos que más aparecen en entrevistas de arquitectura: CQRS, Event Sourcing, Circuit Breaker, Saga, API Gateway, Service Mesh y más."
+        }
+      ]
+    },
+    {
+      "label": "Parte IV",
+      "title": "Frontend y casos",
+      "chapters": [
+        {
+          "id": "estudio-frontend",
+          "file": "estudio-frontend.html",
+          "title": "Arquitectura frontend moderna",
+          "lede": "Patrones de renderizado, microfrontends y selección del tipo de aplicación."
+        },
+        {
+          "id": "casos",
+          "file": "casos.html",
+          "title": "Casos de uso reales"
+        }
+      ]
+    }
+  ]
+}

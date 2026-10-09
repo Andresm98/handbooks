@@ -1,0 +1,622 @@
+<p>La infraestructura es la capa donde las decisiones arquitectónicas se materializan en costos
+reales, latencias reales, y fallos reales. Un SA que no entiende la infraestructura tomará
+decisiones que son correctas en papel y desastrosas en producción.</p>
+
+<h3>El Espectro de Modelos Cloud</h3>
+
+<div class="diagram">
+<pre><code>
+  On-Premise ◄──────────────────────────────────────────► Full Cloud-Native
+      │              │              │              │              │
+   Todo en        Hybrid         Lift &amp;          Cloud-        Cloud-
+   datacenter     Cloud          Shift           Aware         Native
+   propio                        (VMs en cloud)  (PaaS +       (K8s +
+                                                 managed DB)   serverless)
+      │              │              │              │              │
+  Control max    Mejor de       Migración     Equilibrio    Elasticidad
+  Costo fijo     ambos mundos   rápida pero   pragmático    máxima
+  0 elasticidad  Complejidad    cara y no     Buen TCO      Complejidad
+                 operacional    optimizada    a mediano     operacional
+                 alta                         plazo         muy alta
+</code></pre>
+</div>
+
+<h4>Cuándo cada modelo es la respuesta correcta</h4>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th>Caso de uso primario</th>
+<th>Señales que lo indican</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>On-Premise</strong></td>
+<td>Compliance estricto, latencia ultra-baja, datos clasificados</td>
+<td>Regulación impide cloud, hardware especializado (GPU farms), costo predictable
+crítico</td>
+</tr>
+<tr>
+<td><strong>Hybrid</strong></td>
+<td>Migración incremental, datos sensibles on-prem + compute en cloud</td>
+<td>Legacy systems inamovibles, compliance mixto, burst capacity necesaria</td>
+</tr>
+<tr>
+<td><strong>Lift &amp; Shift</strong></td>
+<td>Cerrar datacenter rápidamente, salida de un proveedor</td>
+<td>Presión de tiempo, optimización no es prioridad inmediata, ahorros de datacenter
+</td>
+</tr>
+<tr>
+<td><strong>Cloud-Native</strong></td>
+<td>Nuevos productos, startups, alta variabilidad de carga</td>
+<td>Equipo con experiencia cloud, carga impredecible, velocidad de desarrollo
+crítica</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>El Modelo de Responsabilidad Compartida</h3>
+<p>Cada modelo de despliegue define qué gestiona el proveedor y qué gestiona el cliente. Entender
+esta frontera es fundamental para entender dónde están los riesgos reales.</p>
+
+<div class="diagram">
+<pre><code>
+  MODELO DE RESPONSABILIDAD COMPARTIDA
+
+           IaaS              PaaS              SaaS
+  ┌────────────────┬────────────────┬────────────────┐
+  │ Aplicación  ← │ Aplicación  ← │ Aplicación     │  ← Cliente
+  │ Runtime     ← │ Runtime        │ Runtime        │
+  │ OS          ← │ OS             │ OS             │
+  │ Virtualiz.     │ Virtualiz.     │ Virtualiz.     │
+  │ Servidores     │ Servidores     │ Servidores     │  ← Proveedor
+  │ Storage        │ Storage        │ Storage        │
+  │ Networking     │ Networking     │ Networking     │
+  └────────────────┴────────────────┴────────────────┘
+  
+  ← = Responsabilidad del cliente
+  
+  Implicación: En IaaS, parchear el OS es TU responsabilidad.
+  En producción esto significa: no parchear = vulnerabilidad activa.
+</code></pre>
+</div>
+
+<h3 id="kubernetes-real">Kubernetes: La Realidad de Producción</h3>
+<p>Kubernetes es el estándar de facto para orquestación de contenedores. Pero la brecha entre "saber
+usar Kubernetes" y "operar Kubernetes en producción" es abismal. El SA debe entender lo que K8s
+resuelve, lo que no resuelve, y el costo operacional real.</p>
+
+<div class="diagram">
+<pre><code>
+  Kubernetes: Arquitectura de Control Plane
+
+  ┌─────────────────────────────────────────────────────────────────┐
+  │  CONTROL PLANE (Masters)                                        │
+  │  ┌──────────────┐  ┌───────────────┐  ┌──────────────────────┐ │
+  │  │  API Server  │  │  etcd         │  │  Controller Manager  │ │
+  │  │  (frontend   │  │  (distributed │  │  (reconciliation     │ │
+  │  │   de K8s)    │  │   KV store)   │  │   loops)             │ │
+  │  └──────────────┘  └───────────────┘  └──────────────────────┘ │
+  │  ┌──────────────┐                                               │
+  │  │  Scheduler   │  Decide en qué nodo va cada Pod              │
+  │  └──────────────┘                                               │
+  └─────────────────────────────────────────────────────────────────┘
+                              │ API calls
+  ┌─────────────────────────────────────────────────────────────────┐
+  │  DATA PLANE (Worker Nodes)                                      │
+  │  ┌───────────────────────────────────────────────────────────┐  │
+  │  │  Node 1                                                   │  │
+  │  │  kubelet (agent) │ kube-proxy (networking) │ container RT │  │
+  │  │  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐    │  │
+  │  │  │  Pod A   │  │  Pod B   │  │  Pod C (sidecar)     │    │  │
+  │  │  │ app:8080 │  │ app:8080 │  │ envoy:9090           │    │  │
+  │  │  └──────────┘  └──────────┘  └──────────────────────┘    │  │
+  │  └───────────────────────────────────────────────────────────┘  │
+  └─────────────────────────────────────────────────────────────────┘
+</code></pre>
+</div>
+
+<pre data-lang="yaml"><code><span class="cm"># Deployment de producción con todas las best practices</span>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-service
+  namespace: fintech-prod
+  labels:
+    app: payments
+    version: v3.2.1
+    team: payments-squad
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0      <span class="cm"># Zero-downtime deploy</span>
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: payments
+  template:
+    spec:
+      affinity:
+        podAntiAffinity:     <span class="cm"># No dos pods en el mismo nodo</span>
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+      containers:
+      - name: payments
+        image: registry/payments:v3.2.1
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:            <span class="cm"># SIN limit de CPU en producción — causa throttling</span>
+            memory: "1Gi"    <span class="cm"># Solo limitar memoria para evitar OOM</span>
+        livenessProbe:
+          httpGet: { path: /healthz, port: 8080 }
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:      <span class="cm"># Diferente al liveness — controla si recibe tráfico</span>
+          httpGet: { path: /ready, port: 8080 }
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:    <span class="cm"># Nunca hardcodear secrets</span>
+              name: payments-secrets
+              key: db-password
+      topologySpreadConstraints: <span class="cm"># Distribuir entre AZs</span>
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule</code></pre>
+
+<div class="callout danger">
+<div class="callout-icon"></div>
+<p><strong>Error crítico de producción #1:</strong> Poner <code>limits.cpu</code> en Kubernetes
+causa CPU throttling aunque el nodo tenga CPU disponible. Un servicio que debería responder
+en 10ms puede tardar 200ms por throttling. En la mayoría de los casos, omitir el CPU limit y
+usar solo request es la práctica correcta.</p>
+</div>
+
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Kubernetes en Producción Real</summary>
+<p>Kubernetes resuelve problemas reales de orquestación de contenedores. También introduce una capa
+de complejidad operacional significativa. Un SA debe evaluar honestamente si el problema
+justifica Kubernetes o si una alternativa más simple es superior.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Alternativa</th>
+<th>Complejidad</th>
+<th>Casos ideales</th>
+<th>Limitaciones</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AWS ECS + Fargate</strong></td>
+<td class="g">Baja</td>
+<td>Startups, equipos pequeños en AWS, microservicios simples</td>
+<td>Vendor lock-in AWS, menos flexible que K8s</td>
+</tr>
+<tr>
+<td><strong>Google Cloud Run</strong></td>
+<td class="g">Muy baja</td>
+<td>Servicios HTTP stateless, scaling a cero, GCP</td>
+<td>Solo HTTP, vendor lock-in GCP</td>
+</tr>
+<tr>
+<td><strong>Kubernetes (EKS/GKE/AKS)</strong></td>
+<td class="r">Alta</td>
+<td>Equipos &gt;15 ingenieros, multi-cloud, control total</td>
+<td>Requiere equipo de platform engineering dedicado</td>
+</tr>
+<tr>
+<td><strong>Nomad (HashiCorp)</strong></td>
+<td class="y">Media</td>
+<td>Organizaciones con Vault/Consul, no solo containers</td>
+<td>Ecosistema más pequeño que K8s</td>
+</tr>
+<tr>
+<td><strong>PaaS (Render, Railway)</strong></td>
+<td class="g">Muy baja</td>
+<td>MVPs, proyectos pequeños, developer experience prioritaria</td>
+<td>Costo mayor a escala, menos control</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warn">
+<div class="callout-icon"></div>
+<p><strong>La trampa de Kubernetes:</strong> Organizaciones con &lt;10 servicios y &lt;15
+ingenieros que adoptan Kubernetes dedican el 40-60% de la capacidad de ingeniería a operar
+la plataforma en lugar de construir producto. Considera seriamente ECS o Cloud Run primero.
+</p>
+</div>
+
+<pre data-lang="yaml"><code><span class="cm"># Kubernetes: Deployment de producción con best practices</span>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: production
+  labels:
+    app: payment-service
+    version: <span class="str">"v2.3.1"</span>
+    team: <span class="str">"payments"</span>
+spec:
+  replicas: <span class="nm">3</span>
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: <span class="nm">0</span>      <span class="cm"># Zero downtime: nunca menos de 3 replicas</span>
+      maxSurge: <span class="nm">1</span>            <span class="cm"># Permite 4 replicas durante el rolling update</span>
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+      annotations:
+        prometheus.io/scrape: <span class="str">"true"</span>
+        prometheus.io/port: <span class="str">"9090"</span>
+    spec:
+      <span class="cm"># Nunca correr como root</span>
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: <span class="nm">1000</span>
+        fsGroup: <span class="nm">2000</span>
+      containers:
+      - name: payment-service
+        image: myregistry/payment-service:v2.3.1
+        ports:
+        - containerPort: <span class="nm">8080</span>
+          name: http
+        - containerPort: <span class="nm">9090</span>
+          name: metrics
+        <span class="cm"># Resources: requests = lo que garantiza K8s, limits = techo absoluto</span>
+        resources:
+          requests:
+            cpu: <span class="str">"200m"</span>
+            memory: <span class="str">"256Mi"</span>
+          limits:
+            cpu: <span class="str">"1000m"</span>
+            memory: <span class="str">"512Mi"</span>
+        <span class="cm"># Liveness: si falla → K8s reinicia el pod</span>
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: <span class="nm">8080</span>
+          initialDelaySeconds: <span class="nm">15</span>
+          periodSeconds: <span class="nm">10</span>
+          failureThreshold: <span class="nm">3</span>
+        <span class="cm"># Readiness: si falla → K8s deja de enviar tráfico (no reinicia)</span>
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: <span class="nm">8080</span>
+          initialDelaySeconds: <span class="nm">5</span>
+          periodSeconds: <span class="nm">5</span>
+        <span class="cm"># Secrets via variables de entorno desde K8s Secret (no en imagen)</span>
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: payment-service-secrets
+              key: db-password
+      <span class="cm"># Graceful shutdown: esperar a que requests en vuelo terminen</span>
+      terminationGracePeriodSeconds: <span class="nm">30</span>
+  <span class="cm"># PodDisruptionBudget separado: nunca menos de 2 pods disponibles</span>
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: payment-service-pdb
+spec:
+  minAvailable: <span class="nm">2</span>
+  selector:
+    matchLabels:
+      app: payment-service</code></pre>
+</details>
+<h3 id="deployment-strats">Estrategias de Deployment: Trade-offs Reales</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Estrategia</th>
+<th>Cómo funciona</th>
+<th>Ventaja</th>
+<th>Riesgo</th>
+<th>Cuándo usar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Rolling Update</strong></td>
+<td>Reemplaza pods gradualmente</td>
+<td class="g">Zero-downtime, simple</td>
+<td class="r">Dos versiones simultáneas — APIs deben ser backward compatible</td>
+<td>Default para la mayoría de servicios</td>
+</tr>
+<tr>
+<td><strong>Blue/Green</strong></td>
+<td>Dos entornos completos, switch instantáneo</td>
+<td class="g">Rollback instantáneo, sin coexistencia de versiones</td>
+<td class="r">Doble costo de infra durante deployment</td>
+<td>Cambios de schema de BD, APIs con breaking changes</td>
+</tr>
+<tr>
+<td><strong>Canary</strong></td>
+<td>% de tráfico a nueva versión, incremento gradual</td>
+<td class="g">Validación con tráfico real, blast radius controlado</td>
+<td class="r">Complejidad de routing, monitoreo activo necesario</td>
+<td>Features de alto riesgo, cambios de performance críticos</td>
+</tr>
+<tr>
+<td><strong>Shadow</strong></td>
+<td>Réplica del tráfico real a nueva versión sin impacto</td>
+<td class="g">Testing con tráfico real sin riesgo</td>
+<td class="r">Doble procesamiento, efectos secundarios en nueva versión</td>
+<td>Validación de migraciones de datos, cambios de algoritmo</td>
+</tr>
+<tr>
+<td><strong>Feature Flags</strong></td>
+<td>Deploy desacoplado del release</td>
+<td class="g">Control granular, rollback por feature sin redeploy</td>
+<td class="r">Deuda técnica de flags, paths de código condicionales</td>
+<td>Features experimentales, A/B testing, releases graduales</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Estrategias de Deployment</summary>
+<p>La estrategia de deployment es una decisión arquitectónica con implicaciones directas en el
+riesgo de cada release, el costo de rollback, y la velocidad de entrega.</p>
+
+<div class="diagram">
+<pre><code>
+  BLUE/GREEN DEPLOYMENT
+  
+  Antes del release:
+  Load Balancer → [Blue: v1.0] (100% tráfico)
+                  [Green: v1.1] (0% tráfico, listo)
+  
+  Durante el switch:
+  Load Balancer → [Blue: v1.0] (0% tráfico)   ← rollback instantáneo
+                  [Green: v1.1] (100% tráfico) ← nuevo activo
+  
+  Pros: Rollback instantáneo. Sin downtime.
+  Cons: Doble infraestructura durante el switch. Costo.
+  Ideal para: Sistemas críticos donde el rollback debe ser inmediato.
+
+  ─────────────────────────────────────────────────────────
+
+  CANARY DEPLOYMENT
+  
+  t=0:  Load Balancer → [v1.0] (100%)
+  t=1:  Load Balancer → [v1.0] (95%) + [v1.1] (5%)   ← canary
+  t=2:  Load Balancer → [v1.0] (80%) + [v1.1] (20%)  ← métricas OK
+  t=3:  Load Balancer → [v1.0] (50%) + [v1.1] (50%)
+  t=4:  Load Balancer → [v1.1] (100%)                  ← rollout completo
+  
+  Si métricas degradan en cualquier paso → rollback automático a t-1
+  
+  Pros: Exposure gradual de riesgo. Validación con tráfico real.
+  Cons: Dos versiones en producción simultáneamente (DB schema compatibility).
+  Ideal para: Features nuevas, cambios de performance, sistemas de alto tráfico.
+
+  ─────────────────────────────────────────────────────────
+
+  FEATURE FLAGS (más allá del deployment)
+  
+  Deploy ≠ Release. Con feature flags, puedes:
+  → Desplegar código a producción sin activarlo
+  → Activar para 1% de usuarios (canary funcional)
+  → A/B testing integrado en el deployment
+  → Kill switch instantáneo sin rollback de código
+  
+  Herramientas: LaunchDarkly, Unleash, Flipt, Flagsmith
+</code></pre>
+</div>
+</details>
+<h3 id="dr-ha">Disaster Recovery, HA y RTO/RPO: Diseño Real</h3>
+
+<div class="diagram">
+<pre><code>
+  Relación entre Disponibilidad, RTO y RPO:
+
+  AVAILABILITY TIERS:
+  99%    = 87.6h downtime/año  → Sistemas internos no críticos
+  99.9%  = 8.7h  downtime/año  → Aplicaciones de negocio standard
+  99.95% = 4.4h  downtime/año  → Plataformas de e-commerce
+  99.99% = 52min downtime/año  → Sistemas financieros, infraestructura
+  99.999%=  5min downtime/año  → Trading, telecomunicaciones
+
+  RTO (Recovery Time Objective) = ¿Cuánto tiempo para recuperar?
+  RPO (Recovery Point Objective) = ¿Cuántos datos podemos perder?
+
+  Solución         │ RTO      │ RPO      │ Costo relativo
+  ─────────────────┼──────────┼──────────┼────────────────
+  Backup + Restore │ Horas    │ 24h      │ 1x  (baseline)
+  Warm Standby     │ Minutos  │ Minutos  │ 2x
+  Hot Standby      │ Segundos │ Segundos │ 3-4x
+  Active-Active    │ ~0       │ ~0       │ 5-10x
+
+  Pregunta crítica del SA: "¿Cuánto vale 1 hora de downtime para el negocio?"
+  Si la respuesta es $10K/hora → el costo de Active-Active se justifica.
+  Si la respuesta es $500/hora  → Warm Standby es suficiente.
+</code></pre>
+</div>
+
+<pre data-lang="terraform"><code><span class="cm"># Multi-AZ RDS con failover automático — IaC real</span>
+resource <span class="str">"aws_db_instance"</span> <span class="str">"payments_db"</span> {
+  identifier        = <span class="str">"payments-prod"</span>
+  engine            = <span class="str">"postgres"</span>
+  engine_version    = <span class="str">"15.4"</span>
+  instance_class    = <span class="str">"db.r6g.xlarge"</span>
+  allocated_storage = <span class="nm">500</span>
+
+  <span class="cm"># Multi-AZ: réplica síncrona en otra AZ, failover ~60-120s</span>
+  multi_az               = true
+  backup_retention_period = <span class="nm">30</span>    <span class="cm"># RPO: 5 min con PITR</span>
+  backup_window          = <span class="str">"03:00-04:00"</span>
+  maintenance_window     = <span class="str">"Mon:04:00-Mon:05:00"</span>
+
+  <span class="cm"># Performance Insights para observabilidad de queries</span>
+  performance_insights_enabled          = true
+  performance_insights_retention_period = <span class="nm">7</span>
+
+  <span class="cm"># Encryption at rest obligatorio</span>
+  storage_encrypted = true
+  kms_key_id        = aws_kms_key.db_key.arn
+
+  <span class="cm"># Deletion protection: evitar borrado accidental</span>
+  deletion_protection = true
+  skip_final_snapshot = false
+  final_snapshot_identifier = <span class="str">"payments-prod-final"</span>
+
+  tags = {
+    Team        = <span class="str">"payments"</span>
+    Environment = <span class="str">"production"</span>
+    RTO         = <span class="str">"2min"</span>
+    RPO         = <span class="str">"5min"</span>
+  }
+}</code></pre>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>La infraestructura cloud se diseña en función del estilo arquitectónico:
+<strong>Microservicios</strong> en Kubernetes requieren service mesh (Istio/Linkerd),
+service discovery y distributed tracing desde el diseño. <strong>Serverless</strong> se
+diseña alrededor de managed services. <strong>Event-Driven</strong> requiere un broker
+resiliente (Kafka en multi-AZ mínimo). La estrategia de deployment (canary, blue/green) es
+una decisión arquitectónica que impacta el contrato de API y el modelo de datos.
+</p>
+</div>
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Disaster Recovery, HA y los Números Reales</summary>
+<h5>SLA, RTO Y RPO — LO QUE REALMENTE SIGNIFICAN</h5>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>SLA</th>
+<th>Uptime anual</th>
+<th>Downtime permitido/año</th>
+<th>Downtime/mes</th>
+<th>Costo aproximado de HA</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>99%</td>
+<td>99%</td>
+<td class="r">87.6 horas</td>
+<td>7.3h</td>
+<td class="g">Bajo — single region</td>
+</tr>
+<tr>
+<td>99.9% (tres nueves)</td>
+<td>99.9%</td>
+<td class="y">8.76 horas</td>
+<td>43.8 min</td>
+<td class="g">Bajo — multi-AZ</td>
+</tr>
+<tr>
+<td>99.95%</td>
+<td>99.95%</td>
+<td class="y">4.38 horas</td>
+<td>21.9 min</td>
+<td class="y">Medio</td>
+</tr>
+<tr>
+<td>99.99% (cuatro nueves)</td>
+<td>99.99%</td>
+<td class="r">52.6 minutos</td>
+<td>4.4 min</td>
+<td class="r">Alto — multi-region activo</td>
+</tr>
+<tr>
+<td>99.999% (cinco nueves)</td>
+<td>99.999%</td>
+<td class="r">5.26 minutos</td>
+<td>26 seg</td>
+<td class="r">Muy alto — arquitectura compleja</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout axiom">
+<div class="callout-icon"></div>
+<p><strong>Axioma #3:</strong> Cada "nueve" adicional de disponibilidad tiene un costo que
+escala no linealmente — frecuentemente 3–10x. Antes de comprometer un SLA de "cuatro
+nueves", calcula el costo de la arquitectura requerida. La mayoría de los sistemas no lo
+justifican económicamente.</p>
+</div>
+
+<pre data-lang="terraform"><code><span class="cm"># Terraform: Infraestructura Multi-AZ en AWS (alta disponibilidad)</span>
+<span class="kw">module</span> <span class="str">"vpc"</span> {
+  source  = <span class="str">"terraform-aws-modules/vpc/aws"</span>
+  version = <span class="str">"~> 5.0"</span>
+  
+  name = <span class="str">"production-vpc"</span>
+  cidr = <span class="str">"10.0.0.0/16"</span>
+  
+  <span class="cm"># 3 AZs = tolerancia a fallo de 1 AZ completa</span>
+  azs             = [<span class="str">"us-east-1a"</span>, <span class="str">"us-east-1b"</span>, <span class="str">"us-east-1c"</span>]
+  private_subnets = [<span class="str">"10.0.1.0/24"</span>, <span class="str">"10.0.2.0/24"</span>, <span class="str">"10.0.3.0/24"</span>]
+  public_subnets  = [<span class="str">"10.0.101.0/24"</span>, <span class="str">"10.0.102.0/24"</span>, <span class="str">"10.0.103.0/24"</span>]
+  
+  enable_nat_gateway     = <span class="nm">true</span>
+  single_nat_gateway     = <span class="nm">false</span>  <span class="cm"># NAT por AZ — evita single point of failure</span>
+  one_nat_gateway_per_az = <span class="nm">true</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_db_instance"</span> <span class="str">"postgres"</span> {
+  identifier        = <span class="str">"payments-primary"</span>
+  engine            = <span class="str">"postgres"</span>
+  engine_version    = <span class="str">"15.4"</span>
+  instance_class    = <span class="str">"db.r6g.xlarge"</span>
+  
+  multi_az          = <span class="nm">true</span>          <span class="cm"># Failover automático entre AZs</span>
+  storage_encrypted = <span class="nm">true</span>         <span class="cm"># Cifrado en reposo obligatorio</span>
+  
+  backup_retention_period = <span class="nm">30</span>      <span class="cm"># 30 días de backups para PITR</span>
+  backup_window           = <span class="str">"03:00-04:00"</span>
+  maintenance_window      = <span class="str">"Mon:04:00-Mon:05:00"</span>
+  
+  deletion_protection = <span class="nm">true</span>       <span class="cm"># Previene borrado accidental</span>
+  
+  performance_insights_enabled = <span class="nm">true</span>
+  enabled_cloudwatch_logs_exports = [<span class="str">"postgresql"</span>, <span class="str">"upgrade"</span>]
+}</code></pre>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>La arquitectura cloud se relaciona con <strong>Cloud-Native Architecture</strong> (12-factor
+app, contenedores como unidad de despliegue), con <strong>Microservices</strong> (Kubernetes
+como plataforma de orquestación), y con <strong>Event-Driven Architecture</strong>
+(servicios managed de mensajería como SQS, EventBridge, Pub/Sub como infraestructura del
+event bus).</p>
+</div>
+</details>
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Otra forma de plantear este capítulo</summary>
+<p>La infraestructura cloud no es un commodity intercambiable — es una decisión arquitectónica con
+implicaciones en costo, resiliencia, latencia, y lock-in que durarán años. Un SA que trata el
+cloud como "servidores en la nube" toma decisiones que son técnicamente funcionales pero
+económicamente sub-óptimas.</p>
+</details>

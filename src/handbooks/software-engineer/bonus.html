@@ -1,0 +1,179 @@
+<h3>Complejidad Algorítmica: Lo que Realmente Importa</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Complejidad</th>
+<th>Nombre</th>
+<th>Ejemplo</th>
+<th>n=1M</th>
+<th>¿Problema?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="g"><strong>O(1)</strong></td>
+<td>Constante</td>
+<td>HashMap get, array index</td>
+<td class="g">1 op</td>
+<td>Nunca</td>
+</tr>
+<tr>
+<td class="g"><strong>O(log n)</strong></td>
+<td>Logarítmica</td>
+<td>Binary search, B-Tree lookup</td>
+<td class="g">~20 ops</td>
+<td>Nunca</td>
+</tr>
+<tr>
+<td class="g"><strong>O(n)</strong></td>
+<td>Lineal</td>
+<td>Array scan, linked list</td>
+<td class="y">1M ops</td>
+<td>Rara vez</td>
+</tr>
+<tr>
+<td class="y"><strong>O(n log n)</strong></td>
+<td>Linearítmica</td>
+<td>Merge sort, heap sort</td>
+<td class="y">~20M ops</td>
+<td>A veces</td>
+</tr>
+<tr>
+<td class="r"><strong>O(n²)</strong></td>
+<td>Cuadrática</td>
+<td>Bubble sort, nested loops</td>
+<td class="r">1T ops</td>
+<td>Sí — revisar</td>
+</tr>
+<tr>
+<td class="r"><strong>O(2ⁿ)</strong></td>
+<td>Exponencial</td>
+<td>Recursive fib sin memo</td>
+<td class="r">∞ efectivo</td>
+<td>Siempre</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout tip">
+<div class="callout-icon"></div>
+<p><strong>Regla práctica:</strong> O(n²) con n > 10,000 necesita revisión. O(n) con n > 10M
+puede necesitar
+optimización. La complejidad importa cuando los datos crecen — siempre preguntar "¿qué tan
+grande puede
+ser n en producción?"</p>
+</div>
+
+<h3>Git Avanzado: Los Comandos que Salvan Incidentes</h3>
+
+<pre data-lang="bash"><code><span class="cm"># Encontrar qué commit introdujo un bug (bisect)</span>
+git bisect start
+git bisect bad                     <span class="cm"># El commit actual tiene el bug</span>
+git bisect good v2.1.0             <span class="cm"># Este tag estaba bien</span>
+<span class="cm"># Git hace checkout de commits intermedios automáticamente</span>
+<span class="cm"># Tú ejecutas los tests y marcas: git bisect good / git bisect bad</span>
+<span class="cm"># En ~10 pasos encuentra el commit exacto en miles de commits</span>
+git bisect reset                   <span class="cm"># Volver al HEAD original</span>
+
+<span class="cm"># Reescribir historia de commits antes de merge (interactive rebase)</span>
+git rebase -i HEAD~5               <span class="cm"># Últimos 5 commits</span>
+<span class="cm"># pick → mantener, squash → combinar, reword → editar mensaje</span>
+<span class="cm"># fixup → combinar sin mensaje, drop → eliminar</span>
+
+<span class="cm"># Recuperar código eliminado accidentalmente</span>
+git reflog                         <span class="cm"># Historial de todos los HEAD</span>
+git checkout HEAD@{2}              <span class="cm"># Volver al estado de hace 2 operaciones</span>
+
+<span class="cm"># Guardar trabajo en progreso rápidamente</span>
+git stash push -m "WIP: payment form validation"
+git stash list
+git stash pop stash@{0}
+
+<span class="cm"># Cherry-pick: aplicar un commit específico a otra rama</span>
+git cherry-pick abc1234            <span class="cm"># Aplica solo ese commit</span>
+<span class="cm"># Útil para: hotfixes que van a main Y a la rama de release</span>
+
+<span class="cm"># Ver qué línea introdujo un bug (blame con movimiento de código)</span>
+git log -S "bug_function_name" --all   <span class="cm"># Busca en el diff de cada commit</span>
+git log --all --full-history -- "path/to/deleted/file.py"  <span class="cm"># Archivo eliminado</span></code></pre>
+
+<h3>El Checklist Antes de ir a Producción</h3>
+
+<pre data-lang="markdown"><code>## Pre-deploy Checklist
+
+### Código
+- [ ] Tests pasan localmente Y en CI
+- [ ] No hay console.log / print / debug statements
+- [ ] No hay secrets hardcodeados (API keys, passwords)
+- [ ] Las migraciones de BD son backward compatible (Expand, no Rename)
+- [ ] Los feature flags están configurados correctamente
+
+### Performance
+- [ ] Las nuevas queries tienen EXPLAIN ANALYZE revisado
+- [ ] No hay N+1 queries introducidos
+- [ ] Los endpoints nuevos tienen paginación si retornan listas
+
+### Seguridad
+- [ ] El input del usuario está validado y sanitizado
+- [ ] Los endpoints nuevos tienen autorización correcta
+- [ ] No hay IDOR en accesos a recursos por ID
+
+### Operabilidad
+- [ ] Los nuevos endpoints están en los dashboards de monitoreo
+- [ ] Los errores nuevos tienen alertas configuradas
+- [ ] El runbook está actualizado si el comportamiento cambia
+- [ ] El rollback está planeado: ¿cómo revertir si algo falla?
+
+### Comunicación
+- [ ] El equipo está informado del deploy
+- [ ] El cliente/stakeholder está informado si hay cambio de comportamiento
+- [ ] El on-call sabe qué buscar en las próximas 2 horas post-deploy
+</code></pre>
+
+<h3>Comandos de Debugging en Producción</h3>
+
+<pre data-lang="bash"><code><span class="cm"># Debugging de red — verificar conectividad</span>
+curl -v -w "\n\nTime: %{time_total}s\nHTTP: %{http_code}\n" https://api.service.com/health
+<span class="cm"># -v muestra headers completos de request y response</span>
+<span class="cm"># -w añade métricas de timing al output</span>
+
+<span class="cm"># Ver conexiones activas de un proceso</span>
+ss -tlnp | grep :8080         <span class="cm"># Qué está escuchando en el puerto 8080</span>
+lsof -p $(pgrep python) -i    <span class="cm"># Conexiones del proceso Python</span>
+
+<span class="cm"># CPU y memoria en tiempo real</span>
+top -p $(pgrep -d',' python)  <span class="cm"># Solo los procesos Python</span>
+vmstat 1 10                    <span class="cm"># Sistema cada 1s durante 10s</span>
+
+<span class="cm"># Logs con contexto — encontrar errores con su contexto</span>
+journalctl -u myapp --since "10 minutes ago" | grep -A 5 "ERROR"
+<span class="cm"># -A 5: 5 líneas después del match (el stack trace)</span>
+
+<span class="cm"># Ver qué hace un proceso en este momento (Linux)</span>
+strace -p $(pgrep myapp) -e trace=network,file  <span class="cm"># Solo syscalls de red y archivo</span>
+
+<span class="cm"># PostgreSQL: queries activas ahora mismo</span>
+<span class="cm"># psql -c "SELECT pid, now() - query_start AS duration, query, state</span>
+<span class="cm">#          FROM pg_stat_activity</span>
+<span class="cm">#          WHERE state != 'idle'</span>
+<span class="cm">#          ORDER BY duration DESC LIMIT 20;"</span>
+
+<span class="cm"># Redis: ver qué comandos se ejecutan en tiempo real</span>
+redis-cli MONITOR | head -100  <span class="cm"># ⚠️ Solo en staging — consume CPU</span>
+redis-cli INFO stats | grep -E "ops_per_sec|hits|misses"</code></pre>
+
+<div class="callout axiom">
+<div class="callout-icon"></div>
+<p><strong>El axioma final del ingeniero:</strong> El código que escribes hoy será mantenido por
+alguien —
+probablemente tú mismo dentro de seis meses, cuando no recuerdes por qué lo escribiste así.
+Escríbelo para
+esa persona. La mejor documentación es el código que no necesita documentación porque se
+explica solo. La
+segunda mejor es el código con los comentarios correctos en los lugares correctos. La
+tercera mejor es el
+código difícil con comentarios que explican el por qué. No existe la cuarta opción.</p>
+</div>

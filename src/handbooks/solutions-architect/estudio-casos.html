@@ -1,0 +1,278 @@
+<!-- CASO BANCA -->
+<article>
+<h3>🏦 Caso: Plataforma Bancaria Digital</h3>
+<p>Banco necesita reducir costos sin comprometer disponibilidad. Sistema con transacciones, consultas de
+saldo, y notificaciones.</p>
+
+<h4>Decisiones de Arquitectura</h4>
+<div class="card-grid">
+<div class="card">
+<h3>📊 Base de Datos</h3>
+<p>PostgreSQL / Aurora (RDS) para transacciones — ACID obligatorio en finanzas. NoSQL para
+catálogos de productos y sesiones.</p>
+<p><strong>Trade-off:</strong> NoSQL más barato a escala, pero sin consistencia fuerte → no apto
+para transferencias.</p>
+</div>
+<div class="card">
+<h3>⚡ Serverless para Esporádicos</h3>
+<p>Procesos batch de fin de mes, generación de reportes, notificaciones → AWS Lambda. Reducción
+de costos significativa vs instancias 24/7.</p>
+</div>
+<div class="card">
+<h3>🔐 Seguridad</h3>
+<p>OAuth 2.0 + JWT para autenticación. Azure Key Vault / AWS Secrets Manager para credenciales.
+Zero Trust: mTLS entre microservicios.</p>
+</div>
+<div class="card">
+<h3>📡 NoSQL para Analytics</h3>
+<p>DynamoDB para historial de transacciones de lectura rápida. BigQuery/Redshift para analytics
+histórico. Replicación de write DB → read store.</p>
+</div>
+</div>
+
+<h4>Arquitectura simplificada</h4>
+<pre><code>Client → CDN → API Gateway → [Auth Service (JWT)]
+                              ↓
+                    [Microservicios]
+                    ├── Account Service → PostgreSQL (ACID)
+                    ├── Transaction Service → PostgreSQL + Event → Kafka
+                    ├── Notification Service → SQS/SNS → Lambda
+                    └── Analytics Service → DynamoDB (read) + Redshift
+
+[Kafka] → Event Store → CQRS Read Store (DynamoDB)
+[Circuit Breaker] en cada inter-service call
+[Service Mesh (Istio)] para mTLS + observabilidad
+[Redis Cache] para sesiones y consultas frecuentes</code></pre>
+</article>
+
+<!-- CASO E-COMMERCE -->
+<article>
+<h3>🛒 Caso: E-Commerce a Gran Escala</h3>
+
+<div class="card-grid">
+<div class="card">
+<h3>📦 Catálogo</h3>
+<p>NoSQL (DynamoDB/MongoDB) — datos semiestructurados, lectura intensiva, baja latencia.</p>
+<p>CDN para imágenes. ElastiCache Redis para productos frecuentes.</p>
+</div>
+<div class="card">
+<h3>🛒 Carrito</h3>
+<p>Redis (AP: disponibilidad > consistencia fuerte). Aceptable eventual consistency.</p>
+</div>
+<div class="card">
+<h3>💳 Pagos</h3>
+<p>PostgreSQL con ACID. Saga pattern para coordinar: Inventario → Pago → Envío.</p>
+<p>Circuit breaker hacia payment gateway externo.</p>
+</div>
+<div class="card">
+<h3>🔔 Notificaciones</h3>
+<p>Event-driven: Order Service → Kafka → Notification Service → Email/Push.</p>
+<p>Desacoplado, escalable independientemente.</p>
+</div>
+</div>
+</article>
+
+<!-- TRADE-OFFS -->
+<article>
+<h3>⚖️ Trade-offs Clave para Entrevistas</h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Decisión</th>
+<th>Opción A</th>
+<th>Opción B</th>
+<th>Cuándo elegir A vs B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Consistencia vs Disponibilidad</strong></td>
+<td>CP (consistencia fuerte)</td>
+<td>AP (disponibilidad + eventual consistency)</td>
+<td>A: finanzas, salud | B: redes sociales, e-commerce</td>
+</tr>
+<tr>
+<td><strong>Sync vs Async</strong></td>
+<td>REST/gRPC síncrono</td>
+<td>Event-driven asíncrono</td>
+<td>A: respuesta inmediata requerida | B: desacoplamiento, resilience</td>
+</tr>
+<tr>
+<td><strong>Monolito vs Microservicios</strong></td>
+<td>Monolito modular</td>
+<td>Microservicios</td>
+<td>A: equipo pequeño, dominio nuevo | B: múltiples equipos, dominio estable</td>
+</tr>
+<tr>
+<td><strong>SQL vs NoSQL</strong></td>
+<td>PostgreSQL/MySQL</td>
+<td>DynamoDB/MongoDB</td>
+<td>A: transacciones ACID, JOINs | B: escala masiva, schema flexible</td>
+</tr>
+<tr>
+<td><strong>SSR vs SSG</strong></td>
+<td>SSR (runtime)</td>
+<td>SSG (build time)</td>
+<td>A: datos dinámicos por usuario | B: contenido estático, SEO, perf</td>
+</tr>
+<tr>
+<td><strong>Serverless vs Containers</strong></td>
+<td>Lambda/Functions</td>
+<td>ECS/EKS/K8s</td>
+<td>A: workloads esporádicos, eventos | B: workloads continuos, control fino</td>
+</tr>
+<tr>
+<td><strong>REST vs GraphQL</strong></td>
+<td>REST</td>
+<td>GraphQL</td>
+<td>A: APIs simples, múltiples consumidores externos | B: UI complejas, múltiples
+clientes con distintas necesidades</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>
+
+<!-- DISTRIBUTED SYSTEMS -->
+<article>
+<h3>🌐 Sistemas Distribuidos — Conceptos Clave</h3>
+<div class="two-col">
+<div>
+<h4>Tipos de Arquitectura Distribuida</h4>
+<ul>
+<li><strong>Client-Server:</strong> nodo server fijo + clientes</li>
+<li><strong>P2P (Peer-to-Peer):</strong> todos los nodos son client/server/ambos</li>
+</ul>
+
+<h4>Elasticidad vs Escalabilidad</h4>
+<ul>
+<li><strong>Scalability:</strong> capacidad de crecer (escalar hacia arriba)</li>
+<li><strong>Elasticity:</strong> adaptar recursos dinámicamente según demanda actual (up AND
+down). Requiere scalability como prerequisito.</li>
+</ul>
+</div>
+<div>
+<h4>NTP — Sincronización de Tiempo</h4>
+<p><strong>Network Time Protocol</strong> es la solución real para sincronizar clocks en
+sistemas distribuidos. Sincroniza con UTC vía jerarquía de servidores de tiempo.</p>
+
+<h4>Riesgos de Sistemas Distribuidos</h4>
+<ul>
+<li>✅ Network failure cascade</li>
+<li>✅ Governance/GDPR (datos en múltiples regiones)</li>
+<li>✅ Mayor superficie de ataque (seguridad)</li>
+<li>❌ <em>Escalabilidad NO es un riesgo</em> — es una ventaja</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- DOMAIN-DRIVEN DESIGN -->
+<article>
+<h3>🗺️ Domain-Driven Design (DDD)</h3>
+<p>Metodología para modelar software en torno a la complejidad del dominio de negocio. Puente entre
+expertos de negocio y desarrolladores.</p>
+<div class="two-col">
+<div>
+<h4>Conceptos Centrales DDD</h4>
+<ul>
+<li><strong>Ubiquitous Language:</strong> vocabulario común entre negocio y tech</li>
+<li><strong>Bounded Context:</strong> frontera explícita de un modelo de dominio</li>
+<li><strong>Aggregate:</strong> cluster de objetos de dominio tratados como unidad</li>
+<li><strong>Domain Event:</strong> algo relevante que ocurrió en el dominio</li>
+<li><strong>Repository:</strong> abstracción de persistencia</li>
+</ul>
+</div>
+<div>
+<h4>Qué NO es DDD</h4>
+<ul>
+<li>❌ No se enfoca en minimizar coupling/cohesión para performance estructural (eso es
+diseño OO general)</li>
+<li>❌ No identifica mecanismos de software a replicar (eso es ADD)</li>
+<li>✅ Organiza artefactos de código en torno al problema de negocio</li>
+<li>✅ Provee prácticas para resolver problemas complejos</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- AGILE -->
+<article>
+<h3>🔄 Agile, Scrum y Gestión de Proyectos</h3>
+<div class="card-grid">
+<div class="card">
+<h3>📜 Agile Manifesto — 4 Valores</h3>
+<ol>
+<li><strong>Individuals & interactions</strong> over processes & tools</li>
+<li><strong>Working software</strong> over comprehensive documentation</li>
+<li><strong>Customer collaboration</strong> over contract negotiation</li>
+<li><strong>Responding to change</strong> over following a plan</li>
+</ol>
+</div>
+<div class="card">
+<h3>🏃 Ceremonias Scrum</h3>
+<ul>
+<li><strong>Sprint Planning:</strong> planificar trabajo del sprint</li>
+<li><strong>Daily Standup:</strong> sincronización diaria del equipo</li>
+<li><strong>Sprint Review:</strong> demo del incremento a stakeholders</li>
+<li><strong>Sprint Retrospective:</strong> inspeccionar proceso, mejorar</li>
+<li><strong>Backlog Refinement:</strong> afinar items futuros</li>
+</ul>
+</div>
+<div class="card">
+<h3>📊 KPIs — Criterios SMART</h3>
+<p>Un KPI debe ser: <strong>S</strong>pecific, <strong>M</strong>easurable,
+<strong>A</strong>chievable, <strong>R</strong>elevant, <strong>T</strong>ime-bound.</p>
+<p>✅ "Alcanzar 3,000 ventas en el primer trimestre"</p>
+<p>❌ "Vender lo más posible" (no medible)</p>
+<p>❌ "100% QA en cada sprint" (no alcanzable)</p>
+</div>
+<div class="card">
+<h3>⚠️ Deuda Técnica — Causas</h3>
+<ul>
+<li>Tecnología desactualizada (legacy)</li>
+<li>Presión de tiempo (velocidad > calidad)</li>
+<li>Cambios constantes de scope</li>
+<li>Falta de tests automáticos</li>
+<li>Código sin documentar ni refactorizar</li>
+</ul>
+</div>
+</div>
+</article>
+
+<!-- TDD -->
+<article>
+<h3>🧪 TDD — Test-Driven Development</h3>
+<div class="two-col">
+<div>
+<h4>Ciclo Red → Green → Refactor</h4>
+<ol>
+<li>🔴 <strong>Red:</strong> escribir test que falla (aún no hay código)</li>
+<li>🟢 <strong>Green:</strong> escribir <em>el mínimo código</em> para que el test pase</li>
+<li>🔵 <strong>Refactor:</strong> limpiar código manteniendo tests verdes</li>
+</ol>
+<h4>Ventajas TDD</h4>
+<ul>
+<li>✅ Codebase más fácil de mantener</li>
+<li>✅ 100% de coverage garantizado</li>
+<li>✅ Ahorro de costos a largo plazo</li>
+<li>✅ Diseño más limpio (testeable = desacoplado)</li>
+</ul>
+</div>
+<div>
+<h4>Lo que TDD NO garantiza</h4>
+<ul>
+<li>❌ Los tests no necesitan mantenimiento cuando cambia el código → <strong>FALSO</strong>.
+Los tests deben actualizarse con cada cambio de comportamiento.</li>
+</ul>
+<h4>Code Review — Métodos válidos</h4>
+<ul>
+<li>✅ Pair programming</li>
+<li>✅ Pull request comments</li>
+<li>✅ Tool-assisted (linters, SonarQube)</li>
+<li>❌ Post-mortem analysis (es para incidentes, no code review)</li>
+</ul>
+</div>
+</div>
+</article>

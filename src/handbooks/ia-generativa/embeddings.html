@@ -1,0 +1,168 @@
+<p>Un <strong>embedding</strong> es una función que mapea texto (o cualquier objeto discreto) a un
+vector de
+números reales en un espacio de alta dimensión. La premisa fundamental es que textos semánticamente
+similares
+producen vectores cercanos según alguna métrica de distancia.</p>
+
+<div class="formula">
+<div class="formula-label">Definición formal</div>
+E : Σ* → ℝⁿ donde sim(E(a), E(b)) ∝ relevancia(a, b)
+</div>
+
+<h3>Métricas de similitud</h3>
+<table>
+<tr>
+<th>Métrica</th>
+<th>Fórmula</th>
+<th>Cuándo usar</th>
+<th>Rango</th>
+</tr>
+<tr>
+<td><strong>Cosine similarity</strong></td>
+<td><code>(A·B) / (‖A‖·‖B‖)</code></td>
+<td>Estándar para texto. Invariante a magnitud.</td>
+<td>[-1, 1]</td>
+</tr>
+<tr>
+<td><strong>Dot product</strong></td>
+<td><code>A·B = Σ aᵢbᵢ</code></td>
+<td>Modelos entrenados con dot product (OpenAI)</td>
+<td>(-∞, ∞)</td>
+</tr>
+<tr>
+<td><strong>Euclidean (L2)</strong></td>
+<td><code>√(Σ(aᵢ-bᵢ)²)</code></td>
+<td>Menor distancia = mayor similitud</td>
+<td>[0, ∞)</td>
+</tr>
+</table>
+
+<div class="callout info">
+<div class="callout-label">Importante</div>
+<p>Siempre usa la misma métrica que el modelo de embeddings fue entrenado para usar.
+<code>text-embedding-3-large</code> de OpenAI fue entrenado con dot product normalizado
+(equivale a cosine).
+Usar L2 con ese modelo produce rankings incorrectos.
+</p>
+</div>
+
+<h3>Modelos de embeddings recomendados</h3>
+<table>
+<tr>
+<th>Modelo</th>
+<th>Dims</th>
+<th>Tipo</th>
+<th>Ideal para</th>
+</tr>
+<tr>
+<td><code>text-embedding-3-large</code></td>
+<td>3072</td>
+<td>API / cloud</td>
+<td>Alta precisión, inglés y multilingüe</td>
+</tr>
+<tr>
+<td><code>text-embedding-3-small</code></td>
+<td>1536</td>
+<td>API / cloud</td>
+<td>Costo-eficiente, producción</td>
+</tr>
+<tr>
+<td><code>bge-m3</code></td>
+<td>1024</td>
+<td>Local / open</td>
+<td>Multilingüe, español, sin costo API</td>
+</tr>
+<tr>
+<td><code>nomic-embed-text</code></td>
+<td>768</td>
+<td>Local / open</td>
+<td>Rápido, bajo consumo de memoria</td>
+</tr>
+<tr>
+<td><code>cohere-embed-v3</code></td>
+<td>1024</td>
+<td>API / cloud</td>
+<td>Input types (search_query vs search_document)</td>
+</tr>
+</table>
+
+<div class="callout tip">
+<div class="callout-label">Best practice</div>
+<p>Algunos modelos (Cohere, voyage-ai) distinguen entre embeddings de <em>query</em> y de
+<em>documento</em>.
+Siempre embeddea las consultas con el tipo "query" y los documentos con "document" para obtener
+mejores
+resultados en retrieval asimétrico.
+</p>
+</div>
+
+<p class="muted">Tabla vigente a la fecha de revisión del capítulo. Los modelos de embeddings evolucionan rápido; consulta rankings públicos como MTEB como punto de partida y valida con tus propios documentos y consultas, especialmente en español.</p>
+<h3>Matryoshka embeddings</h3>
+<p>Los modelos MRL (Matryoshka Representation Learning) producen embeddings donde los primeros
+<code>k</code>
+dimensiones ya contienen información útil. Esto permite truncar los vectores para ahorrar memoria
+con un
+trade-off controlado de precisión. <code>text-embedding-3-large</code> soporta truncamiento a 256,
+512, 1536 o
+3072 dims.
+</p>
+
+<h3>Algoritmos de búsqueda vectorial (ANN)</h3>
+<table>
+<tr>
+<th>Algoritmo</th>
+<th>Tipo</th>
+<th>Trade-off</th>
+<th>Usado en</th>
+</tr>
+<tr>
+<td><strong>HNSW</strong></td>
+<td>Graph-based</td>
+<td>Alta recall, memoria alta</td>
+<td>Qdrant, Weaviate</td>
+</tr>
+<tr>
+<td><strong>IVF-PQ</strong></td>
+<td>Clustering</td>
+<td>Menor memoria, recall menor</td>
+<td>FAISS, Pinecone</td>
+</tr>
+<tr>
+<td><strong>ScaNN</strong></td>
+<td>Tree + quantization</td>
+<td>Muy rápido en producción</td>
+<td>Google, Vertex AI</td>
+</tr>
+</table>
+
+<div class="callout info">
+<div class="callout-label">HNSW en detalle</div>
+<p>HNSW (Hierarchical Navigable Small World) construye un grafo multi-capa donde cada nodo conecta a
+sus
+vecinos más cercanos. La búsqueda navega desde la capa más alta (pocos nodos, conexiones largas)
+hacia la
+más baja (todos los nodos). Complejidad de búsqueda: O(log N). Qdrant usa HNSW con parámetros
+configurables
+<code>m</code> (conexiones por nodo) y <code>ef_construction</code> (calidad vs velocidad de
+indexado).
+</p>
+</div>
+
+<h3>Elegir base de datos vectorial</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Opción</th><th>Tipo</th><th>Cuándo conviene</th></tr></thead>
+<tbody>
+<tr><td><strong>pgvector</strong> (PostgreSQL)</td><td>Extensión de base relacional</td><td>Ya operas Postgres, volumen de millones de vectores, quieres filtros SQL y transacciones junto a tus datos.</td></tr>
+<tr><td><strong>Qdrant, Weaviate, Milvus</strong></td><td>Motores vectoriales dedicados</td><td>Alto volumen, filtros por payload complejos, búsqueda híbrida nativa, despliegue propio o gestionado.</td></tr>
+<tr><td><strong>Pinecone</strong> y servicios serverless</td><td>Gestionado</td><td>Cero operación y escalado automático; acepta dependencia del proveedor.</td></tr>
+<tr><td><strong>OpenSearch / Elasticsearch</strong></td><td>Motor de búsqueda con vectores</td><td>Ya tienes búsqueda léxica (BM25) y quieres híbrida en un solo motor.</td></tr>
+<tr><td><strong>Servicios de cada nube</strong></td><td>Gestionado e integrado</td><td>Identidad, red y auditoría unificadas con el resto de la plataforma.</td></tr>
+<tr><td><strong>Chroma, FAISS, LanceDB</strong></td><td>Embebidos o librerías</td><td>Prototipos, pruebas locales, evaluación offline.</td></tr>
+</tbody>
+</table>
+</div>
+<div class="callout">
+<span class="callout-label">Criterios que deciden en la práctica</span>
+Filtros por metadatos a escala (tenant, permisos, fecha), soporte de búsqueda híbrida, borrado y actualización eficientes (derecho al olvido), copias de seguridad, y que el equipo sepa operarlo. Con menos de unos pocos millones de vectores, casi cualquier opción rinde; la diferencia está en la operación.
+</div>

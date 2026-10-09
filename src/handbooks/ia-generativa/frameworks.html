@@ -1,0 +1,107 @@
+<p>Los frameworks resuelven la "fontanería" de los agentes: el loop, el estado, la memoria, la conexión de herramientas, las pausas para aprobación humana y la observabilidad. El panorama cambia cada pocos meses (se fusionan proyectos, aparecen SDKs de cada proveedor), así que importa más entender las <strong>categorías</strong> que memorizar nombres.</p>
+
+<h3>Categorías</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Categoría</th><th>Ejemplos (vigentes a la revisión)</th><th>Te da</th><th>Cuándo</th></tr></thead>
+<tbody>
+<tr><td><strong>SDK del proveedor de modelos</strong></td><td>SDKs oficiales con tool runner; SDKs de agentes de cada proveedor (Claude Agent SDK, OpenAI Agents SDK, Google ADK)</td><td>Acceso de primera mano a las capacidades del modelo; algunos incluyen un harness completo con herramientas de archivos y terminal</td><td>Un solo proveedor, máximo aprovechamiento de sus funciones.</td></tr>
+<tr><td><strong>Grafos de estado</strong></td><td>LangGraph</td><td>Estados y transiciones explícitos, ciclos, checkpointing, interrupciones para aprobación humana</td><td>Flujos complejos con ramas y ciclos que deben ser auditables.</td></tr>
+<tr><td><strong>Equipos de agentes por rol</strong></td><td>CrewAI</td><td>Definición rápida de agentes con rol, objetivo y tareas</td><td>Prototipos de colaboración entre agentes especializados.</td></tr>
+<tr><td><strong>Ecosistema Microsoft</strong></td><td>Microsoft Agent Framework (sucesor que unifica Semantic Kernel y AutoGen)</td><td>Integración .NET y Python, conectores empresariales, patrones multiagente</td><td>Organizaciones invertidas en Azure y .NET.</td></tr>
+<tr><td><strong>Datos y RAG primero</strong></td><td>LlamaIndex (Workflows), Haystack</td><td>Conectores de datos, indexación y orquestación orientada a recuperación</td><td>Sistemas donde el problema principal es el conocimiento.</td></tr>
+<tr><td><strong>Tipado y validación</strong></td><td>Pydantic AI</td><td>Agentes con entradas y salidas tipadas y validadas</td><td>Equipos Python que priorizan contratos estrictos.</td></tr>
+<tr><td><strong>Plataformas gestionadas de agentes</strong></td><td>Servicios de agentes de cada nube (AWS, Azure AI Foundry, Vertex AI) y agentes alojados por proveedores de modelos</td><td>Runtime, identidad, memoria y observabilidad operados por el proveedor</td><td>Cuando quieres no operar el runtime y aceptas el acoplamiento.</td></tr>
+<tr><td><strong>Motores de workflow durables</strong></td><td>Temporal, AWS Step Functions, Azure Durable Functions</td><td>Reintentos, timeouts, idempotencia, historial y reanudación garantizados</td><td>Procesos de negocio críticos donde el LLM es un paso más.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout beige">
+<span class="callout-label">Nota de arquitectura</span>
+Distingue entre <em>frameworks de agentes</em> y <em>motores de workflow</em>. En sistemas de misión crítica es común envolver los pasos no deterministas del LLM dentro de un motor de workflow determinista: reintentos, idempotencia, auditoría y reanudación de nivel productivo que los frameworks de agentes no siempre garantizan por sí solos.
+</div>
+
+<h3>Criterios de selección</h3>
+<ul>
+<li><strong>¿Necesitas un framework?</strong> Para un agente con pocas herramientas, el SDK del proveedor y 50 líneas de loop propio son más fáciles de depurar que cualquier abstracción.</li>
+<li><strong>Durabilidad:</strong> ¿cómo persiste y reanuda el estado? ¿Qué pasa si el proceso muere a mitad de una herramienta?</li>
+<li><strong>Human-in-the-loop:</strong> ¿puede pausar, esperar horas una aprobación y continuar?</li>
+<li><strong>Observabilidad:</strong> ¿emite trazas estándar (OpenTelemetry) o solo hacia su propia plataforma?</li>
+<li><strong>Portabilidad:</strong> ¿te ata a un proveedor de modelos o de nube?</li>
+<li><strong>Madurez:</strong> frecuencia de cambios incompatibles, comunidad, soporte. Un framework que cambia su API cada trimestre es deuda técnica.</li>
+</ul>
+
+<h3>Ejemplo: un grafo de estado con LangGraph</h3>
+<p><strong>LangGraph</strong> modela flujos agénticos como grafos de estado donde cada nodo es una
+función (o
+llamada al LLM) y las aristas determinan el flujo de control. El estado se persiste automáticamente,
+permitiendo pausas, checkpoints y reanudaciones.</p>
+
+<h3>Componentes del grafo</h3>
+<table>
+<tr>
+<th>Concepto</th>
+<th>Descripción</th>
+<th>Analogía</th>
+</tr>
+<tr>
+<td><strong>State</strong></td>
+<td>Objeto Python con toda la información del flujo</td>
+<td>Variables globales del programa</td>
+</tr>
+<tr>
+<td><strong>Node</strong></td>
+<td>Función que recibe y modifica el state</td>
+<td>Función en un programa</td>
+</tr>
+<tr>
+<td><strong>Edge</strong></td>
+<td>Transición entre nodos</td>
+<td>Llamada a función / goto</td>
+</tr>
+<tr>
+<td><strong>Conditional edge</strong></td>
+<td>Edge que depende del state actual</td>
+<td>if/else</td>
+</tr>
+<tr>
+<td><strong>Checkpointer</strong></td>
+<td>Persistencia automática del estado</td>
+<td>Guardar progreso</td>
+</tr>
+</table>
+
+<pre><span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+<span class="kw">from</span> typing <span class="kw">import</span> TypedDict, Annotated
+<span class="kw">import</span> operator
+
+<span class="kw">class</span> <span class="cls">AgentState</span>(TypedDict):
+    messages: Annotated[list, operator.add]
+    context: list[str]
+    final_answer: str | <span class="kw">None</span>
+
+<span class="kw">def</span> <span class="fn">retrieve</span>(state: <span class="cls">AgentState</span>) -> <span class="cls">AgentState</span>:
+    query = state[<span class="str">"messages"</span>][-<span class="num">1</span>].content
+    chunks = vector_store.<span class="fn">search</span>(query, k=<span class="num">5</span>)
+    <span class="kw">return</span> {<span class="str">"context"</span>: chunks}
+
+<span class="kw">def</span> <span class="fn">generate</span>(state: <span class="cls">AgentState</span>) -> <span class="cls">AgentState</span>:
+    response = llm.<span class="fn">invoke</span>(state[<span class="str">"messages"</span>] + state[<span class="str">"context"</span>])
+    <span class="kw">return</span> {<span class="str">"final_answer"</span>: response.content}
+
+<span class="kw">def</span> <span class="fn">should_continue</span>(state: <span class="cls">AgentState</span>) -> str:
+    <span class="kw">if</span> <span class="str">"[BUSCAR MÁS]"</span> <span class="kw">in</span> state.get(<span class="str">"final_answer"</span>, <span class="str">""</span>):
+        <span class="kw">return</span> <span class="str">"retrieve"</span>
+    <span class="kw">return</span> <span class="str">"end"</span>
+
+graph = <span class="cls">StateGraph</span>(<span class="cls">AgentState</span>)
+graph.<span class="fn">add_node</span>(<span class="str">"retrieve"</span>, retrieve)
+graph.<span class="fn">add_node</span>(<span class="str">"generate"</span>, generate)
+graph.<span class="fn">set_entry_point</span>(<span class="str">"retrieve"</span>)
+graph.<span class="fn">add_edge</span>(<span class="str">"retrieve"</span>, <span class="str">"generate"</span>)
+graph.<span class="fn">add_conditional_edges</span>(<span class="str">"generate"</span>, should_continue,
+    {<span class="str">"retrieve"</span>: <span class="str">"retrieve"</span>, <span class="str">"end"</span>: END})
+<span class="lang-label">Python · LangGraph</span></pre>
+
+<p class="muted">El ejemplo muestra el concepto (estado, nodos, aristas condicionales). Revisa la documentación actual de LangGraph para la API exacta de checkpointers e interrupciones de aprobación humana.</p>

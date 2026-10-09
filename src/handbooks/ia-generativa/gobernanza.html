@@ -1,0 +1,67 @@
+<p>La gobernanza de IA responde tres preguntas: <strong>qué sistemas de IA tenemos</strong>, <strong>qué riesgo representa cada uno</strong> y <strong>quién responde por ellos</strong>. Para un AI Solutions Architect no es un trámite posterior: define requisitos no funcionales (trazabilidad, supervisión humana, explicabilidad, residencia de datos) que cambian la arquitectura desde el primer diagrama.</p>
+
+<div class="callout beige">
+<span class="callout-label">Aviso</span>
+Este capítulo es orientación técnica, no asesoría legal. Las regulaciones de IA están en plena evolución: confirma con el área legal y de cumplimiento las obligaciones aplicables a tu jurisdicción y la fecha vigente de cada una.
+</div>
+
+<h3>Marcos de referencia</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Marco</th><th>Tipo</th><th>Qué aporta</th></tr></thead>
+<tbody>
+<tr><td><strong>EU AI Act</strong></td><td>Regulación (UE)</td><td>Clasificación por riesgo con obligaciones proporcionales; aplica también a proveedores fuera de la UE cuyos sistemas se usan en ella.</td></tr>
+<tr><td><strong>NIST AI RMF 1.0</strong> y su perfil de IA generativa (NIST AI 600-1)</td><td>Marco voluntario (EE. UU.)</td><td>Cuatro funciones: <em>Govern, Map, Measure, Manage</em>. Lenguaje común para gestionar riesgos de IA.</td></tr>
+<tr><td><strong>ISO/IEC 42001</strong></td><td>Norma certificable</td><td>Sistema de gestión de IA (AIMS), análogo a ISO 27001 para seguridad de la información.</td></tr>
+<tr><td><strong>ISO/IEC 23894</strong></td><td>Norma</td><td>Guía de gestión de riesgos específica de IA.</td></tr>
+<tr><td><strong>Leyes de protección de datos</strong> (GDPR, LOPDP de Ecuador, equivalentes locales)</td><td>Regulación</td><td>Base legal, minimización, derechos de las personas (acceso, rectificación, supresión), decisiones automatizadas.</td></tr>
+<tr><td><strong>Regulación sectorial</strong></td><td>Regulación</td><td>Banca: gestión de riesgo de modelos, gestión de terceros, PCI-DSS si hay datos de tarjeta, y las normas del supervisor local.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>EU AI Act: niveles de riesgo</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Nivel</th><th>Ejemplos</th><th>Consecuencia</th></tr></thead>
+<tbody>
+<tr><td class="r"><strong>Inaceptable</strong></td><td>Puntuación social, manipulación que explota vulnerabilidades, ciertos usos de identificación biométrica</td><td>Prohibido.</td></tr>
+<tr><td class="y"><strong>Alto riesgo</strong></td><td>Evaluación de solvencia crediticia de personas, selección de personal, acceso a servicios esenciales, componentes de seguridad</td><td>Gestión de riesgos, calidad de datos, documentación técnica, registros, supervisión humana, exactitud y robustez, evaluación de conformidad.</td></tr>
+<tr><td class="b"><strong>Riesgo limitado</strong></td><td>Chatbots, contenido generado o manipulado</td><td>Obligaciones de transparencia: informar que se interactúa con IA, marcar contenido sintético.</td></tr>
+<tr><td class="g"><strong>Mínimo</strong></td><td>Filtros de spam, la mayoría de usos internos de productividad</td><td>Sin obligaciones específicas (códigos voluntarios).</td></tr>
+</tbody>
+</table>
+</div>
+<p>Además, los <strong>modelos de IA de propósito general</strong> tienen obligaciones propias para sus proveedores (documentación, política de derechos de autor, y obligaciones adicionales si presentan riesgo sistémico).</p>
+<div class="timeline">
+<div class="timeline-item"><strong>Agosto 2024</strong> — entrada en vigor.</div>
+<div class="timeline-item"><strong>Febrero 2025</strong> — aplican las prohibiciones y las obligaciones de alfabetización en IA.</div>
+<div class="timeline-item"><strong>Agosto 2025</strong> — obligaciones para modelos de propósito general y estructura de gobernanza.</div>
+<div class="timeline-item"><strong>Agosto 2026</strong> — fecha general de aplicación, incluida la mayoría de obligaciones de alto riesgo.</div>
+<div class="timeline-item"><strong>Agosto 2027</strong> — alto riesgo en productos regulados por legislación sectorial de la UE.</div>
+</div>
+<p class="muted">En noviembre de 2025 la Comisión Europea propuso ajustes (paquete "Digital Omnibus") que incluyen aplazar parte de las obligaciones de alto riesgo. Verifica el calendario vigente antes de planificar.</p>
+
+<h3>Prácticas de IA responsable que se traducen en arquitectura</h3>
+<div class="card-grid">
+<div class="card"><h4>Inventario de sistemas de IA</h4><p>Registro de cada caso de uso: dueño, modelo y versión, datos que usa, nivel de riesgo, evaluaciones y fecha de revisión.</p></div>
+<div class="card"><h4>Evaluación de impacto</h4><p>Antes de construir: a quién afecta, qué puede salir mal, qué controles se aplican, qué riesgo residual se acepta y quién lo firma.</p></div>
+<div class="card"><h4>Supervisión humana demostrable</h4><p>No basta con "una persona puede intervenir": hay que registrar quién aprobó qué, con qué información, y medir si las personas revisan de verdad o solo aprueban.</p></div>
+<div class="card"><h4>Trazabilidad</h4><p>Registros que permitan reconstruir cada decisión: entrada, contexto recuperado, versión de modelo y prompt, herramientas, salida y aprobación.</p></div>
+<div class="card"><h4>Equidad</h4><p>Métricas de desempeño por segmento (región, edad, género cuando sea legal medirlo) y umbrales de diferencia aceptable.</p></div>
+<div class="card"><h4>Transparencia</h4><p>Informar al usuario que interactúa con IA, mostrar fuentes y ofrecer un canal humano.</p></div>
+</div>
+
+<h3>Marco regulatorio relevante (según industria/jurisdicción)</h3>
+<table>
+<tr><th>Marco</th><th>Relevancia para sistemas de IA</th></tr>
+<tr><td>PCI-DSS</td><td>Si el agente toca datos de tarjetas, ninguna PAN completa debe pasar por el contexto del LLM sin tokenización previa</td></tr>
+<tr><td>ISO 27001</td><td>Gestión de riesgo de seguridad de la información aplicada a los nuevos activos: prompts, embeddings, logs de conversación</td></tr>
+<tr><td>LOPDP (Ecuador) / GDPR</td><td>Datos personales en contexto o en el índice RAG requieren base legal, minimización, y capacidad de eliminación (el vector store también debe soportar "derecho al olvido")</td></tr>
+<tr><td>EU AI Act</td><td>Clasificación de riesgo del sistema de IA; sistemas de alto riesgo (ej. scoring crediticio) requieren documentación técnica y supervisión humana demostrable</td></tr>
+</table>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Gobernanza como plataforma</span>
+<p>En organizaciones con muchos casos de uso, la gobernanza escala solo si se automatiza: un AI Gateway que registra todas las llamadas, un catálogo de modelos aprobados, evals obligatorias como gate de despliegue y tableros de riesgo por sistema. Es el mismo patrón de "plataforma interna" que se aplica a seguridad o a observabilidad.</p>
+</div>

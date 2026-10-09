@@ -1,0 +1,59 @@
+<p>Todo lo que sigue en esta guía se apoya en un mismo componente: un <strong>modelo de lenguaje grande (LLM)</strong> que predice texto token a token, condicionado por todo lo que está en su ventana de contexto. Desde la óptica de arquitectura, un LLM es un <u>servicio de inferencia con estado nulo</u>: no recuerda nada entre llamadas salvo lo que tú le reenvíes.</p>
+
+<h3>Las tres capacidades que se combinan</h3>
+<div class="card-grid">
+<div class="card">
+<h4>Generación</h4>
+<p>Producir texto, código, o estructuras (JSON, XML) a partir de una instrucción. Es la capacidad base sobre la que se construye todo lo demás.</p>
+</div>
+<div class="card">
+<h4>Razonamiento</h4>
+<p>Descomponer un problema en pasos intermedios antes de responder (chain-of-thought, extended thinking). Determina si el modelo puede planificar, no solo completar texto.</p>
+</div>
+<div class="card">
+<h4>Uso de herramientas</h4>
+<p>Invocar funciones externas (tool use / function calling) y decidir, con base en el resultado, cuál es el siguiente paso. Es la puerta de entrada a todo lo agéntico.</p>
+</div>
+</div>
+
+<div class="callout">
+<div class="callout-label">Para el rol de Solutions Architect</div>
+La pregunta de negocio casi nunca es "¿qué modelo uso?" sino "¿qué tanto de este problema necesita generación pura, cuánto necesita conocimiento externo (RAG), y cuánto necesita acción sobre sistemas (agentes)?". Confundir estas tres capas es la causa más común de sobre-ingeniería en proyectos de IA.
+</div>
+
+<h3>Parámetros de inferencia</h3>
+<p>Cada llamada a un modelo se configura con parámetros que cambian costo, latencia y comportamiento. Algunos proveedores y modelos recientes restringen o ignoran los parámetros de muestreo (por ejemplo cuando el razonamiento está activo); consulta la documentación del modelo concreto antes de fijarlos.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Parámetro</th><th>Qué controla</th><th>Guía práctica</th></tr></thead>
+<tbody>
+<tr><td><code>max_tokens</code></td><td>Tope de tokens de salida de la respuesta</td><td>No lo subestimes: si se alcanza, la respuesta queda cortada a mitad (<code>stop_reason = max_tokens</code>). Para salidas largas usa streaming.</td></tr>
+<tr><td><code>temperature</code></td><td>Aleatoriedad del muestreo</td><td>Valores bajos para extracción y respuestas factuales; más altos para ideación. Temperatura 0 no garantiza determinismo total.</td></tr>
+<tr><td><code>top_p</code> / <code>top_k</code></td><td>Recorte de la distribución antes de muestrear</td><td>Ajusta uno u otro, no ambos a la vez con temperatura; en la mayoría de casos el valor por defecto es correcto.</td></tr>
+<tr><td>Secuencias de parada</td><td>Cadenas que detienen la generación</td><td>Útiles para formatos delimitados; preferible usar salidas estructuradas.</td></tr>
+<tr><td>Esfuerzo / razonamiento</td><td>Cuánto "piensa" el modelo antes de responder</td><td>Más esfuerzo para tareas difíciles y agentes; menos para clasificación y chat simple. Se mide por costo por tarea completada.</td></tr>
+<tr><td>Formato de salida</td><td>JSON validado contra un esquema</td><td>Úsalo siempre que la salida alimente código: elimina el parseo frágil de texto libre.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Por qué un LLM alucina</h3>
+<p>Un LLM optimiza la plausibilidad del siguiente token, no la verdad. Cuando la información no está en el contexto y su conocimiento paramétrico es difuso, produce el texto más probable, que puede ser falso pero bien redactado. No hay un parámetro que lo elimine; se reduce con diseño:</p>
+<ul>
+<li><strong>Grounding:</strong> poner la fuente en el contexto (RAG, herramientas) y exigir citas.</li>
+<li><strong>Abstención explícita:</strong> instruir y premiar el "no tengo esa información".</li>
+<li><strong>Verificación:</strong> un segundo paso que compruebe cada afirmación contra la fuente, o validación determinista (esquemas, reglas de negocio, cálculos con herramientas).</li>
+<li><strong>Diseño del producto:</strong> mostrar fuentes al usuario y mantener a una persona en decisiones de alto impacto.</li>
+</ul>
+
+<h3>Multimodalidad</h3>
+<div class="card-grid">
+<div class="card"><h4>Visión y documentos</h4><p>Lectura de imágenes, capturas, PDFs y gráficos. Útil para extracción de documentos (facturas, contratos, formularios KYC) y para agentes que operan interfaces.</p></div>
+<div class="card"><h4>Audio y voz</h4><p>Transcripción, síntesis y modelos de voz en tiempo real. La latencia de ida y vuelta pasa a ser el requisito no funcional dominante.</p></div>
+<div class="card"><h4>Generación de imágenes y video</h4><p>Modelos de difusión y similares. Requieren controles adicionales de propiedad intelectual, marcas de agua y uso aceptable.</p></div>
+</div>
+
+<div class="callout beige">
+<span class="callout-label">Vocabulario mínimo</span>
+<strong>Modelo fundacional:</strong> modelo grande y general que se adapta a muchas tareas. <strong>LLM:</strong> modelo fundacional de lenguaje. <strong>Inferencia:</strong> ejecutar el modelo. <strong>Grounding:</strong> anclar la respuesta en fuentes provistas. <strong>Agente:</strong> sistema donde el modelo decide qué acciones ejecutar en un loop. Ver el glosario al final para el resto.
+</div>

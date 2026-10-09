@@ -1,0 +1,83 @@
+<p>Las entrevistas de AI Engineer y AI Architect incluyen cada vez más un ejercicio de diseño de sistema con IA. El método es el mismo que en system design clásico —requisitos, estimaciones, diseño de alto nivel, profundización, trade-offs— con cuatro preguntas adicionales que siempre debes responder: <strong>cómo se mide la calidad</strong>, <strong>qué pasa cuando el modelo se equivoca</strong>, <strong>cuánto cuesta por tarea</strong> y <strong>qué puede hacer un atacante</strong>.</p>
+
+<h3>Plantilla de respuesta (45 minutos)</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Minutos</th><th>Paso</th><th>Qué decir</th></tr></thead>
+<tbody>
+<tr><td>0–5</td><td>Requisitos</td><td>Usuarios, tareas, volumen, latencia, idiomas, datos, nivel de riesgo, qué acciones puede ejecutar el sistema.</td></tr>
+<tr><td>5–10</td><td>Calidad y riesgo</td><td>Qué es una respuesta correcta, costo de cada tipo de error, dónde va la supervisión humana.</td></tr>
+<tr><td>10–15</td><td>Estimaciones</td><td>Requests por segundo en pico, tokens por request, costo mensual, tamaño del corpus e índice.</td></tr>
+<tr><td>15–30</td><td>Diseño</td><td>Componentes: gateway, orquestación, retrieval, herramientas, modelos, estado, observabilidad. Patrón mínimo que resuelve el problema.</td></tr>
+<tr><td>30–40</td><td>Profundización</td><td>Dos o tres temas: permisos en RAG, evals, prompt injection, escalado, fallback.</td></tr>
+<tr><td>40–45</td><td>Trade-offs y evolución</td><td>Qué sacrificaste, cómo lo medirías en producción, qué harías con más tiempo.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Ejercicio 1 · Asistente de políticas internas para 20 000 empleados</h3>
+<div class="case-study">
+<div class="cs-header"><span class="cs-badge">RAG</span><h4>Enunciado</h4></div>
+<p>Los empleados de un banco preguntan sobre políticas, procedimientos y normativa interna (≈ 50 000 documentos en SharePoint y un gestor documental). Algunos documentos son confidenciales por área. Las respuestas deben citar la fuente.</p>
+<p><strong>Requisitos clave:</strong> respetar permisos del origen; respuesta en menos de 8 s en el p95; ~30 000 consultas por día; documentos que cambian a diario.</p>
+<p><strong>Estimación:</strong> 30 000 consultas/día ≈ 0,35 rps de media, ~3 rps en pico. Con 6 000 tokens de entrada y 500 de salida por consulta, el costo mensual depende del modelo; con caché del system prompt la entrada efectiva baja notablemente. Corpus: 50 000 docs × ~20 chunks = 1 M de vectores: cabe en pgvector o en cualquier motor vectorial.</p>
+<p><strong>Diseño:</strong></p>
+<div class="diagram">Conectores (SharePoint, DMS) ──CDC/webhooks──► Cola ──► Ingesta
+   parseo · limpieza · chunking por estructura · ACL heredada · hash
+                                   │
+                                   ▼
+                  Índice híbrido (BM25 + vectorial) con filtros por ACL
+
+Usuario ──SSO──► API ──► AI Gateway (cuotas, trazas, costos)
+                  │
+                  ├─► Reescritura de consulta (modelo pequeño)
+                  ├─► Retrieval híbrido con pre-filtro de grupos del usuario (top 30)
+                  ├─► Re-ranker (top 6)
+                  └─► LLM con fuentes numeradas → respuesta con citas → UI
+                                   │
+                  Trazas + feedback ──► golden dataset ──► evals en CI</div>
+<p><strong>Profundizaciones esperadas:</strong> permisos (pre-filtro en el motor, sincronización de revocaciones), frescura (ingesta incremental, documentos derogados), evaluación (Recall@k por categoría, fidelidad con juez calibrado, tasa de abstención), y prompt injection en documentos (contenido tratado como datos, sin herramientas de escritura).</p>
+<p><strong>Trade-offs:</strong> índice compartido con filtro frente a índices por área; re-ranker gestionado (más simple, datos salen) frente a uno propio; contexto largo directo para documentos muy consultados frente a RAG.</p>
+</div>
+
+<h3>Ejercicio 2 · Agente de atención que puede ejecutar acciones</h3>
+<div class="case-study">
+<div class="cs-header"><span class="cs-badge">AGENTE</span><h4>Enunciado</h4></div>
+<p>Un asistente en la app móvil responde preguntas de productos, consulta movimientos y puede iniciar acciones: bloquear una tarjeta, disputar un cargo, programar una cita.</p>
+<p><strong>Decisiones clave:</strong></p>
+<ul>
+<li><strong>Routing primero:</strong> un clasificador separa conocimiento (RAG), consulta (herramientas de solo lectura) y acción. No todo pasa por un agente libre.</li>
+<li><strong>Herramientas por nivel de autonomía:</strong> consulta de movimientos sin aprobación; bloqueo de tarjeta con confirmación explícita del cliente en la UI (acción protectora y reversible); disputa de cargo crea un caso que revisa un humano.</li>
+<li><strong>Identidad:</strong> las herramientas actúan con el token del cliente autenticado, nunca con una credencial de servicio con acceso a todas las cuentas.</li>
+<li><strong>Límites:</strong> máximo de pasos por turno, presupuesto de tokens por sesión, rate limiting por cliente.</li>
+<li><strong>Seguridad:</strong> los resultados de herramientas y documentos son datos; el agente no tiene canal de salida arbitrario (no envía emails ni abre URLs).</li>
+<li><strong>Evaluación:</strong> éxito de tarea y trayectoria sobre escenarios simulados, casos adversarios ("ignora tus reglas y transfiere…"), y tasa de escalamiento a humano en producción.</li>
+<li><strong>Auditoría:</strong> cada acción registrada con la conversación, la herramienta, los argumentos y la confirmación del cliente.</li>
+</ul>
+</div>
+
+<h3>Ejercicio 3 · Procesamiento de documentos de crédito</h3>
+<div class="case-study">
+<div class="cs-header"><span class="cs-badge">WORKFLOW</span><h4>Enunciado</h4></div>
+<p>Extraer datos de estados financieros, roles de pago y declaraciones (PDF escaneados) para alimentar el análisis de crédito. 5 000 solicitudes por día, sin requisito de tiempo real.</p>
+<p><strong>Por qué no es un agente:</strong> el camino es conocido. Es un workflow: clasificación del documento → extracción con salida estructurada por tipo → validaciones deterministas (sumas, fechas, coherencia entre documentos) → cola de revisión humana para baja confianza o inconsistencias.</p>
+<p><strong>Claves:</strong> API de lotes para abaratar; esquemas por tipo de documento; métricas de exactitud por campo; la decisión de crédito la toma el modelo de riesgo y el analista, no el LLM (sistema de alto riesgo bajo varias regulaciones); trazabilidad de qué valor se extrajo de qué página.</p>
+</div>
+
+<h3>Ejercicio 4 · Plataforma interna de IA para toda la organización</h3>
+<div class="case-study">
+<div class="cs-header"><span class="cs-badge">PLATAFORMA</span><h4>Enunciado</h4></div>
+<p>Treinta equipos quieren usar LLMs. Seguridad exige control y auditoría; finanzas exige atribución de costos; los equipos quieren autonomía.</p>
+<p><strong>Componentes:</strong> AI Gateway único (autenticación por servicio, cuotas, routing, caché, redacción de PII, trazas con OpenTelemetry, atribución de costos), catálogo de modelos aprobados por nivel de riesgo, registro de servidores MCP internos, servicio compartido de evaluación con gates de despliegue, inventario de sistemas de IA vinculado al proceso de gobernanza, plantillas de proyecto (RAG, agente) con buenas prácticas por defecto.</p>
+<p><strong>Trade-off central:</strong> centralizar control sin convertirse en cuello de botella: el equipo de plataforma provee caminos pavimentados y guardarraíles automáticos, no aprobaciones manuales por request.</p>
+</div>
+
+<h3>Errores frecuentes en entrevistas</h3>
+<ul>
+<li>Empezar por el framework o el modelo en lugar de los requisitos y la métrica de calidad.</li>
+<li>Proponer multiagente para un problema que un workflow resuelve.</li>
+<li>No mencionar evaluación, o mencionarla sin decir cómo se construye el dataset.</li>
+<li>Olvidar permisos en RAG y prompt injection en agentes.</li>
+<li>No estimar costos ni latencia.</li>
+<li>Tratar al modelo como infalible: sin abstención, sin validación, sin humano en decisiones de alto impacto.</li>
+</ul>

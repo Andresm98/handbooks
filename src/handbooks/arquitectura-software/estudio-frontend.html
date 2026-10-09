@@ -1,0 +1,123 @@
+<article>
+<h3>🎭 Patrones de Renderizado</h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Patrón</th>
+<th>Dónde se genera el HTML</th>
+<th>Cuándo</th>
+<th>Frameworks</th>
+<th>Ideal para</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SSR</strong> — Server Side Rendering</td>
+<td>Servidor</td>
+<td>En cada request (runtime)</td>
+<td>Next.js, Nuxt, Remix</td>
+<td>SEO, datos dinámicos por usuario</td>
+</tr>
+<tr>
+<td><strong>SSG</strong> — Static Site Generation</td>
+<td>Servidor (build time)</td>
+<td>Durante el build</td>
+<td>Next.js, Gatsby, Astro</td>
+<td>Blogs, docs, landing pages</td>
+</tr>
+<tr>
+<td><strong>CSR</strong> — Client Side Rendering / SPA</td>
+<td>Navegador</td>
+<td>En tiempo de ejecución (JS)</td>
+<td>React, Vue, Angular</td>
+<td>Apps interactivas, dashboards internos</td>
+</tr>
+<tr>
+<td><strong>ISR</strong> — Incremental Static Regeneration</td>
+<td>Servidor (revalidación)</td>
+<td>Build + revalidación periódica</td>
+<td>Next.js</td>
+<td>E-commerce, contenido semi-estático</td>
+</tr>
+<tr>
+<td><strong>PWA</strong> — Progressive Web App</td>
+<td>Mixto</td>
+<td>Service Worker + cache</td>
+<td>Cualquier framework</td>
+<td>Offline support, instalable en dispositivo</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout callout-info">
+<span class="callout-icon">💡</span>
+<div><strong>PWA no recomendada cuando:</strong> la app necesita acceso profundo a hardware
+(Bluetooth, NFC, acelerómetro, GPS en background). Para esos casos, una app nativa móvil es la
+mejor opción.</div>
+</div>
+</article>
+
+<article>
+<h3>🧩 Microfrontends</h3>
+<p>Extensión del concepto de microservicios al frontend. Cada equipo es dueño de una parte independiente
+de la UI, con su propio stack tecnológico y ciclo de deploy.</p>
+<div class="two-col">
+<div>
+<h4>Ventajas</h4>
+<ul>
+<li>Múltiples tecnologías en mismo frontend (React + Vue + Angular)</li>
+<li>Deploys independientes por equipo</li>
+<li>Escalado de equipos sin fricción</li>
+<li>Aislamiento de fallos</li>
+</ul>
+</div>
+<div>
+<h4>Implementación</h4>
+<ul>
+<li><strong>Module Federation:</strong> Webpack 5 comparte módulos en runtime</li>
+<li><strong>Web Components:</strong> Custom Elements nativos del browser</li>
+<li><strong>iFrames:</strong> aislamiento total, UX limitada</li>
+<li><strong>Single-SPA:</strong> framework de orquestación</li>
+</ul>
+</div>
+</div>
+</article>
+
+<article>
+<h3>📱 Selección de Tipo de App</h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Tipo</th>
+<th>Cuándo elegirlo</th>
+<th>Cuándo NO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Native Mobile App</strong></td>
+<td>GPS background, sensores, Bluetooth, offline crítico, UX máxima</td>
+<td>Presupuesto limitado, equipo pequeño, no requiere hardware</td>
+</tr>
+<tr>
+<td><strong>PWA</strong></td>
+<td>Presupuesto limitado, cross-platform, offline básico, instalable</td>
+<td>Hardware específico, tienda de apps obligatoria, UX nativa crítica</td>
+</tr>
+<tr>
+<td><strong>Web App / SPA</strong></td>
+<td>Dashboard, herramientas internas, apps interactivas</td>
+<td>SEO crítico, acceso offline, hardware nativo</td>
+</tr>
+<tr>
+<td><strong>Website</strong></td>
+<td>Contenido estático, SEO, blogs</td>
+<td>Interactividad compleja, datos personalizados</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>

@@ -1,0 +1,476 @@
+<p>La arquitectura de datos es frecuentemente el factor limitante más subestimado en el diseño de
+sistemas. Las decisiones de qué base de datos usar, cómo modelar los datos, y cómo moverlos
+entre sistemas determinan la escalabilidad, el costo, y la capacidad de evolución del sistema
+durante años.</p>
+
+<h3>El Espectro de Sistemas de Datos</h3>
+
+<div class="diagram">
+<pre><code>
+  Sistemas de Datos: Clasificación por Caso de Uso
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  OLTP (Online Transaction Processing)    OLAP (Analytics)           │
+  │  Muchas escrituras pequeñas              Pocas queries grandes       │
+  │  Latencia baja                           Throughput alto             │
+  │  Normalizado (3NF)                       Desnormalizado (Star/Snow)  │
+  │  PostgreSQL, MySQL, DynamoDB             BigQuery, Redshift, Snowflake│
+  ├─────────────────────────────────────────────────────────────────────┤
+  │  OPERATIONAL STORE          │  ANALYTICAL STORE                     │
+  │  ┌──────────────────────┐   │   ┌───────────────────────────────┐  │
+  │  │ Transacciones en     │   │   │ Análisis histórico            │  │
+  │  │ tiempo real          │   │   │ Business Intelligence         │  │
+  │  │ Row-oriented storage │──ETL──│ Column-oriented storage       │  │
+  │  │ ACID transactions    │   │   │ Eventual consistency OK       │  │
+  │  └──────────────────────┘   │   └───────────────────────────────┘  │
+  │                             │                                       │
+  │  STREAMING                  │  LAKEHOUSE (moderno)                  │
+  │  ┌──────────────────────┐   │   ┌───────────────────────────────┐  │
+  │  │ Eventos en tiempo    │   │   │ Data Lake + ACID transactions  │  │
+  │  │ real                 │   │   │ Delta Lake, Apache Iceberg     │  │
+  │  │ Kafka, Kinesis       │   │   │ Databricks, Snowflake         │  │
+  │  └──────────────────────┘   │   └───────────────────────────────┘  │
+  └─────────────────────────────────────────────────────────────────────┘
+</code></pre>
+</div>
+
+<h3 id="db-matrix">Matriz Comparativa de Bases de Datos</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Base de datos</th>
+<th>Modelo</th>
+<th>Consistencia</th>
+<th>Escala escrituras</th>
+<th>Latencia lectura</th>
+<th>Caso de uso ideal</th>
+<th>NO usar para</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>Relacional</td>
+<td class="g">ACID fuerte</td>
+<td class="y">Vertical principalmente</td>
+<td class="g">Baja con índices</td>
+<td>Transacciones complejas, joins, JSONB semi-estructurado</td>
+<td>Escrituras masivas distribuidas, escala geo-distribuida</td>
+</tr>
+<tr>
+<td><strong>MySQL</strong></td>
+<td>Relacional</td>
+<td class="g">ACID</td>
+<td class="y">Vertical</td>
+<td class="g">Baja</td>
+<td>Web apps tradicionales, WordPress, replication simple</td>
+<td>Queries analíticas complejas, JSONB avanzado</td>
+</tr>
+<tr>
+<td><strong>DynamoDB</strong></td>
+<td>Key-Value / Documento</td>
+<td class="y">Eventual (o fuerte a costo)</td>
+<td class="g">Ilimitada</td>
+<td class="g">~1ms SLA</td>
+<td>High-throughput KV, serverless backends, gaming, IoT</td>
+<td>Queries complejas no planificadas, joins, migraciones frecuentes</td>
+</tr>
+<tr>
+<td><strong>Cassandra</strong></td>
+<td>Wide-column</td>
+<td class="y">Tunable (AP por defecto)</td>
+<td class="g">Lineal horizontal</td>
+<td class="g">Baja para queries simples</td>
+<td>Time-series, IoT, feeds con escala masiva, multi-region</td>
+<td>Transactions, queries ad-hoc, datos relacionales</td>
+</tr>
+<tr>
+<td><strong>MongoDB</strong></td>
+<td>Documento</td>
+<td class="y">Configurable</td>
+<td class="y">Horizontal con sharding</td>
+<td class="g">Baja</td>
+<td>Esquema flexible, rapid prototyping, catálogos</td>
+<td>Transacciones complejas multi-documento, reporting complejo</td>
+</tr>
+<tr>
+<td><strong>Redis</strong></td>
+<td>KV in-memory</td>
+<td class="y">AP (Redis Cluster)</td>
+<td class="g">Muy alta</td>
+<td class="g">Sub-milisegundo</td>
+<td>Cache, sesiones, rate limiting, pub/sub, leaderboards</td>
+<td>Datos que no caben en memoria, durabilidad crítica primaria</td>
+</tr>
+<tr>
+<td><strong>Elasticsearch</strong></td>
+<td>Búsqueda / Documento</td>
+<td class="y">Eventual</td>
+<td class="y">Media</td>
+<td class="g">Baja para búsqueda</td>
+<td>Full-text search, log analytics, faceted search</td>
+<td>Fuente de verdad primaria, transacciones, writes masivos</td>
+</tr>
+<tr>
+<td><strong>ClickHouse</strong></td>
+<td>Columnar OLAP</td>
+<td class="y">Eventual</td>
+<td class="g">Alta (batch inserts)</td>
+<td class="g">Muy baja para OLAP</td>
+<td>Analytics en tiempo real, logs, métricas, BI sobre eventos</td>
+<td>OLTP, updates frecuentes, queries de punto único</td>
+</tr>
+<tr>
+<td><strong>Neo4j</strong></td>
+<td>Grafos</td>
+<td class="g">ACID</td>
+<td class="r">Limitada</td>
+<td class="g">Baja para graph traversal</td>
+<td>Redes sociales, fraude detection, knowledge graphs</td>
+<td>Datos no relacionales entre sí, escala masiva</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>La Matriz de Selección de Base de Datos</summary>
+<p>La pregunta no es "¿qué base de datos es mejor?" sino "¿qué base de datos es mejor <em>para este
+patrón de acceso específico</em>?"</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Base de datos</th>
+<th>Modelo</th>
+<th>Fortaleza principal</th>
+<th>Debilidad principal</th>
+<th>Sweet spot</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>Relacional</td>
+<td class="g">ACID, joins complejos, extensibilidad</td>
+<td class="r">Escala horizontal compleja</td>
+<td>OLTP general, datos relacionales, cuando necesitas correctness</td>
+</tr>
+<tr>
+<td><strong>DynamoDB</strong></td>
+<td>Key-Value / Document</td>
+<td class="g">Escala horizontal infinita, latencia predecible &lt;10ms</td>
+<td class="r">Access patterns deben definirse antes, sin joins</td>
+<td>Escala masiva con access patterns conocidos y estables</td>
+</tr>
+<tr>
+<td><strong>Cassandra</strong></td>
+<td>Wide-column</td>
+<td class="g">Write-heavy, multi-region nativo, sin SPOF</td>
+<td class="r">Eventual consistency, no soporta queries ad-hoc</td>
+<td>Time-series, IoT, actividad de usuarios a escala</td>
+</tr>
+<tr>
+<td><strong>MongoDB</strong></td>
+<td>Document</td>
+<td class="g">Esquema flexible, queries ricas sobre documentos</td>
+<td class="r">Consistencia configurable (confuso), joins costosos</td>
+<td>Catálogos, contenido con esquema variable, prototipos</td>
+</tr>
+<tr>
+<td><strong>Redis</strong></td>
+<td>In-memory K/V</td>
+<td class="g">Sub-millisecond latency, estructuras de datos ricas</td>
+<td class="r">Tamaño limitado por RAM, persistencia secundaria</td>
+<td>Cache, sesiones, rate limiting, pub/sub, leaderboards</td>
+</tr>
+<tr>
+<td><strong>Elasticsearch</strong></td>
+<td>Search / Document</td>
+<td class="g">Full-text search, analytics sobre logs, agregaciones</td>
+<td class="r">No es fuente de verdad, complejo de operar</td>
+<td>Búsqueda de productos, logs analytics, observabilidad</td>
+</tr>
+<tr>
+<td><strong>ClickHouse</strong></td>
+<td>Columnar OLAP</td>
+<td class="g">Analytics sobre billones de filas en segundos</td>
+<td class="r">No es OLTP, updates costosos</td>
+<td>Analytics de negocio, dashboards en tiempo real</td>
+</tr>
+<tr>
+<td><strong>Neo4j</strong></td>
+<td>Grafo</td>
+<td class="g">Traversal de relaciones N-hop eficiente</td>
+<td class="r">Escala horizontal limitada, nicho</td>
+<td>Redes sociales, recomendaciones, detección de fraude</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout axiom">
+<div class="callout-icon"></div>
+<p><strong>Axioma #4 — La regla del access pattern:</strong> Elige la base de datos según cómo
+vas a <em>leer</em> los datos, no cómo los vas a <em>escribir</em>. Las escrituras son
+generalmente más uniformes. Las lecturas determinan si necesitas índices especializados,
+joins, o un modelo de datos desnormalizado.</p>
+</div>
+</details>
+<h3 id="data-patterns">Patrones de Datos Críticos para SA</h3>
+
+<h4>OUTBOX PATTERN: CONSISTENCIA ENTRE BD Y MENSAJERÍA</h4>
+<p>El problema más común en sistemas event-driven: ¿cómo garantizar que cuando guardas en la BD
+también publicas el evento, sin transacciones distribuidas entre BD y broker?</p>
+
+<div class="diagram">
+<pre><code>
+  PROBLEMA: Inconsistencia potencial
+  ┌─────────────┐   1. Save order   ┌────────┐
+  │ Order Svc   │──────────────────►│  DB    │ ✓
+  │             │   2. Publish event│        │
+  │             │──────────────────►│ Kafka  │ ✗ (falla aquí)
+  └─────────────┘                   └────────┘
+  Resultado: Order guardada, evento no publicado.
+  Inventory no se actualiza. Inconsistencia de datos.
+
+  SOLUCIÓN: Outbox Pattern
+  ┌─────────────┐  1. Save order     ┌────────────────────────────┐
+  │ Order Svc   │  + outbox event   │  DB (transacción única)     │
+  │             │──────────────────►│  ┌──────────┬───────────┐   │
+  │             │                   │  │ orders   │ outbox    │   │
+  │             │                   │  │ table    │ table     │   │
+  └─────────────┘                   └──┤──────────┴──────────┬┘   │
+                                       │         ▲           │    │
+                                  ┌────┴──────────┘           │   │
+                                  │  CDC / Polling worker      │   │
+                                  │  (Debezium)                │   │
+                                  └────────────────────────────┘
+                                            │ 2. Lee outbox
+                                            ▼
+                                         Kafka ──► Consumers
+  
+  Garantía: Si la transacción de BD commit, el evento SIEMPRE se publicará.
+  At-least-once delivery con idempotency en consumers.
+</code></pre>
+</div>
+
+<pre data-lang="sql"><code><span class="cm">-- Tabla outbox: parte de la misma transacción que los datos de negocio</span>
+<span class="kw">CREATE TABLE</span> outbox_events (
+    id            UUID <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+    aggregate_id  UUID <span class="kw">NOT NULL</span>,
+    aggregate_type VARCHAR(<span class="nm">100</span>) <span class="kw">NOT NULL</span>,
+    event_type    VARCHAR(<span class="nm">100</span>) <span class="kw">NOT NULL</span>,
+    payload       JSONB <span class="kw">NOT NULL</span>,
+    created_at    TIMESTAMPTZ <span class="kw">DEFAULT</span> NOW(),
+    published_at  TIMESTAMPTZ <span class="cm">-- NULL = pendiente de publicar</span>
+);
+
+<span class="cm">-- En el mismo transaction block:</span>
+<span class="kw">BEGIN</span>;
+  <span class="kw">INSERT INTO</span> orders (id, user_id, total) <span class="kw">VALUES</span> ($1, $2, $3);
+  <span class="kw">INSERT INTO</span> outbox_events (aggregate_id, aggregate_type, event_type, payload)
+  <span class="kw">VALUES</span> ($1, <span class="str">'Order'</span>, <span class="str">'OrderCreated'</span>, $4);
+<span class="kw">COMMIT</span>; <span class="cm">-- Ambas insercciones o ninguna</span>
+
+<span class="cm">-- Worker (Debezium CDC o polling) publica desde outbox a Kafka
+-- y marca published_at una vez confirmado</span></code></pre>
+
+<h4>CACHE-ASIDE vs READ-THROUGH: ESTRATEGIAS DE CACHÉ</h4>
+
+<div class="compare-row">
+<div class="compare-col">
+<h4>Cache-Aside (Lazy Loading)</h4>
+<ul>
+<li>App consulta caché primero</li>
+<li>Si miss: consulta BD, guarda en caché</li>
+<li>Control explícito desde la app</li>
+<li>Cache solo contiene datos leídos</li>
+<li>Primera lectura siempre lenta (cache miss)</li>
+<li>Riesgo: inconsistencia si BD cambia</li>
+<li>Ideal: datos de lectura frecuente, baja escritura</li>
+</ul>
+</div>
+<div class="compare-col">
+<h4>Write-Through</h4>
+<ul>
+<li>App escribe en caché Y BD simultáneamente</li>
+<li>Caché siempre actualizado</li>
+<li>Latencia de escritura mayor</li>
+<li>Sin cache misses en lecturas posteriores</li>
+<li>Puede llenar caché con datos poco leídos</li>
+<li>Riesgo: doble punto de fallo en escrituras</li>
+<li>Ideal: datos críticos que se leen frecuentemente</li>
+</ul>
+</div>
+</div>
+
+<h4>DATA MESH: CUÁNDO TIENE SENTIDO</h4>
+<p>Data Mesh no es una tecnología — es un paradigma organizacional que trata los datos como producto
+con ownership descentralizado. Solo tiene sentido en organizaciones con múltiples dominios de
+datos y equipos que los poseen.</p>
+
+<div class="when-box">
+<div class="when-use">
+<span class="when-label">Data Mesh tiene sentido cuando</span>
+<ul>
+<li>Tienes 10+ dominios de negocio con datos propios</li>
+<li>El equipo central de datos es un cuello de botella</li>
+<li>Cada dominio tiene equipos de ingeniería propios</li>
+<li>Los datos de cada dominio tienen semántica muy diferente</li>
+<li>Organización con 200+ ingenieros de datos</li>
+</ul>
+</div>
+<div class="when-avoid">
+<span class="when-label">Data Mesh NO tiene sentido cuando</span>
+<ul>
+<li>Organización pequeña o mediana (&lt;50 data engineers)</li>
+<li>Un único dominio de negocio central</li>
+<li>Falta de madurez en data governance</li>
+<li>Equipo sin experiencia en platform engineering</li>
+<li>Necesitas mover rápido — añade complejidad organizacional</li>
+</ul>
+</div>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>La arquitectura de datos se relaciona directamente con los estilos de sistema: <strong>Event
+Sourcing</strong> usa el event store como fuente de verdad de datos.
+<strong>CQRS</strong> separa los modelos de escritura (OLTP normalizado) y lectura (OLAP
+desnormalizado). <strong>Event-Driven Architecture</strong> usa el <strong>Outbox
+Pattern</strong> para garantizar consistencia entre BD y broker.
+<strong>Microservicios</strong> usan database-per-service, lo que requiere estrategias de
+datos distribuidos como Saga para transacciones cross-service.
+</p>
+</div>
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Patrones de Data Architecture</summary>
+<h5>OLTP VS OLAP: LA SEPARACIÓN FUNDAMENTAL</h5>
+<div class="diagram">
+<pre><code>
+  OLTP (Online Transaction Processing)    OLAP (Online Analytical Processing)
+  ─────────────────────────────────────   ─────────────────────────────────────
+  Patrón: Muchas transacciones pequeñas   Patrón: Pocas queries grandes
+  Latencia: < 10ms por operación          Latencia: segundos a minutos por query
+  Concurrencia: Miles de usuarios         Concurrencia: Decenas de analistas
+  Datos: Actuales (últimas semanas)       Datos: Históricos (años)
+  Modelo: Normalizado (3NF)               Modelo: Desnormalizado (Star/Snowflake)
+  Ejemplos: PostgreSQL, MySQL, DynamoDB   Ejemplos: BigQuery, ClickHouse, Redshift
+
+  ¿Por qué NO usar la misma base?
+  → Queries analíticas largas bloquean transacciones de usuarios
+  → Modelos de datos opuestos: OLTP normalizado, OLAP desnormalizado
+  → Requerimientos de escala distintos
+
+  Solución: CDC (Change Data Capture) o ETL para sincronizar OLTP → OLAP
+  ┌────────────┐    CDC / ETL    ┌────────────┐    Queries    ┌──────────┐
+  │ PostgreSQL │ ──────────────► │ BigQuery / │ ◄──────────── │ Analistas│
+  │  (OLTP)   │                 │ ClickHouse │               │ Dashboards│
+  └────────────┘                 └────────────┘               └──────────┘
+</code></pre>
+</div>
+
+<h5>DATA LAKEHOUSE: LA CONVERGENCIA MODERNA</h5>
+<p>El patrón moderno que combina la flexibilidad del Data Lake (almacenamiento barato de cualquier
+formato) con las capacidades analíticas del Data Warehouse (queries SQL, ACID transactions).</p>
+
+<div class="diagram">
+<pre><code>
+  DATA LAKEHOUSE (Delta Lake / Apache Iceberg / Apache Hudi)
+  
+  Sources          Ingestion         Storage           Consumption
+  ────────         ─────────         ───────           ───────────
+  Databases   ──► Kafka / Flink ──► Object Storage ──► SQL Engines
+  APIs            (streaming)       (S3/GCS/Azure)    (Spark, Trino,
+  Files       ──► Spark/Glue        + Table Format    Athena)
+  Logs            (batch)           (Delta/Iceberg)   
+                                    + Metadata        BI Tools
+                                    Catalog           ML Frameworks
+                                    (Unity/Glue/Hive) Feature Store
+  
+  Ventaja: Un solo copy de datos para todos los casos de uso.
+  Costo 5-10x menor que Data Warehouse clásico (storage en S3 vs Redshift).
+  ACID transactions sobre archivos Parquet.
+</code></pre>
+</div>
+
+<h5>DATABASE PER SERVICE: EL PRECIO DE LA AUTONOMÍA</h5>
+<p>El patrón canónico de microservicios exige que cada servicio tenga su propia base de datos. Esto
+garantiza autonomía de despliegue pero introduce el problema más difícil de la arquitectura
+distribuida: <strong>las transacciones cross-service</strong>.</p>
+
+<div class="pros-cons">
+<div class="pros">
+<h5>Beneficios reales</h5>
+<ul>
+<li>Cambio de esquema sin afectar otros servicios</li>
+<li>Elección de base de datos óptima por servicio</li>
+<li>Escalabilidad independiente de datos por dominio</li>
+<li>Un fallo de DB no afecta todos los servicios</li>
+<li>Ownership claro de datos por equipo</li>
+</ul>
+</div>
+<div class="cons">
+<h5>Costos reales</h5>
+<ul>
+<li>Joins cross-service imposibles — requieren API composition</li>
+<li>Transacciones distribuidas requieren Saga pattern</li>
+<li>Consistencia eventual entre servicios</li>
+<li>Duplicación de datos entre servicios para reporting</li>
+<li>Costo de gestionar N bases de datos distintas</li>
+</ul>
+</div>
+</div>
+
+<h5>OUTBOX PATTERN: TRANSACCIONALIDAD EN SISTEMAS DISTRIBUIDOS</h5>
+<p>El Outbox Pattern resuelve el problema de "¿cómo guardo en la base de datos Y publico un evento
+al mensaje broker de forma atómica?" — sin transacciones distribuidas.</p>
+
+<div class="diagram">
+<pre><code>
+  PROBLEMA: Dual Write sin Outbox
+  ┌─────────────────────────────────────────────────────────────┐
+  │ 1. Guardar Order en PostgreSQL    ✓                         │
+  │ 2. Publicar event en Kafka        ✗ ← FALLA AQUÍ            │
+  │                                                             │
+  │ Resultado: Order guardada pero evento nunca publicado.      │
+  │ Payment service no sabe que debe procesar el pago.          │
+  │ Inconsistencia silenciosa en producción.                    │
+  └─────────────────────────────────────────────────────────────┘
+
+  SOLUCIÓN: Outbox Pattern
+  ┌─────────────────────────────────────────────────────────────┐
+  │ Transacción ÚNICA en PostgreSQL:                            │
+  │ 1. INSERT INTO orders (...)           ─┐                   │
+  │ 2. INSERT INTO outbox_events (...)    ─┘ ATOMIC            │
+  │                                                             │
+  │ Proceso separado (Debezium/CDC):                            │
+  │ 3. Lee outbox_events → Publica en Kafka → Marca processed  │
+  │                                                             │
+  │ Garantía: Si el evento está en outbox, SERÁ publicado.      │
+  │ At-least-once delivery garantizado.                         │
+  └─────────────────────────────────────────────────────────────┘
+</code></pre>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>La data architecture se relaciona con <strong>CQRS</strong> (separación de modelos de lectura
+y escritura como estrategia de optimización de datos), con <strong>Event Sourcing</strong>
+(el event store como fuente de verdad), con <strong>Data Mesh</strong> (ownership de datos
+por dominio alineado con DDD), y con <strong>Event-Driven Architecture</strong> (CDC como
+mecanismo de propagación de cambios entre bounded contexts).</p>
+</div>
+</details>
+<details class="alt-take">
+<summary><span>Perspectiva complementaria</span>Otra forma de plantear este capítulo</summary>
+<p>Las decisiones de data architecture son las más costosas de revertir en cualquier sistema. Un SA
+que elige la base de datos incorrecta, el modelo de datos incorrecto, o la estrategia de
+escalabilidad incorrecta crea deuda que puede tomar años en pagar. Esta sección no es un
+catálogo de bases de datos — es una guía de decisión para los escenarios más comunes en
+producción real.</p>
+</details>

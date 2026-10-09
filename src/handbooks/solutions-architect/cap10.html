@@ -1,0 +1,192 @@
+<p>El trabajo más difícil y más valioso del Solutions Architect no es diseñar sistemas nuevos — es
+modernizar los existentes sin destruir el negocio que los necesita. Cualquiera puede diseñar en
+el vacío. La verdadera habilidad está en navegar la complejidad de sistemas que llevan 10 años
+en producción, con deuda técnica acumulada, sin documentación, y con el negocio dependiendo de
+cada transacción.</p>
+
+<h3 id="why-rewrites-fail">Por qué los Rewrites Fallan: El Análisis Honesto</h3>
+
+<div class="callout danger">
+<div class="callout-icon"></div>
+<p><strong>Estadística real:</strong> El 70-80% de los proyectos de "rewrite completo" fallan o
+son cancelados. Los que se completan frecuentemente recapitulan los mismos problemas del
+sistema original. Joel Spolsky lo llamó "la única decisión peor que puedes tomar".</p>
+</div>
+
+<div class="diagram">
+<pre><code>
+  Por qué los Rewrites Completos Fallan:
+
+  SUPOSICIÓN INCORRECTA: "El sistema legacy es malo porque fue mal escrito"
+
+  REALIDAD: El sistema legacy acumula AÑOS de:
+  ├── Reglas de negocio implícitas no documentadas
+  │   ("Este campo no puede ser 0 el primer día del mes" — nadie sabe por qué)
+  ├── Edge cases del mundo real
+  │   (Maneja IVA de 5 países diferentes con reglas distintas)
+  ├── Workarounds de bugs de proveedores
+  │   (La API de X no funciona si el monto tiene más de 2 decimales)
+  ├── Comportamiento contractual implícito
+  │   (Los clientes grandes asumen cierto comportamiento "buggy" y lo usan)
+  └── Decisiones de negocio que ya no se recuerdan
+      ("No se puede cancelar una orden 48h después" — hay razón legal)
+
+  El rewrite asume que SABES todo esto. No lo sabes.
+  Descubres que no lo sabías cuando el sistema en producción
+  hace algo diferente al legacy y el negocio se rompe.
+
+  Resultado típico:
+  Año 1: "Vamos bien, el nuevo sistema es más limpio"
+  Año 2: "Estamos encontrando casos edge inesperados"
+  Año 3: "El nuevo sistema tiene los mismos problemas que el legacy"
+        + "El legacy siguió evolucionando y el gap es mayor"
+  Año 3.5: Proyecto cancelado o "mantenemos ambos indefinidamente"
+</code></pre>
+</div>
+
+<h3 id="strangler">Strangler Fig Pattern: La Alternativa Real</h3>
+
+<p>El <strong>Strangler Fig</strong> (Martin Fowler) es la estrategia de migración que
+consistentemente funciona. Nombrado por el árbol que crece alrededor de otro árbol,
+eventualmente reemplazándolo, sin que el árbol original deje de funcionar durante el proceso.
+</p>
+
+<div class="diagram">
+<pre><code>
+  Strangler Fig: Fases de Migración
+
+  FASE 0: Facade Layer (semanas 1-4)
+  ┌─────────────────────────────────────────────────────────────────┐
+  │  Todo el tráfico pasa por un facade/proxy                       │
+  │  El facade inicialmente re-envía TODO al legacy                 │
+  │                                                                 │
+  │  Client ──► Facade Proxy ──► Legacy System (100% del tráfico)  │
+  └─────────────────────────────────────────────────────────────────┘
+
+  FASE 1: Extracción del primer dominio (meses 1-3)
+  ┌─────────────────────────────────────────────────────────────────┐
+  │  Extraer el dominio más aislado (menor acoplamiento al resto)   │
+  │                                                                 │
+  │             ┌──► Legacy (80% del tráfico)                       │
+  │  Client──► Facade                                               │
+  │             └──► New Service: Users (20%)                       │
+  │                  (solo endpoints de usuario migrados)           │
+  └─────────────────────────────────────────────────────────────────┘
+
+  FASES 2-N: Migración incremental (meses 3-24+)
+  ┌─────────────────────────────────────────────────────────────────┐
+  │  Cada sprint: migrar un endpoint, un dominio, un flujo           │
+  │                                                                 │
+  │             ┌──► Legacy (20% — solo partes no migradas)         │
+  │  Client──► Facade                                               │
+  │             ├──► New Service: Users                             │
+  │             ├──► New Service: Orders                            │
+  │             ├──► New Service: Payments                          │
+  │             └──► New Service: Catalog                           │
+  └─────────────────────────────────────────────────────────────────┘
+
+  FASE FINAL: Legacy apagado
+  ┌─────────────────────────────────────────────────────────────────┐
+  │  Client ──► Facade (o eliminado) ──► New Services (100%)        │
+  │  Legacy: APAGADO                                                │
+  └─────────────────────────────────────────────────────────────────┘
+
+  CLAVE: El negocio nunca se interrumpe. En ninguna fase.
+</code></pre>
+</div>
+
+<h4>Anti-Corruption Layer (ACL)</h4>
+<p>Cuando el sistema nuevo debe comunicarse con el legacy, el ACL actúa como traductor. Evita que el
+modelo de dominio del legacy "contamine" el modelo del nuevo sistema.</p>
+
+<pre data-lang="typescript"><code><span class="cm">// El legacy usa un modelo de datos feo de los años 90</span>
+<span class="kw">interface</span> LegacyCustomer {
+  CUST_ID: string      <span class="cm">// "00123456"</span>
+  CUST_NM: string      <span class="cm">// "SMITH, JOHN A."</span>
+  ADDR_LN1: string
+  ADDR_CITY: string
+  STS_CD: string       <span class="cm">// "A" = active, "I" = inactive, "S" = suspended</span>
+  CRT_DT: string       <span class="cm">// "20240115" — YYYYMMDD sin separadores</span>
+}
+
+<span class="cm">// Nuestro nuevo modelo de dominio limpio</span>
+<span class="kw">interface</span> Customer {
+  id: string
+  name: { first: string; last: string; middle?: string }
+  address: Address
+  status: <span class="str">'active'</span> | <span class="str">'inactive'</span> | <span class="str">'suspended'</span>
+  createdAt: Date
+}
+
+<span class="cm">// Anti-Corruption Layer: traduce entre ambos mundos</span>
+<span class="kw">class</span> <span class="fn">CustomerACL</span> {
+  <span class="kw">fromLegacy</span>(legacy: LegacyCustomer): Customer {
+    <span class="kw">const</span> [lastName, rest] = legacy.CUST_NM.split(<span class="str">', '</span>)
+    <span class="kw">const</span> [firstName, middle] = rest.split(<span class="str">' '</span>)
+
+    <span class="kw">return</span> {
+      id: legacy.CUST_ID.replace(<span class="str">/^0+/</span>, <span class="str">''</span>),  <span class="cm">// Quitar leading zeros</span>
+      name: { first: firstName, last: lastName, middle },
+      address: <span class="kw">this</span>.parseAddress(legacy),
+      status: <span class="kw">this</span>.mapStatus(legacy.STS_CD),
+      createdAt: parse(legacy.CRT_DT, <span class="str">'yyyyMMdd'</span>, <span class="kw">new</span> Date())
+    }
+  }
+
+  <span class="kw">private</span> <span class="fn">mapStatus</span>(code: string): Customer[<span class="str">'status'</span>] {
+    <span class="kw">const</span> map = { <span class="str">'A'</span>: <span class="str">'active'</span>, <span class="str">'I'</span>: <span class="str">'inactive'</span>, <span class="str">'S'</span>: <span class="str">'suspended'</span> } <span class="kw">as const</span>
+    <span class="kw">return</span> map[code] ?? <span class="str">'inactive'</span>
+  }
+}</code></pre>
+
+<h3>Estrategias de Migración de Base de Datos</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Estrategia</th>
+<th>Cómo</th>
+<th>Riesgo</th>
+<th>Cuándo usar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Expand/Contract</strong></td>
+<td>Fase expand: añadir nueva columna. Migrar datos. Fase contract: eliminar columna
+vieja.</td>
+<td class="g">Bajo — zero-downtime</td>
+<td>Cambios de schema en producción con zero-downtime</td>
+</tr>
+<tr>
+<td><strong>Dual-write</strong></td>
+<td>App escribe en BD vieja Y nueva simultáneamente durante migración</td>
+<td class="y">Medio — consistencia eventual entre ambas</td>
+<td>Migración de base de datos completa manteniendo el negocio activo</td>
+</tr>
+<tr>
+<td><strong>CDC (Change Data Capture)</strong></td>
+<td>Debezium captura cambios del WAL de la BD vieja y los replica a la nueva</td>
+<td class="y">Medio — requiere sincronización inicial</td>
+<td>Migración de BD con mínimo impacto en la aplicación existente</td>
+</tr>
+<tr>
+<td><strong>Shadow Read</strong></td>
+<td>App lee de ambas BDs, compara resultados, alerta si difieren</td>
+<td class="g">Muy bajo — sin impacto en producción</td>
+<td>Validar que la nueva BD produce resultados idénticos antes del cutover</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>La modernización de legacy se apoya en múltiples patrones arquitectónicos: <strong>Strangler
+Fig</strong> como estrategia macro, <strong>Anti-Corruption Layer</strong> para aislar
+modelos de dominio, <strong>Event-Driven Architecture</strong> para desacoplar gradualmente
+(el legacy publica eventos que el nuevo sistema consume), y <strong>Hexagonal
+Architecture</strong> como el patrón de destino que hace el nuevo sistema adaptable a
+futuros cambios.</p>
+</div>

@@ -4,18 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guía de Dominio — Ingeniero de Software (Banca)</title>
-    <link rel="manifest" href="/manifest.json">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <title>Roadmap de Ingeniería de Software (Banca) · AnaxDevBook</title>
+    <link rel="manifest" href="../manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="../icons/icon-512.png">
+    <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
     <meta name="theme-color" content="#38bdf8">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('../sw.js')
                     .then(reg => console.log('Service Worker registrado:', reg.scope))
                     .catch(err => console.warn('Error al registrar Service Worker:', err));
             });
@@ -23,6 +23,7 @@
     </script>
     <meta name="description"
         content="Guía de estudio completa para Ingeniero de Software / Banco Pichincha — backend, frontend, nube, datos, arquitectura y banca.">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
     <style>
         /* =================================s===========================
    TOKENS
@@ -32,49 +33,49 @@
    Mono: utilitario para código / datos
    ============================================================ */
         :root {
-            /* Paleta pastel oscura — base mate desaturada, acentos pastel suaves */
-            --paper: #272330;
-            --paper-raised: #302B3A;
-            --ink: #E7E1EA;
-            --ink-soft: #B3A9BE;
-            --ink-faint: #85798F;
-            --line: #42394F;
-            --line-strong: #594D68;
-            --indigo: #9BB4D9;
-            --indigo-soft: #384361;
-            --signal: #E3B888;
-            --signal-soft: #4A3B40;
-            --ok: #A8CBAE;
-            --ok-soft: #33402E;
-            --danger: #E0A0A8;
-            --danger-soft: #48313A;
-            --radius-sm: 4px;
-            --radius-md: 7px;
-            --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", "Liberation Mono", monospace;
-            --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.28), 0 1px 1px rgba(0, 0, 0, 0.18);
+            /* Paleta Tailwind (slate + sky), alineada con los handbooks */
+            --paper: #0f172a;
+            --paper-raised: #1e293b;
+            --ink: #f1f5f9;
+            --ink-soft: #94a3b8;
+            --ink-faint: #64748b;
+            --line: #1e293b;
+            --line-strong: #334155;
+            --indigo: #38bdf8;
+            --indigo-soft: rgba(56, 189, 248, 0.12);
+            --signal: #fbbf24;
+            --signal-soft: rgba(251, 191, 36, 0.12);
+            --ok: #34d399;
+            --ok-soft: rgba(52, 211, 153, 0.12);
+            --danger: #fb7185;
+            --danger-soft: rgba(251, 113, 133, 0.12);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", "Consolas", "Liberation Mono", monospace;
+            --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06);
             color-scheme: dark;
         }
 
         :root[data-theme="light"] {
-            /* Variante clara — misma familia pastel, valores invertidos y suavizados */
-            --paper: #EDE7E0;
-            --paper-raised: #F7F3ED;
-            --ink: #332C3B;
-            --ink-soft: #665A72;
-            --ink-faint: #948A9D;
-            --line: #D9D0C9;
-            --line-strong: #C3B7AE;
-            --indigo: #5C7AA8;
-            --indigo-soft: #DCE3EF;
-            --signal: #A8754A;
-            --signal-soft: #EFE0CD;
-            --ok: #4D7D58;
-            --ok-soft: #DEEBDF;
-            --danger: #A85D63;
-            --danger-soft: #F1DCDE;
-            --shadow-card: 0 1px 2px rgba(60, 50, 40, 0.08), 0 1px 1px rgba(60, 50, 40, 0.05);
+            /* Variante clara Tailwind (white + slate + sky) */
+            --paper: #f8fafc;
+            --paper-raised: #ffffff;
+            --ink: #0f172a;
+            --ink-soft: #475569;
+            --ink-faint: #64748b;
+            --line: #e2e8f0;
+            --line-strong: #cbd5e1;
+            --indigo: #0284c7;
+            --indigo-soft: #e0f2fe;
+            --signal: #d97706;
+            --signal-soft: #fef3c7;
+            --ok: #059669;
+            --ok-soft: #d1fae5;
+            --danger: #e11d48;
+            --danger-soft: #ffe4e6;
+            --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.06);
             color-scheme: light;
         }
 
@@ -3192,6 +3193,236 @@
            CHECKLIST GLOBAL COMPLEMENTARIO
            (suma al checklist de cada capítulo para superar los 500 ítems)
            ============================================================ */
+        CHAPTERS.push({
+    "id": "ia-generativa-agentes",
+    "num": 22,
+    "titulo": "IA Generativa, RAG y Agentes para Ingenieros",
+    "dominio": "IA",
+    "resumen": "Integrar modelos de lenguaje en sistemas bancarios de forma medible, segura y auditable: APIs de LLM, RAG, agentes con herramientas, evals y gobernanza.",
+    "nivel": "Senior",
+    "dificultad": 4,
+    "tiempoEstimado": "20-30h",
+    "prereq": [
+        "apis-rest-graphql",
+        "seguridad-redes-linux",
+        "testing-calidad"
+    ],
+    "tecnologias": [
+        "LLM APIs",
+        "RAG",
+        "Embeddings",
+        "Vector DB",
+        "Agentes",
+        "MCP",
+        "Evals",
+        "OWASP LLM Top 10"
+    ],
+    "c": {
+        "definicion": "La IA generativa usa modelos de lenguaje (LLM) para generar texto, código o datos estructurados a partir de instrucciones y contexto. En ingeniería de software se integra como un servicio de inferencia sin estado: el sistema decide qué contexto entregarle (RAG), qué herramientas puede invocar (agentes) y cómo verificar sus salidas (evals y validaciones).",
+        "problema": "Gran parte del trabajo bancario está en lenguaje no estructurado: políticas, contratos, reclamos, documentos KYC. Los LLM permiten automatizar lectura, clasificación, extracción y asistencia sobre ese contenido, pero son probabilísticos: pueden equivocarse con seguridad, ser manipulados por el contenido que leen y generar costos no acotados. El reto de ingeniería es aprovecharlos sin perder control, trazabilidad ni cumplimiento.",
+        "fundamentos": "Un LLM predice el siguiente token condicionado por su ventana de contexto; no recuerda nada entre llamadas. RAG recupera fragmentos relevantes de una base de conocimiento (búsqueda híbrida, re-ranking, filtros por permisos) y los inyecta en el contexto con citas. Un agente es un loop donde el modelo decide qué herramienta llamar; el código ejecuta la herramienta y devuelve el resultado. Las salidas estructuradas (JSON Schema) conectan el modelo con código determinista. Las evals son pruebas automatizadas de calidad sobre un golden dataset.",
+        "arquitectura": "Cliente → API del dominio → AI Gateway (autenticación, cuotas por tenant, trazas, costos, fallback) → orquestación (workflow o agente con límite de pasos) → modelo. A un lado, el pipeline de ingesta (parseo, chunking, embeddings, ACL heredada) alimenta el índice híbrido; las herramientas se exponen como servidores MCP o APIs internas con mínimo privilegio; toda acción irreversible pasa por aprobación humana; las trazas alimentan evals y auditoría.",
+        "funcionamiento": "Una consulta llega con la identidad del usuario. El backend recupera documentos filtrando por sus permisos, re-rankea y construye un prompt con fragmentos numerados tratados como datos. El modelo responde con citas o pide una herramienta; el loop ejecuta la herramienta, devuelve el resultado y repite hasta terminar o alcanzar el límite. Antes de mostrar la respuesta se valida su forma y, si corresponde, se exige aprobación humana. Cada paso queda trazado con tokens, costo, latencia y versión del prompt.",
+        "buenas": [
+            "Empezar por el patrón mínimo: una llamada o un workflow antes que un agente, y un agente antes que multiagente.",
+            "Construir un golden dataset con casos difíciles y adversarios antes de optimizar prompts, y correr evals en CI.",
+            "Filtrar por permisos en el motor de búsqueda con la identidad del usuario, nunca delegarlo al modelo.",
+            "Usar salidas estructuradas validadas por esquema para todo lo que consume código.",
+            "Versionar prompts y registrar en cada traza qué versión y qué modelo respondieron.",
+            "Exigir aprobación humana en acciones irreversibles o de impacto financiero.",
+            "Medir costo por tarea completada junto a la métrica de calidad."
+        ],
+        "malas": [
+            "Usar un LLM para decisiones que un modelo clásico o una regla resuelven mejor y de forma auditable.",
+            "Evaluar con un puñado de ejemplos mirados a ojo.",
+            "Poner secretos, reglas de autorización o datos de otros clientes en el prompt.",
+            "Dar al agente credenciales de servicio con acceso a todas las cuentas.",
+            "Loops agénticos sin límite de pasos ni presupuesto.",
+            "Parsear texto libre del modelo con expresiones regulares en lugar de pedir JSON con esquema."
+        ],
+        "errores": [
+            "Creer que temperatura cero elimina las alucinaciones.",
+            "Olvidar que el contenido recuperado o devuelto por herramientas puede contener instrucciones maliciosas (prompt injection indirecta).",
+            "No re-indexar al cambiar de modelo de embeddings.",
+            "Ignorar el stop_reason y mostrar respuestas truncadas o rechazos como si fueran válidos.",
+            "Elegir modelo por benchmarks públicos sin evaluar con datos propios."
+        ],
+        "patrones": [
+            "RAG con búsqueda híbrida y re-ranking",
+            "AI Gateway",
+            "Routing y fallback de modelos",
+            "Human-in-the-loop",
+            "Evaluador-optimizador",
+            "Workflow durable con pasos LLM"
+        ],
+        "antipatrones": [
+            "Multiagente por defecto",
+            "Prompt único para todos los casos de uso",
+            "Agente con datos privados, contenido no confiable y canal de salida sin aprobación",
+            "Piloto sin métrica de éxito ni camino a producción"
+        ],
+        "ejemploReal": "Un asistente de documentación interna pasa de respuestas genéricas a respuestas citadas y verificables cuando el equipo añade búsqueda híbrida, re-ranking y un golden dataset de 100 preguntas con gate en CI: las regresiones dejan de llegar a producción y cada cambio de prompt se discute con métricas.",
+        "ejemploBanca": "Copiloto para analistas de reclamos: clasifica el reclamo con salida estructurada, recupera las políticas aplicables con citas, consulta el estado de la transacción con una herramienta de solo lectura y redacta un borrador; el analista aprueba antes de enviar y cada paso queda auditado por ID de ejecución.",
+        "ejemploEmpresarial": "Las organizaciones que escalan IA centralizan las llamadas a modelos en una plataforma interna (gateway, catálogo de modelos aprobados, evals compartidas) en lugar de que cada equipo integre proveedores por su cuenta.",
+        "comparacion": {
+            "headers": [
+                "Necesidad",
+                "Prompting",
+                "RAG",
+                "Fine-tuning"
+            ],
+            "rows": [
+                [
+                    "Conocimiento privado que cambia",
+                    "No",
+                    "Sí",
+                    "No"
+                ],
+                [
+                    "Citar fuentes y auditar",
+                    "No",
+                    "Sí",
+                    "No"
+                ],
+                [
+                    "Formato o estilo consistente",
+                    "Sí",
+                    "No es su objetivo",
+                    "Sí, a alto volumen"
+                ],
+                [
+                    "Tiempo hasta el primer resultado",
+                    "Horas",
+                    "Días o semanas",
+                    "Semanas"
+                ]
+            ]
+        },
+        "ventajas": [
+            "Automatiza trabajo sobre lenguaje no estructurado",
+            "Mejora tiempos de atención y análisis",
+            "Se integra con sistemas existentes vía herramientas"
+        ],
+        "desventajas": [
+            "Resultados probabilísticos que exigen evaluación continua",
+            "Nuevas superficies de ataque",
+            "Costos variables que hay que gobernar",
+            "Requisitos regulatorios en evolución"
+        ],
+        "faq": [
+            {
+                "q": "¿Un LLM puede decidir si se aprueba un crédito?",
+                "a": "Es un caso de alto riesgo bajo varias regulaciones. El patrón recomendado es que el modelo resuma y explique información para el analista, mientras la decisión queda en el modelo de riesgo auditado y en la persona responsable."
+            },
+            {
+                "q": "¿RAG o fine-tuning para que conozca nuestras políticas?",
+                "a": "RAG: las políticas cambian, hay que citarlas y respetar permisos. El fine-tuning sirve para comportamiento (formato, estilo), no para conocimiento que se actualiza."
+            },
+            {
+                "q": "¿Cómo sé si una mejora de prompt realmente mejoró?",
+                "a": "Con un golden dataset versionado y evals automáticas que comparan contra el baseline; un cambio sin métricas es una opinión."
+            }
+        ],
+        "codigo": {
+            "lang": "Python — loop de herramientas acotado con aprobación humana (pseudocódigo)",
+            "code": "for paso in range(MAX_PASOS):\n    respuesta = llm.crear(mensajes, herramientas=HERRAMIENTAS)\n    if respuesta.stop_reason != \"tool_use\":\n        break\n    resultados = []\n    for llamada in respuesta.llamadas_a_herramientas():\n        if llamada.nombre in IRREVERSIBLES and not aprobacion_humana(llamada):\n            resultados.append(error(llamada, \"Rechazado por el analista\"))\n            continue\n        resultados.append(ejecutar_con_identidad_del_usuario(llamada))\n    mensajes += [respuesta.como_mensaje(), resultados_como_mensaje(resultados)]\n    auditoria.registrar(run_id, paso, respuesta, resultados)"
+        }
+    },
+    "entrevistas": [
+        {
+            "nivel": "Junior",
+            "pregunta": "¿Qué es un token y por qué importa en costo?",
+            "respuesta": "Es la unidad de texto que procesa el modelo; se factura por tokens de entrada y salida y los límites de contexto se miden en tokens."
+        },
+        {
+            "nivel": "Junior",
+            "pregunta": "¿Por qué alucina un LLM?",
+            "respuesta": "Porque optimiza la plausibilidad del siguiente token, no la verdad; se mitiga con contexto (RAG), citas, abstención y verificación."
+        },
+        {
+            "nivel": "Semi Senior",
+            "pregunta": "¿Cómo garantizas que la salida sea JSON válido?",
+            "respuesta": "Con salidas estructuradas nativas validadas por esquema y validación semántica en el código."
+        },
+        {
+            "nivel": "Semi Senior",
+            "pregunta": "¿Cuándo usar búsqueda híbrida?",
+            "respuesta": "Cuando hay identificadores, códigos o jerga: BM25 captura coincidencias exactas y los embeddings capturan significado; se combinan con RRF y se mide con Recall@k."
+        },
+        {
+            "nivel": "Senior",
+            "pregunta": "¿Cómo evitas que un RAG muestre documentos sin permiso?",
+            "respuesta": "ACL heredadas en la ingesta, identidad resuelta en el backend, pre-filtrado en el motor de búsqueda, sincronización de revocaciones y auditoría."
+        },
+        {
+            "nivel": "Senior",
+            "pregunta": "¿Cómo mitigas la prompt injection indirecta en un agente?",
+            "respuesta": "Con arquitectura: separar datos de instrucciones, mínimo privilegio, aprobación humana en el canal de salida, sandbox y red teaming; no hay defensa completa a nivel de modelo."
+        },
+        {
+            "nivel": "Staff/Arquitecto",
+            "pregunta": "¿API gestionada o modelo self-hosted?",
+            "respuesta": "API por defecto; self-hosting por soberanía de datos, volumen alto y constante con un modelo abierto suficiente, comparando costo total y calidad medida."
+        },
+        {
+            "nivel": "Staff/Arquitecto",
+            "pregunta": "¿Cómo llevarías un piloto de IA a producción?",
+            "respuesta": "Con línea base y métrica de negocio, gates numéricos (evals, seguridad, costo), datos reales, plan de adopción y gobierno del sistema en el inventario de IA."
+        }
+    ],
+    "ejercicios": [
+        "Construye un golden dataset de 50 preguntas sobre un reglamento público y mide Recall@5 de dos estrategias de chunking.",
+        "Escribe la definición de una herramienta de solo lectura con esquema estricto y mensajes de error accionables.",
+        "Calcula el costo mensual de un asistente con 100 000 consultas, 5 000 tokens de entrada y 400 de salida, con y sin caché del prompt de sistema."
+    ],
+    "proyecto": {
+        "titulo": "Copiloto de reclamos con evals",
+        "desc": "Asistente que clasifica reclamos con salida estructurada, recupera políticas con citas respetando permisos, consulta el estado de una transacción simulada y propone un borrador que un analista aprueba. Incluye golden dataset, evals en CI y trazas con costo por respuesta.",
+        "tech": [
+            "Python",
+            "API de LLM",
+            "PostgreSQL + pgvector",
+            "MCP",
+            "pytest",
+            "OpenTelemetry"
+        ]
+    },
+    "checklist": [
+        "Puedo explicar tokens, ventana de contexto y por qué el costo crece con el contexto",
+        "Sé integrar una API de LLM con streaming, salidas estructuradas y manejo de stop_reason",
+        "Puedo construir un RAG con búsqueda híbrida, re-ranking y filtros por permisos",
+        "Sé diseñar herramientas con mínimo privilegio y aprobación humana",
+        "Puedo construir un golden dataset y correr evals en CI",
+        "Conozco el OWASP Top 10 para aplicaciones con LLM",
+        "Puedo estimar el costo mensual de un caso de uso",
+        "Sé qué exige la regulación de IA a un sistema de alto riesgo"
+    ],
+    "recursos": [
+        {
+            "kind": "Handbook",
+            "label": "AnaxDevBook — IA Generativa, RAG y Sistemas Agénticos"
+        },
+        {
+            "kind": "Estándar",
+            "label": "OWASP Top 10 for LLM Applications"
+        },
+        {
+            "kind": "Marco",
+            "label": "NIST AI Risk Management Framework y su perfil de IA generativa"
+        },
+        {
+            "kind": "Especificación",
+            "label": "Model Context Protocol — especificación oficial"
+        }
+    ],
+    "relacionados": [
+        "arquitectura-software",
+        "seguridad-redes-linux",
+        "observabilidad-sre",
+        "ingenieria-banca"
+    ]
+});
+
         const GLOBAL_CHECKLIST_EXTRA = [];
         GLOBAL_CHECKLIST_EXTRA.push(
             {
@@ -3664,11 +3895,263 @@
         /* ============================================================
            DATOS DE APOYO: dominio, roadmap, matriz, proyectos capstone
            ============================================================ */
+        /* Enlaces a la sección exacta de los handbooks (validados por tools/build.py) */
+        const HANDBOOK_LINKS = {
+    "fundamentos-sdlc": [
+        {
+            "href": "software-engineer.html#cap11",
+            "label": "El ingeniero en el equipo"
+        },
+        {
+            "href": "software-engineer.html#bonus",
+            "label": "Referencia rápida de producción"
+        }
+    ],
+    "programacion-paradigmas": [
+        {
+            "href": "software-engineer.html#cap02",
+            "label": "El oficio del código"
+        },
+        {
+            "href": "software-engineer.html#cap03",
+            "label": "Diseño de software"
+        }
+    ],
+    "java-spring": [
+        {
+            "href": "software-engineer.html#cap04",
+            "label": "Backend engineering"
+        }
+    ],
+    "dotnet-backend": [
+        {
+            "href": "software-engineer.html#stack-net",
+            "label": ".NET y C# por nivel"
+        },
+        {
+            "href": "software-engineer.html#cap04",
+            "label": "Backend engineering"
+        }
+    ],
+    "python-backend": [
+        {
+            "href": "software-engineer.html#cap04",
+            "label": "Backend engineering"
+        }
+    ],
+    "go-backend": [
+        {
+            "href": "software-engineer.html#cap04",
+            "label": "Backend engineering"
+        },
+        {
+            "href": "software-engineer.html#cap10",
+            "label": "Sistemas distribuidos para el día a día"
+        }
+    ],
+    "frontend-web": [
+        {
+            "href": "software-engineer.html#cap05",
+            "label": "Frontend engineering"
+        },
+        {
+            "href": "software-engineer.html#stack-ang",
+            "label": "Angular por nivel"
+        },
+        {
+            "href": "arquitectura-software.html#estudio-frontend",
+            "label": "Arquitectura frontend moderna"
+        }
+    ],
+    "frontend-movil": [
+        {
+            "href": "software-engineer.html#cap05",
+            "label": "Frontend engineering"
+        },
+        {
+            "href": "arquitectura-software.html#estudio-frontend",
+            "label": "Arquitectura frontend moderna"
+        }
+    ],
+    "apis-rest-graphql": [
+        {
+            "href": "solutions-architect.html#estudio-backend",
+            "label": "APIs, autenticación y escalabilidad"
+        },
+        {
+            "href": "software-engineer.html#cap04",
+            "label": "Backend engineering"
+        }
+    ],
+    "bases-relacionales": [
+        {
+            "href": "software-engineer.html#cap06",
+            "label": "Bases de datos"
+        },
+        {
+            "href": "software-engineer.html#stack-sql",
+            "label": "SQL Server por nivel"
+        },
+        {
+            "href": "solutions-architect.html#cap07",
+            "label": "Data architecture"
+        }
+    ],
+    "bases-nosql-cache": [
+        {
+            "href": "solutions-architect.html#estudio-data",
+            "label": "Bases de datos, caching y pipelines"
+        },
+        {
+            "href": "solutions-architect.html#cap07",
+            "label": "Data architecture"
+        }
+    ],
+    "contenedores-orquestacion": [
+        {
+            "href": "solutions-architect.html#cap06",
+            "label": "Cloud & infrastructure architecture"
+        }
+    ],
+    "cloud-aws-azure-gcp": [
+        {
+            "href": "solutions-architect.html#estudio-cloud",
+            "label": "Multi-cloud: AWS, Azure y GCP"
+        },
+        {
+            "href": "solutions-architect.html#estudio-networking",
+            "label": "Redes: VPC, balanceo y CDN"
+        },
+        {
+            "href": "solutions-architect.html#estudio-costos",
+            "label": "Optimización de costos"
+        }
+    ],
+    "mensajeria-kafka-distribuidos": [
+        {
+            "href": "software-engineer.html#cap10",
+            "label": "Sistemas distribuidos para el día a día"
+        },
+        {
+            "href": "solutions-architect.html#cap03",
+            "label": "Fundamentos de sistemas distribuidos"
+        },
+        {
+            "href": "arquitectura-software.html#patrones",
+            "label": "Patrones de diseño arquitectónico"
+        }
+    ],
+    "testing-calidad": [
+        {
+            "href": "software-engineer.html#cap07",
+            "label": "Testing: confianza, no coverage"
+        }
+    ],
+    "devops-cicd-git": [
+        {
+            "href": "solutions-architect.html#cap09",
+            "label": "DevOps, SRE y observabilidad"
+        },
+        {
+            "href": "solutions-architect.html#estudio-devops",
+            "label": "CI/CD, IaC y resiliencia"
+        }
+    ],
+    "seguridad-redes-linux": [
+        {
+            "href": "software-engineer.html#cap09",
+            "label": "Seguridad para ingenieros"
+        },
+        {
+            "href": "solutions-architect.html#cap08",
+            "label": "Seguridad arquitectónica"
+        },
+        {
+            "href": "solutions-architect.html#estudio-seguridad",
+            "label": "IAM, Zero Trust y criptografía"
+        }
+    ],
+    "observabilidad-sre": [
+        {
+            "href": "solutions-architect.html#cap09",
+            "label": "DevOps, SRE y observabilidad"
+        },
+        {
+            "href": "software-engineer.html#bonus",
+            "label": "Referencia rápida de producción"
+        }
+    ],
+    "arquitectura-software": [
+        {
+            "href": "arquitectura-software.html#principios",
+            "label": "Modelos y principios"
+        },
+        {
+            "href": "arquitectura-software.html#paradigmas",
+            "label": "Paradigmas"
+        },
+        {
+            "href": "arquitectura-software.html#estilos-decision",
+            "label": "Estilos como herramientas de decisión"
+        },
+        {
+            "href": "arquitectura-software.html#patrones",
+            "label": "Patrones"
+        }
+    ],
+    "ingenieria-banca": [
+        {
+            "href": "ia-generativa.html#casos-uso",
+            "label": "Casos de uso de IA en banca"
+        },
+        {
+            "href": "solutions-architect.html#estudio-casos",
+            "label": "Plataforma bancaria digital end-to-end"
+        }
+    ],
+    "gestion-competencias-rol": [
+        {
+            "href": "software-engineer.html#cap11",
+            "label": "El ingeniero en el equipo"
+        },
+        {
+            "href": "software-engineer.html#cap12",
+            "label": "Desarrollo profesional"
+        },
+        {
+            "href": "software-engineer.html#entrevista-fullstack",
+            "label": "Preparación de entrevista Full-Stack"
+        }
+    ],
+    "ia-generativa-agentes": [
+        {
+            "href": "ia-generativa.html#competencias",
+            "label": "Mapa de competencias de IA"
+        },
+        {
+            "href": "ia-generativa.html#integracion-apis",
+            "label": "Integrar LLMs en software"
+        },
+        {
+            "href": "ia-generativa.html#rag",
+            "label": "RAG"
+        },
+        {
+            "href": "ia-generativa.html#agentes",
+            "label": "Agentes"
+        },
+        {
+            "href": "ia-generativa.html#seguridad",
+            "label": "Seguridad de aplicaciones con LLM"
+        }
+    ]
+};
+
         const CH_BY_ID = {};
         CHAPTERS.forEach(c => { CH_BY_ID[c.id] = c; });
 
-        const DOMAIN_ORDER = ['Fundamentos', 'Backend', 'Frontend', 'Datos', 'Infraestructura', 'Calidad', 'Seguridad', 'Arquitectura', 'Banca'];
-        const DOMAIN_ICONS = { Fundamentos: '◆', Backend: '⚙', Frontend: '▣', Datos: '⛁', Infraestructura: '☁', Calidad: '✓', Seguridad: '⛨', Arquitectura: '◈', Banca: '¤' };
+        const DOMAIN_ORDER = ['Fundamentos', 'Backend', 'Frontend', 'Datos', 'Infraestructura', 'Calidad', 'Seguridad', 'Arquitectura', 'IA', 'Banca'];
+        const DOMAIN_ICONS = { Fundamentos: '◆', Backend: '⚙', Frontend: '▣', Datos: '⛁', Infraestructura: '☁', Calidad: '✓', Seguridad: '⛨', Arquitectura: '◈', IA: '✦', Banca: '¤' };
 
         /* Metadatos de matriz que no viven en cada capítulo: frecuencia en entrevistas e importancia */
         const MATRIX_META = {
@@ -3692,7 +4175,8 @@
             'observabilidad-sre': { frecuencia: 'Media', importancia: 'Alta' },
             'arquitectura-software': { frecuencia: 'Alta', importancia: 'Crítica' },
             'ingenieria-banca': { frecuencia: 'Media', importancia: 'Crítica' },
-            'gestion-competencias-rol': { frecuencia: 'Baja', importancia: 'Media' }
+            'gestion-competencias-rol': { frecuencia: 'Baja', importancia: 'Media' },
+            'ia-generativa-agentes': { frecuencia: 'Alta', importancia: 'Alta' }
         };
 
         const ROADMAP = [
@@ -3710,11 +4194,11 @@
             },
             {
                 nivel: 'Senior', duracion: '3 - 6 años', resumen: 'Diseñar soluciones completas, anticipar problemas de escalabilidad y seguridad, y ser el punto de referencia técnico del equipo.',
-                temas: ['arquitectura-software', 'mensajeria-kafka-distribuidos', 'seguridad-redes-linux', 'observabilidad-sre', 'ingenieria-banca']
+                temas: ['arquitectura-software', 'mensajeria-kafka-distribuidos', 'seguridad-redes-linux', 'observabilidad-sre', 'ingenieria-banca', 'ia-generativa-agentes']
             },
             {
                 nivel: 'Staff', duracion: '6+ años', resumen: 'Influir en decisiones técnicas que cruzan varios equipos, liderar migraciones complejas y mentorizar a otros ingenieros senior.',
-                temas: ['arquitectura-software', 'ingenieria-banca', 'cloud-aws-azure-gcp', 'observabilidad-sre']
+                temas: ['arquitectura-software', 'ingenieria-banca', 'cloud-aws-azure-gcp', 'observabilidad-sre', 'ia-generativa-agentes']
             },
             {
                 nivel: 'Principal Engineer', duracion: 'Trayectoria sostenida', resumen: 'Definir estándares técnicos a nivel de toda la organización y participar en decisiones de tecnología de largo plazo (technology radar).',
@@ -3722,7 +4206,7 @@
             },
             {
                 nivel: 'Arquitecto', duracion: 'Trayectoria sostenida', resumen: 'Diseñar sistemas de extremo a extremo, arbitrar trade-offs entre equipos, y alinear la arquitectura con restricciones regulatorias del negocio.',
-                temas: ['arquitectura-software', 'ingenieria-banca', 'cloud-aws-azure-gcp', 'seguridad-redes-linux']
+                temas: ['arquitectura-software', 'ingenieria-banca', 'cloud-aws-azure-gcp', 'seguridad-redes-linux', 'ia-generativa-agentes']
             }
         ];
 
@@ -3977,8 +4461,8 @@
         function renderHome() {
             updateGlobalProgress();
             let html = '<div class="home-hero">'
-                + '<h1>Guía de Dominio — Ingeniero de Software en Banca</h1>'
-                + '<p>Veintiún capítulos, más de 500 ítems de checklist, preguntas de entrevista por nivel y proyectos integradores — cubriendo el stack completo solicitado para los roles de Ingeniero de Software (Emergente) de Banco Pichincha. Usa el buscador, los filtros de la barra lateral, o explora por dominio abajo.</p>'
+                + '<h1>Roadmap de Ingeniería de Software en Banca</h1>'
+                + '<p>Veintidós capítulos (incluido IA generativa y agentes), más de 500 ítems de checklist, preguntas de entrevista por nivel y proyectos integradores — cubriendo el stack completo solicitado para los roles de Ingeniero de Software (Emergente) de Banco Pichincha. Usa el buscador, los filtros de la barra lateral, o explora por dominio abajo.</p>'
                 + '</div>';
 
             DOMAIN_ORDER.forEach(domain => {
@@ -4119,6 +4603,11 @@
 
             let recBody = '<ul class="resource-list">' + chapter.recursos.map(r => '<li><span class="rl-kind">' + esc(r.kind) + '</span>' + esc(r.label) + '</li>').join('') + '</ul>';
             html += seccion('Recursos', recBody, 'sec-recursos');
+
+            if (HANDBOOK_LINKS[chapter.id]) {
+                let hbBody = '<ul class="resource-list">' + HANDBOOK_LINKS[chapter.id].map(l => '<li><span class="rl-kind">Handbook</span><a href="' + l.href + '">' + esc(l.label) + '</a></li>').join('') + '</ul>';
+                html += seccion('Profundiza en los handbooks', hbBody, 'sec-handbooks');
+            }
 
             if (chapter.relacionados && chapter.relacionados.length) {
                 let relBody = '<div class="related-pills">' + chapter.relacionados.map(id => {

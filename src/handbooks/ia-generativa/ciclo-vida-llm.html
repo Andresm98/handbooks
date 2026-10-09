@@ -1,0 +1,63 @@
+<p>Un modelo como los que consumes vía API pasa por varias fases de entrenamiento. Cada una le da capacidades y también le deja sesgos que vas a ver en producción. Entenderlas te permite anticipar comportamientos —por qué responde con seguridad algo falso, por qué tiende a darte la razón, por qué un modelo "de razonamiento" tarda más y cuesta distinto— y elegir mejor dónde intervenir: en el prompt, en el contexto o en un ajuste del modelo.</p>
+
+<div class="flow">
+<div class="flow-step">Datos<span class="step-sub">billones de tokens</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Pre-entrenamiento<span class="step-sub">predecir siguiente token</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">SFT<span class="step-sub">seguir instrucciones</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Alineamiento<span class="step-sub">RLHF · RLAIF · DPO</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Razonamiento<span class="step-sub">RL con verificadores</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Evaluación y despliegue</div>
+</div>
+
+<h3>1. Pre-entrenamiento: el modelo base</h3>
+<p>Se entrena al modelo a predecir el siguiente token sobre un corpus enorme (web, libros, código, datos licenciados). Así adquiere gramática, conocimiento factual, patrones de razonamiento y estilos. El resultado es un <strong>modelo base</strong>: completa texto de forma plausible, pero no está diseñado para seguir instrucciones ni para conversar.</p>
+<ul>
+<li><strong>Fecha de corte (knowledge cutoff):</strong> el conocimiento queda congelado en la fecha de los datos. Lo posterior solo puede llegar por contexto (RAG, herramientas).</li>
+<li><strong>Conocimiento paramétrico difuso:</strong> el modelo "recuerda" estadísticamente, no como una base de datos. Hechos raros o muy específicos se reconstruyen de forma plausible pero inexacta: esa es la raíz de muchas alucinaciones.</li>
+</ul>
+
+<h3>2. Ajuste supervisado (SFT / instruction tuning)</h3>
+<p>Se continúa el entrenamiento con ejemplos de alta calidad de instrucción → respuesta ideal, escritos o curados por personas. El modelo aprende el formato de un asistente: responder la pregunta, seguir el formato pedido, usar herramientas con el esquema esperado.</p>
+
+<h3>3. Alineamiento con preferencias</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Técnica</th><th>Cómo funciona</th><th>Efecto práctico</th></tr></thead>
+<tbody>
+<tr><td><strong>RLHF</strong></td><td>Personas comparan pares de respuestas; se entrena un modelo de recompensa y luego se optimiza el LLM con refuerzo para maximizarla.</td><td>Respuestas más útiles y seguras; puede inducir complacencia (sycophancy) y verbosidad.</td></tr>
+<tr><td><strong>RLAIF / IA constitucional</strong></td><td>Un modelo evalúa respuestas según principios escritos (una "constitución") en lugar de, o además de, personas.</td><td>Escala la retroalimentación y hace explícitos los principios de comportamiento.</td></tr>
+<tr><td><strong>DPO</strong> y variantes</td><td>Optimiza directamente sobre pares preferido/rechazado sin un modelo de recompensa separado.</td><td>Más simple y estable; muy usado también para afinar modelos abiertos.</td></tr>
+</tbody>
+</table>
+</div>
+<div class="callout warn">
+<span class="callout-label">Sesgos que deja el alineamiento</span>
+<strong>Complacencia:</strong> tendencia a confirmar lo que el usuario parece creer; formula preguntas neutrales ("¿es correcto X?" en lugar de "confirma que X"). <strong>Sobre-confianza estilística:</strong> el tono seguro no indica exactitud; exige citas. <strong>Rechazos:</strong> algunos temas legítimos pueden activar negativas; los proveedores exponen el motivo (p. ej. un <code>stop_reason</code> de rechazo) y tu código debe manejarlo.
+</div>
+
+<h3>4. Modelos de razonamiento y cómputo en inferencia</h3>
+<p>Una generación reciente de modelos se entrena con refuerzo sobre tareas verificables (matemáticas, código con pruebas, problemas con respuesta comprobable) para que produzcan un proceso de razonamiento antes de la respuesta final. A esto se le llama escalar el <strong>cómputo en tiempo de inferencia</strong>: el modelo "piensa más" a cambio de más tokens y más latencia.</p>
+<ul>
+<li>Las APIs exponen controles para ese esfuerzo (por ejemplo, un nivel de <em>effort</em> o un modo de razonamiento adaptativo). Más esfuerzo mejora tareas difíciles; en tareas simples solo encarece.</li>
+<li>Los tokens de razonamiento se facturan aunque no siempre se muestren completos al cliente.</li>
+<li>Para agentes de larga duración, el razonamiento entre llamadas a herramientas mejora la planificación y la recuperación de errores.</li>
+</ul>
+
+<h3>5. Evaluación, red teaming y despliegue</h3>
+<p>Antes de publicarse, los modelos se evalúan en benchmarks de capacidad, pruebas de seguridad y <strong>red teaming</strong> (equipos que intentan provocar comportamientos dañinos). Los proveedores publican <strong>model cards</strong> o <em>system cards</em> con capacidades, limitaciones y resultados. Para un arquitecto, la model card es lectura obligatoria antes de aprobar un modelo para un caso regulado.</p>
+
+<h3>Modelos cerrados y de pesos abiertos</h3>
+<div class="two-col">
+<div class="card accent-blue"><h4>Modelos vía API (cerrados)</h4><ul><li>Mayor capacidad en la frontera, sin operar infraestructura.</li><li>Pago por token, límites de tasa, dependencia del proveedor.</li><li>Los datos salen de tu perímetro: revisa retención, región de procesamiento y acuerdos contractuales.</li></ul></div>
+<div class="card accent-green"><h4>Modelos de pesos abiertos</h4><ul><li>Control total: self-hosting, fine-tuning profundo, despliegue on-premise o aislado.</li><li>Costo de GPUs y operación; capacidad típicamente por detrás de la frontera.</li><li>Revisa la licencia: "abierto" no siempre significa uso comercial sin restricciones.</li></ul></div>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Dónde intervenir</span>
+<p>Si el problema es de <strong>conocimiento</strong> (no sabe algo, o algo cambió) la solución es contexto: RAG o herramientas. Si el problema es de <strong>comportamiento</strong> (formato, tono, criterio de una tarea estrecha que se repite millones de veces) puede justificarse un ajuste del modelo. Si el problema es de <strong>capacidad</strong> (la tarea es demasiado difícil) cambia de modelo o descompón la tarea. Confundir estos tres diagnósticos es el error más caro del área.</p>
+</div>

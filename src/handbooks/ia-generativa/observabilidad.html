@@ -1,0 +1,158 @@
+<p>Un sistema agéntico sin observabilidad es una caja negra no determinista en producción — el peor escenario posible para un entorno regulado. La disciplina de evals y tracing es tan importante como el diseño del agente mismo.</p>
+
+<h3>Qué observar</h3>
+<table>
+<tr><th>Dimensión</th><th>Qué mide</th></tr>
+<tr><td>Tracing de pasos</td><td>Cada decisión, tool call y resultado intermedio del agente, para poder reconstruir por qué llegó a una respuesta</td></tr>
+<tr><td>Evals de calidad</td><td>Comparación contra un dataset de referencia: precisión, alucinación, adherencia a formato</td></tr>
+<tr><td>Costo y latencia</td><td>Tokens consumidos y tiempo por paso, crítico cuando hay multiagente o paralelismo</td></tr>
+<tr><td>Tasa de intervención humana</td><td>Con qué frecuencia el agente escala a un humano; indicador de madurez del sistema</td></tr>
+<tr><td>Drift de comportamiento</td><td>Si el mismo prompt produce resultados distintos con el tiempo (cambios de modelo, cambios de datos RAG)</td></tr>
+</table>
+
+<div class="callout">
+<div class="callout-label">Para entornos regulados</div>
+La trazabilidad de decisiones de un agente (qué documento recuperó, qué herramienta invocó, con qué parámetros) no es solo buena práctica de ingeniería: en banca suele ser un requisito de auditoría equivalente a un log de transacciones.
+</div>
+
+<h3>Qué registrar en cada traza</h3>
+<pre><code>trace  agent_run_id=run_7f3a  tenant=banca-personas  user=u_123  prompt_version=soporte@v14
+├─ span  clasificar_intencion   model=…  in=812  out=24   ms=640   cost=$0.0035
+├─ span  retrieval              k=20 → rerank → 5   docs=[pol-112#3, pol-112#4, man-07#9]  ms=210
+├─ span  llm.generate           model=…  in=6 410 (cache_read=5 900)  out=380  ms=4 100
+├─ span  tool.consultar_estado  args={transfer_id: TRF-00012345}  status=ok  ms=95
+└─ result  stop_reason=end_turn  citas=3  abstuvo=false  feedback=👍<span class="lang-label">Traza</span></code></pre>
+<p>La industria converge en las <strong>convenciones semánticas de OpenTelemetry para IA generativa</strong> (atributos estándar para modelo, tokens, operaciones de herramientas), lo que permite enviar trazas de agentes al mismo backend que el resto de tus servicios. Registra el contenido de prompts y respuestas solo donde la política de datos lo permita: pueden contener datos personales.</p>
+
+<h3>Observabilidad y trazabilidad</h3>
+<p>Todo flujo agéntico de producción debe trazar cada llamada al LLM, cada tool call, y cada paso del
+pipeline
+con su latencia, tokens consumidos, y costo. LangSmith y Langfuse ofrecen esta capacidad
+out-of-the-box.</p>
+
+<div class="callout info">
+<div class="callout-label">Métricas clave a monitorear</div>
+<p>Latencia P50/P95/P99 por etapa, tokens por query, costo por query, retrieval precision (via
+feedback
+loops), tasa de abstención (cuando el modelo dice "no sé"), y tasa de error por tipo de tool.
+</p>
+</div>
+
+<h3>LLMOps: Operar IA en Producción</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Dimensión</th>
+<th>Challenge</th>
+<th>Solución</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Latencia</strong></td>
+<td>LLMs son lentos: 1-30s por request</td>
+<td>Streaming responses, semantic caching (GPTCache), prompt optimization</td>
+</tr>
+<tr>
+<td><strong>Costo</strong></td>
+<td>$0.01-$0.10 por request — escala mal</td>
+<td>Smaller models cuando sea posible, caching, batching, modelo routing inteligente
+</td>
+</tr>
+<tr>
+<td><strong>Consistency</strong></td>
+<td>El mismo prompt puede dar respuestas distintas</td>
+<td>Temperature=0 para casos deterministas, structured outputs (JSON mode)</td>
+</tr>
+<tr>
+<td><strong>Observabilidad</strong></td>
+<td>No puedes debuggear el LLM como código normal</td>
+<td>LangFuse, Helicone, Arize AI — tracing de prompts, tokens, y evaluaciones</td>
+</tr>
+<tr>
+<td><strong>Evaluación</strong></td>
+<td>¿Cómo sabes si el sistema funciona bien?</td>
+<td>Evals automáticos (LLM-as-judge), golden datasets, human evaluation sampling
+</td>
+</tr>
+<tr>
+<td><strong>Guardrails</strong></td>
+<td>El LLM puede generar contenido inapropiado o peligroso</td>
+<td>NeMo Guardrails, Guardrails AI, output validation con schemas</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4>AI GATEWAY: EL PATRÓN QUE FALTA EN LA MAYORÍA</h4>
+<p>Un AI Gateway centraliza todas las llamadas a modelos de IA en la organización, de la misma forma
+que un API Gateway centraliza las llamadas HTTP. Es la pieza más importante que la mayoría de
+los sistemas de IA ignoran.</p>
+
+<pre data-lang="python"><code><span class="cm"># AI Gateway: centraliza llamadas, añade observabilidad y control</span>
+<span class="kw">class</span> <span class="fn">AIGateway</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.semantic_cache = SemanticCache(threshold=<span class="nm">0.95</span>)
+        self.rate_limiter   = RateLimiter(requests_per_minute=<span class="nm">100</span>)
+        self.cost_tracker   = CostTracker(budget_usd=<span class="nm">500</span>)
+        self.tracer         = LangFuseTracer()
+
+    <span class="kw">async def</span> <span class="fn">complete</span>(self, request: CompletionRequest) -> CompletionResponse:
+        <span class="cm"># 1. Verificar rate limit por tenant</span>
+        <span class="kw">await</span> self.rate_limiter.check(request.tenant_id)
+
+        <span class="cm"># 2. Semantic cache — misma pregunta, misma respuesta</span>
+        cached = <span class="kw">await</span> self.semantic_cache.get(request.prompt)
+        <span class="kw">if</span> cached:
+            <span class="kw">return</span> cached  <span class="cm"># ~$0 vs $0.05 por request cacheado</span>
+
+        <span class="cm"># 3. Model routing inteligente (económico para queries simples)</span>
+        model = self.<span class="fn">route_to_model</span>(request)
+        <span class="cm"># Queries simples → GPT-4o-mini ($0.00015/1K tokens)</span>
+        <span class="cm"># Queries complejas → GPT-4o ($0.005/1K tokens)</span>
+
+        <span class="cm"># 4. Llamada al modelo con tracing</span>
+        <span class="kw">with</span> self.tracer.trace(request) <span class="kw">as</span> span:
+            response = <span class="kw">await</span> model.complete(request)
+            span.record(tokens=response.usage, cost=response.cost)
+
+        <span class="cm"># 5. Cost tracking — alertar si se supera el budget</span>
+        <span class="kw">await</span> self.cost_tracker.record(response.cost, request.tenant_id)
+
+        <span class="cm"># 6. Guardar en caché para futuros requests similares</span>
+        <span class="kw">await</span> self.semantic_cache.set(request.prompt, response)
+
+        <span class="kw">return</span> response</code></pre>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>Los sistemas de IA usan patrones arquitectónicos establecidos: <strong>Event-Driven
+Architecture</strong> para pipelines de indexación asíncrona. <strong>CQRS</strong> con
+un modelo de escritura (ingesta de documentos) y lectura (vector search + generation).
+<strong>Hexagonal Architecture</strong> para aislar los LLMs como adapters externos (si
+cambias de OpenAI a Anthropic, solo cambia el adapter). Los <strong>Workflow
+Engines</strong> como Temporal son ideales para orquestación de agentes con durabilidad
+y retry garantizados.
+</p>
+</div>
+
+<h3>LLMOps: el ciclo de vida</h3>
+<div class="flow">
+<div class="flow-step">Cambio<span class="step-sub">prompt · modelo · índice</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Evals offline<span class="step-sub">gate en CI</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Canario<span class="step-sub">% del tráfico</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Monitoreo online<span class="step-sub">calidad · costo · latencia</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Feedback<span class="step-sub">nuevos casos al dataset</span></div>
+</div>
+<ul>
+<li><strong>Artefactos versionados:</strong> prompts, configuración de retrieval, versión de índice, modelo y rúbricas de evaluación.</li>
+<li><strong>Despliegue gradual</strong> con comparación A/B de métricas de calidad y costo, y rollback inmediato.</li>
+<li><strong>Drift:</strong> alertas cuando cambian la distribución de consultas, la tasa de abstención, la tasa de escalamiento o el costo por tarea.</li>
+<li><strong>Bucle de mejora:</strong> cada fallo en producción se convierte en un caso del golden dataset.</li>
+</ul>

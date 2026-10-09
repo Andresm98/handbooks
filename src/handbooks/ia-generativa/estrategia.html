@@ -1,0 +1,76 @@
+<p>La mayoría de iniciativas de IA no fracasan por la tecnología sino por el planteamiento: un caso de uso sin métrica, un piloto sin camino a producción, o un sistema que funciona pero que nadie adopta. Este capítulo es el trabajo de un AI Solutions Architect antes y alrededor del código.</p>
+
+<h3>Discovery: de "queremos IA" a un caso de uso</h3>
+<ol>
+<li><strong>Problema y dueño:</strong> qué proceso, qué dolor, quién es responsable del resultado.</li>
+<li><strong>Línea base:</strong> cuánto tarda, cuánto cuesta y cuántos errores tiene hoy. Sin línea base no hay ROI demostrable.</li>
+<li><strong>Métrica de éxito:</strong> una o dos métricas de negocio (tiempo de resolución, tasa de autoservicio, horas ahorradas) y sus umbrales.</li>
+<li><strong>Datos disponibles:</strong> dónde están, quién es dueño, calidad, permisos, sensibilidad.</li>
+<li><strong>Riesgo:</strong> qué pasa si el sistema se equivoca, a quién afecta, clasificación regulatoria.</li>
+<li><strong>Patrón mínimo:</strong> ¿prompt, RAG, agente, workflow, o un modelo clásico? (árbol de decisión del capítulo anterior).</li>
+</ol>
+
+<h3>Priorización de casos de uso</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th></th><th>Riesgo bajo</th><th>Riesgo alto</th></tr></thead>
+<tbody>
+<tr><td><strong>Valor alto</strong></td><td class="g">Empezar aquí: asistentes internos, resumen y búsqueda documental, apoyo a analistas</td><td class="y">Planificar con controles fuertes y supervisión humana: decisiones de crédito, atención con acciones</td></tr>
+<tr><td><strong>Valor bajo</strong></td><td class="b">Quick wins de productividad, si son baratos</td><td class="r">Evitar</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Build vs buy</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Opción</th><th>Cuándo</th><th>Riesgo</th></tr></thead>
+<tbody>
+<tr><td>Comprar producto SaaS con IA</td><td>Capacidad genérica (asistentes de oficina, transcripción, código)</td><td>Datos fuera, poco control, dependencia del roadmap del proveedor.</td></tr>
+<tr><td>Construir sobre APIs de modelos</td><td>Procesos propios, integración con sistemas internos, diferenciación</td><td>Necesitas equipo de AI engineering y operación.</td></tr>
+<tr><td>Entrenar o ajustar modelos propios</td><td>Datos únicos, volumen enorme, requisitos de soberanía</td><td>Costo y talento altos; obsolescencia rápida frente a modelos nuevos.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>De PoC a producción sin "pilotitis"</h3>
+<div class="flow">
+<div class="flow-step">PoC<span class="step-sub">2–4 semanas · ¿es posible?</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Gate 1<span class="step-sub">evals ≥ umbral</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Piloto<span class="step-sub">usuarios reales acotados</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step highlight">Gate 2<span class="step-sub">métrica de negocio + seguridad</span></div>
+<div class="flow-arrow">→</div>
+<div class="flow-step">Producción<span class="step-sub">SLOs, guardia, FinOps</span></div>
+</div>
+<ul>
+<li><strong>Define los gates antes de empezar</strong>, con umbrales numéricos. "Se ve bien" no es un criterio.</li>
+<li><strong>El PoC debe usar datos reales</strong> (anonimizados si hace falta); con datos de juguete todo funciona.</li>
+<li><strong>Construye la evaluación en el PoC</strong>, no después: es lo que permite pasar los gates.</li>
+<li><strong>Diseña la adopción:</strong> integración en la herramienta donde la gente ya trabaja, formación, y un canal para reportar errores.</li>
+</ul>
+
+<p>Marco de referencia rápido para ubicar en qué nivel está una iniciativa de IA y qué falta para el siguiente, útil como herramienta de conversación con stakeholders no técnicos.</p>
+
+<table>
+<tr><th>Nivel</th><th>Características</th><th>Riesgo si se salta</th></tr>
+<tr><td><strong>0 · Prompt</strong></td><td>Un LLM responde preguntas sin herramientas ni memoria persistente</td><td>Ninguno propio de IA; riesgo estándar de UX</td></tr>
+<tr><td><strong>1 · Asistido por RAG</strong></td><td>Conocimiento externo inyectado, sin acción sobre sistemas</td><td>Calidad de retrieval no validada, alucinación no detectada</td></tr>
+<tr><td><strong>2 · Agente con herramientas</strong></td><td>Tool use acotado, human-in-the-loop en acciones sensibles</td><td>Guardrails insuficientes, escalación de privilegios</td></tr>
+<tr><td><strong>3 · Multiagente orquestado</strong></td><td>Varios agentes especializados, event backbone, saga</td><td>Observabilidad insuficiente para depurar fallos en cascada</td></tr>
+<tr><td><strong>4 · Gobernado en producción</strong></td><td>Evals continuas, auditoría inmutable, gates de CI/E2E, FinOps activo</td><td>—  este es el nivel objetivo para cargas críticas</td></tr>
+</table>
+
+<div class="callout">
+<div class="callout-label">Uso recomendado de este modelo</div>
+Antes de añadir la siguiente capa de sofisticación (más agentes, más paralelismo, más autonomía), verifica que el nivel actual tiene su propia observabilidad y sus propios gates de calidad resueltos. Avanzar de nivel sin cerrar la deuda de gobernanza del nivel anterior es la causa más común de que un sistema agéntico sea impresionante en demo e inviable en auditoría.
+</div>
+
+<h3>Organización y equipo</h3>
+<div class="card-grid">
+<div class="card"><h4>Centro de excelencia o plataforma</h4><p>Un equipo central que provee AI Gateway, catálogo de modelos, herramientas de evaluación y estándares; los equipos de producto construyen encima.</p></div>
+<div class="card"><h4>Roles</h4><p>AI engineers, data engineers, un AI architect, expertos de dominio para evaluación, seguridad y cumplimiento desde el inicio, y un dueño de producto con métrica.</p></div>
+<div class="card"><h4>Alfabetización</h4><p>Formación para usuarios y directivos sobre capacidades y límites; además de buena práctica, el EU AI Act la exige a quienes despliegan sistemas de IA.</p></div>
+</div>

@@ -1,0 +1,32 @@
+<p>Cuando un sistema agéntico involucra múltiples servicios (scanner, analizador semántico, generador de reportes, notificador), un backbone de eventos desacopla estos pasos y permite que cada uno escale y falle de forma independiente — el mismo principio de <u>database-per-service</u> aplicado a flujos de agentes.</p>
+
+<h3>Saga pattern para flujos multi-paso</h3>
+<p>Un flujo agéntico de varios pasos (recolectar → analizar → generar → notificar) es, en esencia, una transacción distribuida sin 2PC posible. El patrón <strong>Saga</strong> (orquestada, con una máquina de estados explícita) permite modelar cada paso como una transacción local con su compensación correspondiente si algo falla a mitad del flujo.</p>
+
+<table>
+<tr><th>Componente</th><th>Rol en un flujo agéntico</th></tr>
+<tr><td>Saga orchestrator</td><td>Mantiene el estado del flujo completo y decide el siguiente paso o la compensación</td></tr>
+<tr><td>Outbox pattern</td><td>Garantiza que la escritura en base de datos y la publicación del evento sean atómicas</td></tr>
+<tr><td>CDC (Debezium)</td><td>Publica cambios de la tabla outbox como eventos de Kafka sin acoplar el servicio al broker en la ruta transaccional</td></tr>
+<tr><td>Compensación</td><td>Acción inversa si un paso posterior falla (ej. descartar un análisis parcial, notificar fallo en vez de éxito)</td></tr>
+</table>
+
+<div class="diagram">┌────────────┐   outbox   ┌───────────┐   CDC    ┌─────────┐
+│  Servicio  │──escribe──►│  Tabla    │─Debezium─►│ Kafka / │
+│  (ej. saga │   local    │  Outbox   │  lee WAL  │Redpanda │
+│  step)     │            └───────────┘           └────┬────┘
+└────────────┘                                          │
+▼
+┌─────────────────────────┐
+│ Siguiente servicio /     │
+│ agente suscrito al topic │
+└─────────────────────────┘</div>
+
+<h3>CQRS para trazabilidad de auditoría</h3>
+<p>Separar el modelo de escritura (estado operativo del agente) del modelo de lectura (réplicas de auditoría) permite exponer un historial completo de decisiones sin degradar el rendimiento del flujo transaccional principal — relevante en cualquier sistema donde reguladores o auditores necesiten consultar el histórico sin tocar la ruta caliente.</p>
+
+<div class="callout">
+<div class="callout-label">Cuándo NO usar este nivel de complejidad</div>
+Saga + Outbox + CDC + CQRS es apropiado para plataformas de gobernanza de agentes en producción con múltiples servicios y requisitos de auditoría regulatoria. Para un agente único con una API síncrona y bajo volumen, esta arquitectura es sobre-ingeniería: un flujo simple con reintentos y una tabla de estado basta.
+</div>
+

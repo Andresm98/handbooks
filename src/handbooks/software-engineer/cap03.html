@@ -1,0 +1,206 @@
+<p>El diseño de software ocurre constantemente, no solo al principio de un proyecto. Cada vez que
+nombras una
+función, defines una interfaz, o decides dónde vive un pedazo de lógica — estás diseñando. La
+diferencia
+entre un ingeniero que diseña bien y uno que no lo hace no está en el conocimiento de patrones,
+sino en la
+capacidad de reconocer qué problema tienen que resolver.</p>
+
+<h3 id="patterns">Patrones de Diseño como Soluciones a Problemas Reales</h3>
+<p>Los patrones de diseño son soluciones reutilizables a problemas recurrentes. El error es
+aprenderlos como
+un catálogo a memorizar. El valor está en reconocer el problema que cada patrón resuelve — y
+solo entonces
+aplicarlo.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Patrón</th>
+<th>Problema real que resuelve</th>
+<th>Señal de que lo necesitas</th>
+<th>Anti-pattern de aplicación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Strategy</strong></td>
+<td>Comportamiento intercambiable en runtime sin if/else</td>
+<td>Tienes un switch/if-else que crece cada vez que añades un tipo</td>
+<td>Crear Strategy para comportamiento que nunca cambia</td>
+</tr>
+<tr>
+<td><strong>Observer</strong></td>
+<td>Notificar a múltiples componentes sin acoplamiento directo</td>
+<td>Un cambio en objeto A requiere llamar a B, C, D directamente</td>
+<td>Observadores con side effects no predecibles ni testeables</td>
+</tr>
+<tr>
+<td><strong>Decorator</strong></td>
+<td>Añadir responsabilidades a un objeto sin modificar su clase</td>
+<td>Necesitas logging/caching/retry en múltiples implementaciones</td>
+<td>Cadenas de decoradores tan profundas que el debugging es imposible</td>
+</tr>
+<tr>
+<td><strong>Factory</strong></td>
+<td>Centralizar la lógica de creación de objetos complejos</td>
+<td>La lógica de crear un objeto está duplicada en múltiples lugares</td>
+<td>Factory que hace demasiado — viola SRP también</td>
+</tr>
+<tr>
+<td><strong>Repository</strong></td>
+<td>Abstraer el acceso a datos del dominio de negocio</td>
+<td>SQL/ORM queries dispersas en la lógica de negocio</td>
+<td>Repository que filtra, ordena, pagina Y hace joins complejos — se convierte en
+un ORM wrapper</td>
+</tr>
+<tr>
+<td><strong>Builder</strong></td>
+<td>Construir objetos complejos paso a paso</td>
+<td>Constructor con 7+ parámetros donde el orden importa</td>
+<td>Builder para objetos simples — añade complejidad sin valor</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<pre data-lang="typescript"><code><span class="cm">// Strategy Pattern — caso real: procesadores de pago</span>
+
+<span class="cm">// ❌ Sin Strategy: cada nuevo procesador requiere modificar esta clase</span>
+<span class="kw">class</span> <span class="fn">PaymentService</span> {
+  <span class="fn">charge</span>(amount: number, provider: string) {
+    <span class="kw">if</span> (provider === <span class="str">'stripe'</span>) {
+      <span class="cm">// lógica de Stripe...</span>
+    } <span class="kw">else if</span> (provider === <span class="str">'paypal'</span>) {
+      <span class="cm">// lógica de PayPal...</span>
+    } <span class="kw">else if</span> (provider === <span class="str">'mercadopago'</span>) {
+      <span class="cm">// lógica de MercadoPago...</span>
+    }
+    <span class="cm">// Cada nuevo procesador = modificar esta clase = riesgo de regresión</span>
+  }
+}
+
+<span class="cm">// ✓ Con Strategy: añadir procesador = añadir clase, sin tocar lo existente</span>
+<span class="kw">interface</span> <span class="fn">PaymentProvider</span> {
+  charge(amount: Money, metadata: PaymentMetadata): Promise&lt;PaymentResult&gt;
+  refund(transactionId: string): Promise&lt;RefundResult&gt;
+}
+
+<span class="kw">class</span> <span class="fn">StripeProvider</span> <span class="kw">implements</span> PaymentProvider { <span class="cm">/* ... */</span> }
+<span class="kw">class</span> <span class="fn">PayPalProvider</span> <span class="kw">implements</span> PaymentProvider { <span class="cm">/* ... */</span> }
+<span class="kw">class</span> <span class="fn">MercadoPagoProvider</span> <span class="kw">implements</span> PaymentProvider { <span class="cm">/* ... */</span> }
+
+<span class="kw">class</span> <span class="fn">PaymentService</span> {
+  <span class="kw">constructor</span>(<span class="kw">private</span> provider: PaymentProvider) {}
+
+  <span class="kw">async</span> <span class="fn">charge</span>(amount: Money, metadata: PaymentMetadata) {
+    <span class="kw">return</span> <span class="kw">this</span>.provider.<span class="fn">charge</span>(amount, metadata)
+    <span class="cm">// Funciona con CUALQUIER provider — presente y futuro</span>
+  }
+}</code></pre>
+
+<h3 id="api-design">API Design: El Contrato Permanente</h3>
+<p>Una API pública es una decisión arquitectónica irreversible. Una vez que clientes dependen de
+ella,
+cambiarla tiene un costo real. El diseño de una API es el trabajo que más durará en el tiempo —
+más que
+cualquier implementación subyacente.</p>
+
+<div class="diagram">
+<pre><code>
+  Principios de API Design que Envejecen Bien
+
+  1. NOMBRES COMO RECURSOS, VERBOS COMO ACCIONES HTTP
+     ❌ GET /getUser?id=123
+     ❌ POST /createOrder
+     ✓  GET /users/123
+     ✓  POST /orders
+
+  2. VERSIONADO DESDE EL DÍA 1
+     ✓  /api/v1/users
+     Sin versión = imposible hacer breaking changes sin romper clientes
+
+  3. ERRORES INFORMATIVO Y CONSISTENTES (RFC 7807)
+     ❌ HTTP 400 { "error": "bad" }
+     ✓  HTTP 422 {
+           "type": "https://api.company.com/errors/validation",
+           "title": "Validation Failed",
+           "detail": "email must be a valid email address",
+           "invalid_params": [{"name": "email", "reason": "invalid format"}]
+        }
+
+  4. PAGINACIÓN CONSISTENTE
+     ✓  GET /users?page=2&per_page=50
+        Response: { "data": [...], "meta": { "total": 1234,
+                    "page": 2, "per_page": 50, "pages": 25 } }
+
+  5. IDEMPOTENCY KEYS EN OPERACIONES CRÍTICAS
+     POST /payments
+     Idempotency-Key: client-generated-uuid
+     → Si el request falla y se reintenta con la misma key,
+       el servidor retorna el resultado original sin re-procesar
+
+  6. BACKWARD COMPATIBILITY
+     ✓  Añadir campos opcionales: seguro
+     ✓  Deprecar campos (documentar, mantener 1 versión)
+     ❌ Renombrar campos existentes: breaking change
+     ❌ Cambiar tipo de un campo: breaking change
+     ❌ Hacer obligatorio algo que era opcional: breaking change
+</code></pre>
+</div>
+
+<h3 id="abstractions">Abstracciones: El Arte del Equilibrio</h3>
+<p>Una abstracción correcta oculta complejidad sin ocultar información importante. Una abstracción
+incorrecta
+— o prematura — es una de las fuentes más comunes de deuda técnica. Joel Spolsky formuló la
+<em>Ley de las
+Abstracciones con Fugas</em>: todas las abstracciones no triviales tienen fugas.
+</p>
+
+<pre data-lang="python"><code><span class="cm"># Abstracción prematura: el enemigo silencioso</span>
+
+<span class="cm"># Inicio del proyecto — dos casos de uso:</span>
+<span class="kw">def</span> <span class="fn">send_welcome_email</span>(user_email: str): ...
+<span class="kw">def</span> <span class="fn">send_password_reset</span>(user_email: str): ...
+
+<span class="cm"># ❌ Abstracción prematura — crear un EmailSender genérico
+#    con factory, template engine, y 400 líneas "para ser flexible"
+#    cuando todavía no sabemos qué variaciones reales necesitaremos</span>
+
+<span class="cm"># ✓ Esperar hasta el tercer caso de uso para abstraer
+#    La abstracción correcta solo se puede ver con suficientes ejemplos concretos
+#    "Make it work, make it right, make it fast" — en ese orden</span>
+
+<span class="cm"># Regla: duplicar está permitido UNA vez.
+#         Al tercer caso de duplicación, abstraer.
+#         Esta es la "Rule of Three" de abstracción.</span>
+
+<span class="cm"># ─────────────────────────────────────────────────────────────
+# Señales de que una abstracción está MAL:</span>
+
+<span class="cm"># 1. Necesita un nombre genérico porque no sabes qué hace
+#    Manager, Handler, Processor, Helper, Utils → red flags</span>
+
+<span class="cm"># 2. Tiene más de un nivel de indirección innecesario
+#    service.getRepository().findById() vs userRepo.findById()</span>
+
+<span class="cm"># 3. Los casos de uso concretos necesitan "escapar" de la abstracción
+#    if isinstance(repo, PostgresUserRepo):  → abstracción rota</span>
+
+<span class="cm"># 4. Es más difícil de entender que el código que reemplaza
+#    La abstracción debe REDUCIR la carga cognitiva, no aumentarla</span></code></pre>
+
+<div class="arch-rel">
+<span class="arch-rel-lbl">Conexión técnica</span>
+<p>El diseño de software es la capa donde los principios arquitectónicos se materializan en
+código.
+<strong>Hexagonal Architecture</strong> se implementa mediante interfaces (puertos) e
+implementaciones
+concretas (adapters). <strong>DDD</strong> se implementa mediante el modelado cuidadoso de
+entidades,
+value objects, y bounded contexts en el código. Los patrones de diseño son los bloques de
+construcción de
+cualquier arquitectura bien diseñada.
+</p>
+</div>

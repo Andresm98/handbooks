@@ -1,0 +1,103 @@
+<article>
+<h3>🔌 Configuración Dinámica de Servidores</h3>
+<p><strong>DHCP (Dynamic Host Configuration Protocol)</strong> es el protocolo que asigna dinámicamente
+configuración de red (IP, gateway, DNS) a dispositivos/servidores. Es la definición de "dynamic
+server configuration".</p>
+
+<div class="two-col">
+<div>
+<h4>Static vs Dynamic Configuration</h4>
+<ul>
+<li><strong>Static:</strong> IP y config asignadas manualmente</li>
+<li><strong>Dynamic (DHCP):</strong> asignación automática al conectarse</li>
+</ul>
+</div>
+<div>
+<h4>Source IP Hash en Load Balancing</h4>
+<p>Usa el IP del cliente para determinar siempre el mismo servidor. Garantiza <strong>session
+persistence</strong> (sticky sessions). Ideal cuando el servidor guarda estado de sesión
+localmente.</p>
+</div>
+</div>
+</article>
+
+<article>
+<h3>🏗️ VPC y Networking Cloud</h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Concepto</th>
+<th class="th-aws" style="color:var(--aws)">AWS</th>
+<th class="th-azure" style="color:var(--azure)">Azure</th>
+<th class="th-gcp" style="color:var(--gcp)">GCP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Virtual Network</strong></td>
+<td class="aws-cell">VPC (Virtual Private Cloud)</td>
+<td class="azure-cell">VNet (Virtual Network)</td>
+<td class="gcp-cell">VPC (global por defecto)</td>
+</tr>
+<tr>
+<td><strong>Subnets</strong></td>
+<td class="aws-cell">Public/Private subnets por AZ</td>
+<td class="azure-cell">Subnets dentro de VNet</td>
+<td class="gcp-cell">Subnets por región</td>
+</tr>
+<tr>
+<td><strong>Internet Gateway</strong></td>
+<td class="aws-cell">Internet Gateway</td>
+<td class="azure-cell">Internet Gateway (implícito)</td>
+<td class="gcp-cell">Cloud NAT / Internet Gateway</td>
+</tr>
+<tr>
+<td><strong>Private Connectivity</strong></td>
+<td class="aws-cell">Direct Connect / VPN</td>
+<td class="azure-cell">ExpressRoute / VPN Gateway</td>
+<td class="gcp-cell">Cloud Interconnect / VPN</td>
+</tr>
+<tr>
+<td><strong>Security Groups / FW</strong></td>
+<td class="aws-cell">Security Groups + NACLs</td>
+<td class="azure-cell">NSG (Network Security Groups)</td>
+<td class="gcp-cell">Firewall Rules</td>
+</tr>
+<tr>
+<td><strong>Private Link</strong></td>
+<td class="aws-cell">PrivateLink / VPC Endpoints</td>
+<td class="azure-cell">Private Endpoints / Private Link</td>
+<td class="gcp-cell">Private Service Connect</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>
+
+<article>
+<h3>📡 CDN — Content Delivery Network</h3>
+<p>Red de servidores distribuidos globalmente que cachean contenido cerca del usuario. Reduce latencia y
+carga en el origin server.</p>
+<div class="two-col">
+<div>
+<h4>Qué cachear en CDN</h4>
+<ul>
+<li>Assets estáticos (JS, CSS, imágenes, fuentes)</li>
+<li>Videos y archivos grandes</li>
+<li>Respuestas de API con TTL definido</li>
+<li>Páginas SSG</li>
+</ul>
+</div>
+<div>
+<h4>Servicios CDN</h4>
+<ul>
+<li>AWS CloudFront</li>
+<li>Azure CDN / Azure Front Door (con WAF)</li>
+<li>GCP Cloud CDN</li>
+<li>Cloudflare (multi-cloud)</li>
+<li>Akamai (enterprise)</li>
+</ul>
+</div>
+</div>
+</article>

@@ -1,0 +1,212 @@
+<p>Un <strong>Solutions Architect</strong> no es un software architect con mejor presentación. Es un
+rol fundamentalmente diferente con un input diferente: mientras el software architect parte de
+requerimientos técnicos, el SA parte de <strong>problemas de negocio</strong> y trabaja hacia
+atrás para encontrar la solución técnica más adecuada — no la más elegante, sino la más adecuada
+al contexto.</p>
+
+<p>La confusión entre roles es uno de los errores más costosos en organizaciones tecnológicas.
+Contratar a un software architect cuando necesitas un SA, o viceversa, produce soluciones
+técnicamente impecables que no resuelven el problema real, o soluciones de negocio que colapsan
+bajo carga.</p>
+
+<h3 id="roles-comparison">Comparativa Real de Roles</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Rol</th>
+<th>Input primario</th>
+<th>Output primario</th>
+<th>Horizonte temporal</th>
+<th>Éxito medido por</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Software Architect</strong></td>
+<td>Requerimientos técnicos, código existente</td>
+<td>Diseño de sistema, patrones, guías técnicas</td>
+<td>6–18 meses</td>
+<td>Calidad técnica, mantenibilidad, performance</td>
+</tr>
+<tr>
+<td><strong>Solutions Architect</strong></td>
+<td>Problemas de negocio, constraints organizacionales</td>
+<td>Propuesta de solución viable, trade-offs documentados</td>
+<td>3–24 meses</td>
+<td>Problema resuelto, ROI, adopción exitosa</td>
+</tr>
+<tr>
+<td><strong>Enterprise Architect</strong></td>
+<td>Estrategia corporativa, portfolio de sistemas</td>
+<td>Principios, estándares, roadmap tecnológico</td>
+<td>2–5 años</td>
+<td>Coherencia del portfolio, reducción de deuda</td>
+</tr>
+<tr>
+<td><strong>Cloud Architect</strong></td>
+<td>Workloads existentes, objetivos de infra</td>
+<td>Diseño de infraestructura cloud, migración</td>
+<td>6–18 meses</td>
+<td>Costos, disponibilidad, seguridad cloud</td>
+</tr>
+<tr>
+<td><strong>Platform Architect</strong></td>
+<td>Necesidades de equipos de producto internos</td>
+<td>Plataformas internas, developer experience</td>
+<td>12–36 meses</td>
+<td>Velocidad de desarrollo, autonomía de equipos</td>
+</tr>
+<tr>
+<td><strong>Staff Engineer</strong></td>
+<td>Problemas técnicos de alto impacto</td>
+<td>Soluciones técnicas cross-team, guía técnica</td>
+<td>3–12 meses</td>
+<td>Impacto técnico en múltiples equipos</td>
+</tr>
+<tr>
+<td><strong>Principal Engineer</strong></td>
+<td>Dirección técnica de la organización</td>
+<td>Visión técnica, standards, leveling técnico</td>
+<td>1–3 años</td>
+<td>Salud técnica organizacional, retención de talento</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout axiom">
+<div class="callout-icon"></div>
+<p><strong>Axioma #1:</strong> El Solutions Architect es el único rol cuyo fracaso es invisible
+hasta que es demasiado tarde. Un sistema técnicamente correcto que no resuelve el problema
+de negocio puede funcionar durante meses antes de que la organización se dé cuenta del
+error.</p>
+</div>
+
+<h4>Lo que hace un SA un lunes por la mañana</h4>
+<p>No dibuja diagramas. Hace preguntas. Las primeras preguntas de un SA senior ante cualquier
+proyecto son:</p>
+
+<div class="principle-grid">
+<div class="principle-item">
+<strong>¿Cuál es el problema real?</strong>
+<p>No el síntoma reportado. El problema raíz que la organización necesita resolver.
+Frecuentemente son diferentes.</p>
+</div>
+<div class="principle-item">
+<strong>¿Quién sufre si esto falla?</strong>
+<p>Identifica el riesgo real. Define el nivel de inversión en resiliencia y disponibilidad
+justificado.</p>
+</div>
+<div class="principle-item">
+<strong>¿Qué equipo va a operar esto?</strong>
+<p>La mejor arquitectura que el equipo no puede operar es la peor arquitectura. Las
+capacidades del equipo son un constraint arquitectónico.</p>
+</div>
+<div class="principle-item">
+<strong>¿Cuándo es "suficientemente bueno"?</strong>
+<p>El perfeccionismo técnico es una forma de deuda. Determinar el umbral de suficiencia
+evita sobreingeniería.</p>
+</div>
+<div class="principle-item">
+<strong>¿Cuál es el costo de estar equivocado?</strong>
+<p>Evalúa el costo de reversibilidad. Decisiones baratas de revertir pueden tomarse rápido.
+Las costosas requieren análisis profundo.</p>
+</div>
+<div class="principle-item">
+<strong>¿Qué ya existe que podemos reutilizar?</strong>
+<p>El software más confiable es el que no tienes que escribir. Integrar beats construir en
+la mayoría de los casos.</p>
+</div>
+</div>
+
+<h3 id="sa-evolution">Evolución del Rol: de Junior a Principal SA</h3>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Nivel</th>
+<th>Scope</th>
+<th>Decisiones típicas</th>
+<th>Error más común</th>
+<th>Lo que aprenden con experiencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="b"><strong>Junior SA</strong></td>
+<td>Un proyecto, un equipo</td>
+<td>Selección de stack, diseño de API</td>
+<td>Over-engineering desde el inicio</td>
+<td>El negocio tiene sus propias constraints</td>
+</tr>
+<tr>
+<td class="g"><strong>Mid SA</strong></td>
+<td>Múltiples proyectos relacionados</td>
+<td>Integración entre sistemas, migración</td>
+<td>Ignorar costos operacionales</td>
+<td>La arquitectura más simple que funciona</td>
+</tr>
+<tr>
+<td class="y"><strong>Senior SA</strong></td>
+<td>Dominio de negocio completo</td>
+<td>Estrategia de plataforma, vendor selection</td>
+<td>Soluciones sin considerar adopción</td>
+<td>People y process superan a technology</td>
+</tr>
+<tr>
+<td class="r"><strong>Principal SA</strong></td>
+<td>Organización entera</td>
+<td>Dirección tecnológica, M&amp;A technical due diligence</td>
+<td>Perder contacto con la realidad técnica</td>
+<td>Las mejores decisiones evitan decisiones futuras</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="arch-relation">
+<span class="arch-relation-icon">Modelos relacionados</span>
+<p>El rol de SA se relaciona directamente con <strong>Clean Architecture</strong> (separación de
+concerns entre negocio e infraestructura), <strong>Domain-Driven Design</strong> (entender
+el dominio antes de diseñar), y <strong>Hexagonal Architecture</strong> (interfaces hacia el
+exterior — stakeholders — y hacia el interior — implementación técnica).</p>
+</div>
+
+<h3>Anti-patterns del SA</h3>
+
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Resume-Driven Architecture</div>
+<p>Elegir tecnologías novedosas para el CV, no para el problema. La consecuencia es una
+arquitectura que el equipo no puede operar y que añade complejidad innecesaria.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Architecture by Analogy</div>
+<p>"Netflix usa microservicios, nosotros también deberíamos." Sin considerar que Netflix
+tiene 1,000 ingenieros dedicados a operar esa arquitectura y una escala que lo
+justifica.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Ivory Tower Architecture</div>
+<p>Diseñar en el vacío sin involucrarse con el equipo que implementará. Produce
+arquitecturas perfectas en papel que son inimplementables en la práctica.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>The "One True Architecture"</div>
+<p>Creer que existe una arquitectura correcta independiente del contexto. Todo trade-off
+depende de las constraints específicas del problema.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Technical Debt Denial</div>
+<p>Proponer soluciones que asumen una base técnica limpia cuando la realidad es un sistema
+legacy con 10 años de deuda acumulada.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Premature Optimization</div>
+<p>Diseñar para 100M usuarios cuando el producto tiene 100. La infraestructura de
+Google-scale es un pasivo operacional catastrófico en etapas tempranas.</p>
+</div>
+</div>

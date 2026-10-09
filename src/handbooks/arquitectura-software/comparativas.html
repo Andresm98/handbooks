@@ -1,0 +1,164 @@
+<h3>Monolito vs Microservicios</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Dimensión</th>
+<th>Monolito</th>
+<th>Microservicios</th>
+<th>Recomendación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Complejidad inicial</td>
+<td class="green">Baja</td>
+<td class="red">Alta (infra, networking)</td>
+<td>Monolito para proyectos nuevos</td>
+</tr>
+<tr>
+<td>Escalabilidad</td>
+<td class="red">Todo o nada</td>
+<td class="green">Por componente</td>
+<td>Microservicios para alta escala</td>
+</tr>
+<tr>
+<td>Despliegue</td>
+<td class="yellow">Todo junto</td>
+<td class="green">Independiente</td>
+<td>Microservicios para CD frecuente</td>
+</tr>
+<tr>
+<td>Debugging</td>
+<td class="green">Stack trace claro</td>
+<td class="red">Trazas distribuidas requeridas</td>
+<td>Monolito más fácil de debuggear</td>
+</tr>
+<tr>
+<td>Transacciones</td>
+<td class="green">ACID nativas</td>
+<td class="red">Saga patterns necesarios</td>
+<td>Monolito para consistencia fuerte</td>
+</tr>
+<tr>
+<td>Tamaño de equipo</td>
+<td class="green">Ideal &lt; 15 personas</td>
+<td class="green">Escala con equipos grandes</td>
+<td>Conway's Law: organización → arquitectura</td>
+</tr>
+<tr>
+<td>Latencia interna</td>
+<td class="green">In-process (microsegundos)</td>
+<td class="yellow">Red (milisegundos)</td>
+<td>Monolito para operaciones críticas</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<hr class="divider">
+<h3>On-Premise vs Cloud</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Dimensión</th>
+<th>On-Premise</th>
+<th>Cloud</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modelo de costo</td>
+<td class="orange">CapEx (inversión capital)</td>
+<td class="green">OpEx (gasto operativo)</td>
+</tr>
+<tr>
+<td>Time to provision</td>
+<td class="red">Semanas o meses</td>
+<td class="green">Minutos</td>
+</tr>
+<tr>
+<td>Elasticidad</td>
+<td class="red">Limitada y costosa</td>
+<td class="green">Automática e ilimitada</td>
+</tr>
+<tr>
+<td>Control de datos</td>
+<td class="green">Total</td>
+<td class="yellow">Depende del contrato</td>
+</tr>
+<tr>
+<td>Cumplimiento (Compliance)</td>
+<td class="green">Máximo control</td>
+<td class="yellow">Certificaciones disponibles</td>
+</tr>
+<tr>
+<td>Equipo requerido</td>
+<td class="red">Ops + sysadmins dedicados</td>
+<td class="green">Reducido</td>
+</tr>
+<tr>
+<td>Disponibilidad global</td>
+<td class="red">Costosa y compleja</td>
+<td class="green">Nativa (regiones y AZs)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<hr class="divider">
+<h3>Serverless vs Contenedores</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Dimensión</th>
+<th>Serverless (FaaS)</th>
+<th>Contenedores (K8s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Granularidad</td>
+<td class="blue">Función individual</td>
+<td class="green">Servicio completo</td>
+</tr>
+<tr>
+<td>Cold start</td>
+<td class="red">100ms – 2s</td>
+<td class="green">Predecible (always-on)</td>
+</tr>
+<tr>
+<td>Estado</td>
+<td class="red">Stateless obligatorio</td>
+<td class="green">Stateful posible</td>
+</tr>
+<tr>
+<td>Costo en idle</td>
+<td class="green">$0 (no ejecuta)</td>
+<td class="red">Paga aunque no haya tráfico</td>
+</tr>
+<tr>
+<td>Max duración</td>
+<td class="red">15 min (Lambda)</td>
+<td class="green">Sin límite</td>
+</tr>
+<tr>
+<td>Vendor lock-in</td>
+<td class="red">Alto</td>
+<td class="green">Bajo (OCI estándar)</td>
+</tr>
+<tr>
+<td>Observabilidad</td>
+<td class="yellow">Limitada sin herramientas</td>
+<td class="green">Completa con Prometheus/OTel</td>
+</tr>
+<tr>
+<td>Ideal para</td>
+<td>Eventos, webhooks, ETL</td>
+<td>APIs, servicios de larga duración</td>
+</tr>
+</tbody>
+</table>
+</div>

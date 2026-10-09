@@ -1,0 +1,123 @@
+<p>Un agente es un LLM al que se le da un <u>objetivo</u>, un conjunto de <u>herramientas</u>, y la capacidad de ejecutar un <u>loop</u>: observar, decidir, actuar, observar el resultado, y repetir hasta cumplir el objetivo o alcanzar un límite. La diferencia con un simple prompt-respuesta es que el agente controla su propio flujo de pasos.</p>
+
+<p>Un <strong>agente</strong> es un sistema donde un LLM controla un loop de razonamiento-acción
+iterativo. A
+diferencia de un pipeline RAG estático, el agente decide dinámicamente qué acciones tomar, en qué
+orden, y
+cuándo ha terminado.</p>
+
+<div class="pullquote">
+<p>"Un pipeline ejecuta pasos predefinidos. Un agente decide qué pasos ejecutar."</p>
+</div>
+
+<h3>El loop agéntico canónico</h3>
+<div class="diagram">        ┌───────────────────────────┐
+│                           │
+▼                           │
+┌─────────┐    ┌──────────┐   ┌──┴───────┐
+│ Percibir│───►│ Planificar│──►│  Actuar  │
+│ (estado,│    │ (siguiente│   │(tool call)│
+│ contexto)│    │   paso)  │   └──┬───────┘
+└─────────┘    └──────────┘      │
+▲                           │
+└─────── Observar resultado ┘
+
+Termina cuando: objetivo cumplido, límite de
+pasos alcanzado, o requiere intervención humana.</div>
+
+<h3>El loop ReAct (Reason + Act)</h3>
+<p>ReAct es el patrón fundamental de los agentes modernos. El modelo alterna entre pensar
+(<em>Thought</em>),
+actuar (<em>Action</em>), y observar el resultado (<em>Observation</em>) hasta completar la tarea.
+</p>
+
+<pre><span class="cm">--- Iteración 1 ---</span>
+<span class="cls">Thought</span>: Necesito saber el precio actual de AAPL.
+<span class="cls">Action</span>: search_web("AAPL stock price today")
+<span class="cls">Observation</span>: AAPL está a $189.30
+
+<span class="cm">--- Iteración 2 ---</span>
+<span class="cls">Thought</span>: Ahora necesito calcular la variación vs el precio de ayer ($186.50).
+<span class="cls">Action</span>: calculate("(189.30 - 186.50) / 186.50 * 100")
+<span class="cls">Observation</span>: 1.50%
+
+<span class="cm">--- Iteración 3 ---</span>
+<span class="cls">Thought</span>: Tengo toda la información necesaria. Puedo responder.
+<span class="cls">Final Answer</span>: AAPL subió un 1.50% hoy, de $186.50 a $189.30.
+<span class="lang-label">ReAct trace</span></pre>
+
+<h3>Componentes de un agente productivo</h3>
+<table>
+<tr><th>Componente</th><th>Función</th></tr>
+<tr><td>Modelo base</td><td>Motor de razonamiento y decisión en cada paso</td></tr>
+<tr><td>Herramientas (tools)</td><td>Funciones concretas que el agente puede invocar: APIs, bases de datos, búsqueda</td></tr>
+<tr><td>Memoria de corto plazo</td><td>Estado de la tarea actual dentro del context window</td></tr>
+<tr><td>Memoria de largo plazo</td><td>Persistencia entre sesiones, típicamente vía RAG o almacenamiento clave-valor</td></tr>
+<tr><td>Planificador</td><td>Lógica (a veces el mismo LLM, a veces explícita) que decide el orden de pasos</td></tr>
+<tr><td>Guardrails</td><td>Límites de pasos, validación de salidas, puntos de aprobación humana</td></tr>
+</table>
+
+<div class="callout beige">
+<div class="callout-label">Punto de arquitectura clave</div>
+Cuantas más herramientas y más pasos tenga un agente, más importa el diseño de <em>guardrails</em>: límite de iteraciones, validación de cada tool call antes de ejecutarla, y puntos explícitos de "human in the loop" para acciones irreversibles (transferencias, cambios de configuración, envíos externos).
+</div>
+
+<h3>Postulados de sistemas agénticos</h3>
+<div class="card-grid">
+<div class="card accent-green">
+<div class="card-num">POSTULADO P1</div>
+<div class="card-title">Plan antes de actuar</div>
+<p class="card-body">Los agentes que planifican explícitamente antes de ejecutar cometen menos
+errores
+irrecuperables que los que actúan directamente.</p>
+</div>
+<div class="card accent-green">
+<div class="card-num">POSTULADO P2</div>
+<div class="card-title">Mínimo privilegio</div>
+<p class="card-body">Un agente solo debe tener acceso a las herramientas y datos que necesita
+para su tarea
+específica. El scope excesivo amplifica los errores.</p>
+</div>
+<div class="card accent-green">
+<div class="card-num">POSTULADO P3</div>
+<div class="card-title">Checkpointing obligatorio</div>
+<p class="card-body">Flujos agénticos largos deben persistir estado en puntos de control. Un
+fallo en el
+paso 8 de 10 no debe reiniciar desde cero.</p>
+</div>
+<div class="card accent-green">
+<div class="card-num">POSTULADO P4</div>
+<div class="card-title">Human-in-the-loop por defecto</div>
+<p class="card-body">Toda acción irreversible (eliminar datos, enviar emails, ejecutar código)
+debe requerir
+confirmación humana hasta que el sistema demuestre confiabilidad.</p>
+</div>
+</div>
+
+<h3>¿Necesitas realmente un agente?</h3>
+<p>Un agente cuesta más, tarda más y es menos predecible que un flujo fijo. Antes de elegirlo, verifica cuatro condiciones:</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Criterio</th><th>Pregunta</th><th>Si la respuesta es "no"</th></tr></thead>
+<tbody>
+<tr><td>Complejidad</td><td>¿La tarea tiene múltiples pasos difíciles de especificar de antemano?</td><td>Usa una llamada o un workflow fijo.</td></tr>
+<tr><td>Valor</td><td>¿El resultado justifica más costo y latencia?</td><td>Simplifica.</td></tr>
+<tr><td>Viabilidad</td><td>¿El modelo es capaz en este tipo de tarea (medido, no supuesto)?</td><td>Descompón o cambia de enfoque.</td></tr>
+<tr><td>Costo del error</td><td>¿Los errores se detectan y revierten (pruebas, revisión, rollback)?</td><td>Añade aprobación humana o limita a solo lectura.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Autonomía como dial, no como interruptor</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Nivel</th><th>El agente…</th><th>Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Sugerir</td><td>Propone; una persona ejecuta</td><td>Borrador de respuesta a un reclamo.</td></tr>
+<tr><td>Actuar con aprobación</td><td>Prepara la acción; se ejecuta tras confirmación</td><td>Reverso de un cargo, con aprobación del analista.</td></tr>
+<tr><td>Actuar y notificar</td><td>Ejecuta acciones reversibles y avisa</td><td>Re-etiquetar tickets, crear tareas.</td></tr>
+<tr><td>Autónomo acotado</td><td>Ejecuta dentro de un presupuesto y un sandbox</td><td>Agente de código en un contenedor efímero que abre un pull request.</td></tr>
+</tbody>
+</table>
+</div>
+<p>El nivel se decide por acción, no por agente: el mismo agente puede leer libremente, escribir con notificación y mover dinero solo con aprobación.</p>

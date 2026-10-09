@@ -1,0 +1,79 @@
+<p>La memoria permite a los agentes mantener contexto a través de interacciones. Existen cuatro tipos,
+cada uno
+con propósitos y mecanismos distintos.</p>
+
+<table>
+<tr>
+<th>Tipo</th>
+<th>Scope</th>
+<th>Storage</th>
+<th>Ejemplo</th>
+</tr>
+<tr>
+<td><strong>In-context</strong></td>
+<td>Dentro de un turno</td>
+<td>Context window del LLM</td>
+<td>Historial de conversación inmediata</td>
+</tr>
+<tr>
+<td><strong>External (episódica)</strong></td>
+<td>Cross-session</td>
+<td>Base de datos (Redis, Postgres)</td>
+<td>"Recuerda que el usuario prefiere Python"</td>
+</tr>
+<tr>
+<td><strong>Semantic</strong></td>
+<td>Knowledge base</td>
+<td>Vector DB</td>
+<td>Hechos aprendidos de interacciones pasadas</td>
+</tr>
+<tr>
+<td><strong>Procedural</strong></td>
+<td>Skills / workflows</td>
+<td>Código / prompts almacenados</td>
+<td>Cómo ejecutar un tipo de tarea específico</td>
+</tr>
+</table>
+
+<h3>Estado de la tarea y checkpointing</h3>
+<p>Además de "recordar" información, un agente que ejecuta tareas largas necesita <strong>estado durable</strong>: en qué paso va, qué herramientas ya ejecutó, qué resultados obtuvo. Si el proceso se cae en el paso 8 de 10, debe reanudarse sin repetir efectos laterales.</p>
+<ul>
+<li><strong>Checkpoints</strong> después de cada paso con efectos, en un almacén durable (base de datos, el checkpointer del framework o un motor de workflows).</li>
+<li><strong>Idempotencia</strong> en las herramientas que escriben, para que repetir un paso no duplique una transferencia.</li>
+<li><strong>Archivo de estado legible</strong> (notas, plan, progreso) que el propio agente actualiza: útil en agentes de larga duración que superan una ventana de contexto.</li>
+</ul>
+
+<h3>Memoria a largo plazo: decisiones de diseño</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Decisión</th><th>Opciones</th><th>Riesgo a vigilar</th></tr></thead>
+<tbody>
+<tr><td>Qué se guarda</td><td>Preferencias explícitas, hechos confirmados, resúmenes de sesiones</td><td>Guardar inferencias erróneas que luego se tratan como hechos.</td></tr>
+<tr><td>Quién decide escribir</td><td>El agente (herramienta de memoria), reglas del backend, o el usuario</td><td>Inyección: contenido malicioso que se persiste y contamina sesiones futuras.</td></tr>
+<tr><td>Cómo se recupera</td><td>Clave-valor por usuario, búsqueda semántica, ambas</td><td>Recuperar memoria de otro usuario o tenant.</td></tr>
+<tr><td>Cuándo se olvida</td><td>TTL, revisión, borrado a pedido</td><td>Retener datos personales más allá de lo permitido.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Semantic cache</h3>
+<p>El semantic cache almacena pares (query, respuesta) y los recupera cuando una nueva query es
+semánticamente
+similar a una anterior. Si la similitud supera un umbral θ (típicamente 0.95 cosine), retorna la
+respuesta
+cacheada sin llamar al LLM. Reduce costos y latencia en queries repetitivas.</p>
+
+<div class="formula">
+<div class="formula-label">Condición de cache hit</div>
+cache_hit = cos(E(q_nueva), E(q_anterior)) ≥ θ (θ ≈ 0.92–0.97)
+</div>
+
+<div class="callout warn">
+<div class="callout-label">Trade-off importante</div>
+<p>Un θ muy alto (0.99) reduce falsos hits pero limita el ahorro. Un θ bajo (0.85) ahorra más pero
+puede
+retornar respuestas obsoletas para queries ligeramente diferentes. Testea con tu distribución de
+queries
+real.</p>
+</div>
+

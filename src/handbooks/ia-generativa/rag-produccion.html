@@ -1,0 +1,141 @@
+<p>La mayoría de los sistemas RAG funcionan en la demo y se degradan en producción. Los motivos casi nunca son el modelo: son permisos mal heredados, índices desactualizados, documentos mal parseados y ausencia de medición. Este capítulo reúne los problemas reales y los patrones para resolverlos.</p>
+
+<h3>RAG Systems: Arquitectura de Producción</h3>
+
+<p>RAG (Retrieval-Augmented Generation) es el patrón dominante para sistemas de IA que necesitan
+conocimiento específico del dominio sin fine-tuning. La mayoría de las implementaciones tienen
+problemas críticos que no son visibles en un demo.</p>
+
+<div class="diagram">
+<pre><code>
+  RAG Architecture: Producción Real
+
+  INDEXING PIPELINE (offline/batch):
+  Documentos ──► Chunking ──► Embeddings ──► Vector DB
+                  │            (OpenAI/        (Pinecone,
+                  │            local model)     Weaviate,
+                  │                             pgvector)
+                  │
+                  ▼ Decisiones críticas:
+                  • Chunk size: 256-512 tokens (trade-off: contexto vs relevancia)
+                  • Overlap: 20-50 tokens (evitar pérdida de contexto en cortes)
+                  • Chunking strategy: fixed, semantic, o recursive
+
+  QUERY PIPELINE (online/real-time):
+  User Query
+      │
+      ▼
+  Query Rewriting ──► (opcional) Expandir query para mejor recall
+      │
+      ▼
+  Embedding de la query (mismo modelo que indexing — crítico)
+      │
+      ▼
+  Vector Search ──► Top-K chunks (típico: K=5-20)
+      │              + Metadata filtering (fecha, source, categoria)
+      ▼
+  Reranking ──► (opcional) Cross-encoder para mejor precisión
+      │          (Cohere Rerank, FlashRank, BGE-Reranker)
+      ▼
+  Context Assembly ──► Construir prompt con chunks relevantes
+      │
+      ▼
+  LLM Generation ──► Respuesta con groundedness en documentos
+      │
+      ▼
+  Guardrails ──► Validar que la respuesta es factual y apropiada
+</code></pre>
+</div>
+
+<h4>LOS 5 PROBLEMAS REALES DE RAG EN PRODUCCIÓN</h4>
+<div class="cards">
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Retrieval irrelevante (low recall)
+</div>
+<p>La búsqueda semántica retorna chunks que son similares en embedding pero irrelevantes en
+contexto. Solución: hybrid search (semántico + BM25 keyword), reranking con
+cross-encoder.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Context window pollution</div>
+<p>Pasar demasiados chunks llena el context window con información irrelevante. El LLM "se
+pierde" y genera respuestas genéricas. Solución: reranking agresivo, summary chunks,
+contextual compression.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Chunk boundary cuts</div>
+<p>Un concepto importante está dividido entre dos chunks. El vector search retorna solo uno.
+Solución: semantic chunking, sentence window retrieval, parent-child chunk estrategia.
+</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Stale embeddings</div>
+<p>Los documentos se actualizan pero los embeddings en el vector DB no. El sistema retorna
+información desactualizada. Solución: re-indexing pipeline con CDC, TTL en chunks,
+versioning de documentos.</p>
+</div>
+<div class="card">
+<div class="card-title"><span class="bullet b-red"></span>Hallucination sobre documentos
+</div>
+<p>El LLM "recuerda" información de su training que contradice el documento recuperado.
+Solución: prompts que forzan groundedness, citation tracking, factual validation con NLI
+models.</p>
+</div>
+</div>
+
+<h3>Permisos: el índice no es la fuente de verdad</h3>
+<p>Si un usuario no puede abrir un documento en el sistema origen, tampoco debe poder obtener su contenido a través del asistente. Esto exige diseño explícito:</p>
+<ol>
+<li><strong>Heredar ACLs en la ingesta:</strong> cada chunk guarda los grupos o roles con acceso al documento origen.</li>
+<li><strong>Resolver la identidad en cada consulta:</strong> el backend obtiene los grupos del usuario autenticado (no el modelo, no el cliente).</li>
+<li><strong>Pre-filtrar en el motor de búsqueda</strong> con esos grupos antes de la búsqueda por similitud.</li>
+<li><strong>Sincronizar cambios de permisos</strong> con la misma prioridad que los cambios de contenido; una revocación que tarda un día en propagarse es una fuga de un día.</li>
+<li><strong>Auditar:</strong> registrar qué chunks se entregaron a qué usuario en cada respuesta.</li>
+</ol>
+
+<h3>Multi-tenancy</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Patrón</th><th>Aislamiento</th><th>Costo / operación</th><th>Cuándo</th></tr></thead>
+<tbody>
+<tr><td>Índice por tenant</td><td class="g">Fuerte</td><td class="r">Alto con muchos tenants</td><td>Pocos clientes grandes o requisitos contractuales de aislamiento.</td></tr>
+<tr><td>Colección compartida + filtro de tenant</td><td class="y">Lógico (depende del filtro)</td><td class="g">Bajo</td><td>Muchos tenants pequeños; el filtro lo impone el servidor en cada consulta.</td></tr>
+<tr><td>Híbrido por nivel</td><td>Mixto</td><td>Medio</td><td>Tenants premium o regulados aislados, el resto compartido.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Frescura del índice</h3>
+<ul>
+<li><strong>Ingesta incremental</strong> por cambios (CDC, eventos del gestor documental, webhooks) en lugar de re-indexar todo.</li>
+<li><strong>Hash de contenido</strong> para no recalcular embeddings de chunks que no cambiaron.</li>
+<li><strong>Borrado efectivo:</strong> eliminar del índice cuando se borra el documento origen (y para solicitudes de derecho al olvido).</li>
+<li><strong>Versionado de documentos</strong> y fecha de vigencia en metadatos, para que una política derogada no se cite como vigente.</li>
+<li><strong>Re-indexación total</strong> al cambiar de modelo de embeddings: los vectores de modelos distintos no son comparables. Planifícala como una migración con índice paralelo.</li>
+</ul>
+
+<h3>Calidad del parseo</h3>
+<p>Tablas que se convierten en texto sin estructura, encabezados y pies de página repetidos en cada chunk, columnas mezcladas, OCR con errores: el retrieval no puede recuperar lo que el parser destruyó. Revisa manualmente una muestra de chunks de cada tipo de documento antes de culpar al modelo de embeddings.</p>
+
+<h3>Checklist de deployment</h3>
+<ul>
+<li>✓ Prompts versionados y testeados con golden dataset</li>
+<li>✓ Retrieval evaluation baseline establecido (Precision@5, MRR)</li>
+<li>✓ Semantic cache configurado con umbral ajustado</li>
+<li>✓ Traces habilitados en LangSmith / Langfuse</li>
+<li>✓ Alertas en P95 latency y error rate</li>
+<li>✓ HITL para acciones irreversibles de agentes</li>
+<li>✓ PII scrubbing en pipeline de ingesta</li>
+<li>✓ Rate limiting por tenant/usuario</li>
+<li>✓ Rollback plan si quality metrics caen</li>
+</ul>
+
+<div class="callout tip">
+<div class="callout-label">Último consejo</div>
+<p>Empieza simple: RAG estándar sin agentes. Agrega complejidad solo cuando los límites del sistema
+anterior
+sean claros y medibles. Los sistemas agénticos más efectivos suelen ser los más simples que
+resuelven el
+problema.</p>
+</div>
+
