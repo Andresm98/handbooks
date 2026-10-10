@@ -8,11 +8,11 @@
       "id": "roadmap",
       "href": "/apps/roadmap.html",
       "title": "Roadmap interactivo de Ingeniería de Software (Banca)",
-      "meta": "23 temas · checklist y favoritos · offline",
+      "meta": "30 temas · 45 casos reales · offline",
       "card": {
         "kicker": "Aplicación · Práctica",
-        "tagline": "Niveles, checklist, entrevistas y proyectos",
-        "description": "Ruta Junior → Arquitecto con dependencias entre temas, matriz de prioridad, preguntas de entrevista por nivel, proyectos prácticos y progreso guardado.",
+        "tagline": "30 temas con conceptos, casos reales y troubleshooting",
+        "description": "Ruta Junior → Arquitecto en 30 temas: conceptos clave, profundización técnica, temas recurrentes, 45 casos reales documentados, escenarios de troubleshooting, entrevistas por nivel y proyectos.",
         "icon": "RM",
         "color": "#f43f5e"
       }

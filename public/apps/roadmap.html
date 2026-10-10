@@ -1268,6 +1268,39 @@
             transform: translateY(-1px);
             background: rgba(255, 255, 255, 1);
         }
+
+        /* ---------- Contenido ampliado ---------- */
+        .collapsible-body code { font-family: var(--font-mono); font-size: .86em; background: var(--indigo-soft); color: var(--ink); padding: 1px 5px; border-radius: 5px; }
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin: 4px 0; }
+        .concept-item { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 11px 13px; }
+        .concept-item dt { font-weight: 650; color: var(--ink); font-size: 13.5px; margin-bottom: 3px; }
+        .concept-item dd { margin: 0; font-size: 13px; line-height: 1.55; color: var(--ink-soft); }
+        .deep-block { border-left: 2px solid var(--indigo); padding: 2px 0 2px 16px; margin: 0 0 18px; }
+        .deep-block h4 { margin-top: 0 !important; }
+        .code-cap { font-size: 12px !important; color: var(--ink-faint) !important; margin-top: -6px !important; }
+        .recurrent-list { display: grid; gap: 10px; }
+        .recurrent { display: grid; grid-template-columns: 34px 1fr; gap: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 12px 14px; }
+        .rc-num { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--indigo); padding-top: 2px; }
+        .rc-title { font-weight: 650; color: var(--ink); font-size: 14.5px; margin-bottom: 4px; }
+        .rc-why { margin: 0 0 6px !important; font-size: 13.5px; }
+        .rc-key { margin: 0 !important; font-size: 13.5px; color: var(--ink) !important; }
+        .rc-key span, .sc-symptom span, .sc-fix span { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--indigo); background: var(--indigo-soft); border-radius: 5px; padding: 1px 6px; margin-right: 8px; }
+        .case-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+        .case-card { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 15px 17px; box-shadow: var(--shadow-card); }
+        .case-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+        .case-when { font-family: var(--font-mono); font-size: 11.5px; color: var(--danger); background: var(--danger-soft); border-radius: 5px; padding: 1px 7px; }
+        .case-topic { font-size: 11.5px; color: var(--indigo); cursor: pointer; }
+        .case-card h4 { margin: 2px 0 10px !important; font-size: 15px; color: var(--ink); }
+        .case-body { margin: 0; display: grid; grid-template-columns: 92px 1fr; gap: 6px 10px; font-size: 13px; line-height: 1.55; }
+        .case-body dt { font-weight: 650; color: var(--ink-faint); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+        .case-body dd { margin: 0; color: var(--ink-soft); }
+        .case-src { margin-top: 10px; font-size: 11.5px; color: var(--ink-faint); border-top: 1px solid var(--line); padding-top: 8px; }
+        .scenario { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 13px 15px; margin-bottom: 12px; }
+        .sc-symptom { font-weight: 600; color: var(--ink); font-size: 14px; margin-bottom: 8px; }
+        .sc-steps { margin: 0 0 8px 18px !important; font-size: 13.5px; }
+        .sc-fix { font-size: 13.5px; color: var(--ink); }
+        .sc-fix span { color: var(--ok); background: var(--ok-soft); }
+        @media (max-width: 600px) { .case-body { grid-template-columns: 1fr; } }
     </style>
 </head>
 
@@ -1276,8 +1309,7 @@
     <div class="app">
         <header class="topbar">
             <button class="menu-btn" id="menuBtn" aria-label="Abrir menú">☰</button>
-            <div class="brand" onclick="Router.go('home')" style="cursor:pointer;">📘 Guía de Dominio <small>Ing.
-                    Software · Banca</small></div>
+            <div class="brand" onclick="Router.go('home')" style="cursor:pointer;">🧭 Roadmap <small>Ing. Software · Banca</small></div>
             <a href="/" class="home-link" aria-label="Inicio">HOME</a>
             <div class="search-wrap">
                 <span class="search-icon">⌕</span>
@@ -1308,6 +1340,15 @@
 
     <button class="back-to-top" id="backToTop" title="Volver arriba">↑</button>
 
+    <script src="/apps/roadmap-data/registro.js"></script>
+    <script src="/apps/roadmap-data/fundamentos.js"></script>
+    <script src="/apps/roadmap-data/backend.js"></script>
+    <script src="/apps/roadmap-data/frontend.js"></script>
+    <script src="/apps/roadmap-data/datos.js"></script>
+    <script src="/apps/roadmap-data/infraestructura.js"></script>
+    <script src="/apps/roadmap-data/calidad-seguridad.js"></script>
+    <script src="/apps/roadmap-data/arquitectura-banca-ia.js"></script>
+    <script src="/apps/roadmap-data/transversales.js"></script>
     <script>
         /* ============================================================
            ESTADO PERSISTENTE
@@ -3423,6 +3464,12 @@
     ]
 });
 
+        /* Contenido ampliado: public/apps/roadmap-data/*.js (validado en el build) */
+        const PLUS = window.ROADMAP_PLUS || { temas: {}, nuevos: [], transversales: [] };
+        PLUS.nuevos.forEach(c => CHAPTERS.push(c));
+        CHAPTERS.forEach(c => { c.plus = PLUS.temas[c.id] || c.plus || null; });
+        CHAPTERS.sort((a, b) => a.num - b.num);
+
         const GLOBAL_CHECKLIST_EXTRA = [];
         GLOBAL_CHECKLIST_EXTRA.push(
             {
@@ -4178,27 +4225,29 @@
             'gestion-competencias-rol': { frecuencia: 'Baja', importancia: 'Media' },
             'ia-generativa-agentes': { frecuencia: 'Alta', importancia: 'Alta' }
         };
+        PLUS.nuevos.forEach(c => { MATRIX_META[c.id] = c.matriz || { frecuencia: 'Alta', importancia: 'Alta' }; });
+
 
         const ROADMAP = [
             {
                 nivel: 'Principiante', duracion: '0-6 meses', resumen: 'Construir el vocabulario y los reflejos básicos antes de especializarse en cualquier stack.',
-                temas: ['fundamentos-sdlc', 'programacion-paradigmas', 'gestion-competencias-rol']
+                temas: ['fundamentos-sdlc', 'programacion-paradigmas', 'estructuras-datos-algoritmos', 'clean-code-refactoring', 'gestion-competencias-rol']
             },
             {
                 nivel: 'Junior', duracion: '6 meses - 1.5 años', resumen: 'Ser productivo de forma supervisada en un stack backend, entendiendo el ciclo completo de una historia hasta producción.',
-                temas: ['java-spring', 'bases-relacionales', 'apis-rest-graphql', 'testing-calidad', 'devops-cicd-git']
+                temas: ['java-spring', 'bases-relacionales', 'apis-rest-graphql', 'testing-calidad', 'devops-cicd-git', 'redes-protocolos']
             },
             {
                 nivel: 'Semi Senior', duracion: '1.5 - 3 años', resumen: 'Trabajar con autonomía en features completas, incluyendo frontend o móvil según el equipo, y empezar a operar en contenedores y nube.',
-                temas: ['frontend-web', 'frontend-movil', 'bases-nosql-cache', 'contenedores-orquestacion', 'cloud-aws-azure-gcp', 'dotnet-backend', 'python-backend', 'go-backend']
+                temas: ['frontend-web', 'frontend-movil', 'bases-nosql-cache', 'contenedores-orquestacion', 'cloud-aws-azure-gcp', 'dotnet-backend', 'python-backend', 'go-backend', 'concurrencia-paralelismo', 'seguridad-aplicativa-owasp']
             },
             {
                 nivel: 'Senior', duracion: '3 - 6 años', resumen: 'Diseñar soluciones completas, anticipar problemas de escalabilidad y seguridad, y ser el punto de referencia técnico del equipo.',
-                temas: ['arquitectura-software', 'mensajeria-kafka-distribuidos', 'seguridad-redes-linux', 'observabilidad-sre', 'ingenieria-banca', 'ia-generativa-agentes']
+                temas: ['arquitectura-software', 'mensajeria-kafka-distribuidos', 'seguridad-redes-linux', 'observabilidad-sre', 'performance-caching', 'incidentes-troubleshooting', 'system-design', 'ingenieria-banca', 'ia-generativa-agentes']
             },
             {
                 nivel: 'Staff', duracion: '6+ años', resumen: 'Influir en decisiones técnicas que cruzan varios equipos, liderar migraciones complejas y mentorizar a otros ingenieros senior.',
-                temas: ['arquitectura-software', 'ingenieria-banca', 'cloud-aws-azure-gcp', 'observabilidad-sre', 'ia-generativa-agentes']
+                temas: ['arquitectura-software', 'system-design', 'ingenieria-banca', 'cloud-aws-azure-gcp', 'observabilidad-sre', 'incidentes-troubleshooting', 'ia-generativa-agentes']
             },
             {
                 nivel: 'Principal Engineer', duracion: 'Trayectoria sostenida', resumen: 'Definir estándares técnicos a nivel de toda la organización y participar en decisiones de tecnología de largo plazo (technology radar).',
@@ -4206,7 +4255,7 @@
             },
             {
                 nivel: 'Arquitecto', duracion: 'Trayectoria sostenida', resumen: 'Diseñar sistemas de extremo a extremo, arbitrar trade-offs entre equipos, y alinear la arquitectura con restricciones regulatorias del negocio.',
-                temas: ['arquitectura-software', 'ingenieria-banca', 'cloud-aws-azure-gcp', 'seguridad-redes-linux', 'ia-generativa-agentes']
+                temas: ['arquitectura-software', 'system-design', 'ingenieria-banca', 'cloud-aws-azure-gcp', 'seguridad-redes-linux', 'seguridad-aplicativa-owasp', 'ia-generativa-agentes']
             }
         ];
 
@@ -4248,19 +4297,35 @@
         const KEYWORDS = ['public', 'private', 'protected', 'class', 'interface', 'function', 'func', 'return', 'if', 'else', 'for', 'while', 'const', 'let', 'var', 'new', 'async', 'await', 'try', 'catch', 'throw', 'import', 'from', 'export', 'static', 'final', 'void', 'int', 'string', 'String', 'bool', 'boolean', 'null', 'nil', 'true', 'false', 'this', 'self', 'def', 'package', 'struct', 'type', 'select', 'update', 'insert', 'delete', 'from', 'where', 'join', 'begin', 'commit', 'rollback', 'go', 'chan', 'range', 'switch', 'case', 'default', 'transactional', 'override'];
         const KW_REGEX = new RegExp('\\b(' + KEYWORDS.join('|') + ')\\b', 'g');
 
+        /* Resaltado en una sola pasada: tokeniza comentarios, cadenas, números y palabras
+           clave sobre el texto original y escapa cada token por separado. */
+        const TOKEN_RE = /((?:\/\/|(?<=^|\s)#|(?<=^|\s)--)[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`[^`]*`)|(\b\d+(?:\.\d+)?\b)|(\b[A-Za-z_]\w*\b)/gm;
+        const KW_SET = new Set(KEYWORDS.map(k => k.toLowerCase()));
         function highlightCode(code) {
-            let out = esc(code);
-            out = out.replace(/(^|\n)([ \t]*(\/\/|#|--).*)/g, (m, p1, p2) => p1 + '<span class="tok-com">' + p2 + '</span>');
-            out = out.replace(/(&quot;[^&]*?&quot;|&#39;[^&]*?&#39;)/g, '<span class="tok-str">$1</span>');
-            out = out.replace(/\b(\d+\.?\d*)\b/g, '<span class="tok-num">$1</span>');
-            out = out.replace(KW_REGEX, '<span class="tok-kw">$1</span>');
-            return out;
+            let out = '', last = 0, m;
+            TOKEN_RE.lastIndex = 0;
+            while ((m = TOKEN_RE.exec(code)) !== null) {
+                out += esc(code.slice(last, m.index));
+                const t = esc(m[0]);
+                if (m[1]) out += '<span class="tok-com">' + t + '</span>';
+                else if (m[2]) out += '<span class="tok-str">' + t + '</span>';
+                else if (m[3]) out += '<span class="tok-num">' + t + '</span>';
+                else if (KW_SET.has(m[4].toLowerCase())) out += '<span class="tok-kw">' + t + '</span>';
+                else out += t;
+                last = TOKEN_RE.lastIndex;
+            }
+            return out + esc(code.slice(last));
         }
 
         /* Indice de busqueda: titulo, resumen, tecnologias, definicion, preguntas de entrevista */
         const SEARCH_INDEX = [];
         CHAPTERS.forEach(c => {
             SEARCH_INDEX.push({ tipo: 'capitulo', chapterId: c.id, titulo: c.titulo, sub: c.dominio, texto: normalizar(c.titulo + ' ' + c.resumen + ' ' + c.tecnologias.join(' ') + ' ' + c.c.definicion) });
+            const pl = c.plus || {};
+            (pl.conceptos || []).forEach(k => SEARCH_INDEX.push({ tipo: 'concepto', chapterId: c.id, titulo: k[0], sub: c.titulo + ' · concepto', texto: normalizar(k[0] + ' ' + k[1]) }));
+            (pl.casos || []).forEach(k => SEARCH_INDEX.push({ tipo: 'caso', chapterId: c.id, titulo: k.titulo, sub: c.titulo + ' · caso real ' + k.cuando, texto: normalizar(k.titulo + ' ' + k.que + ' ' + k.causa) }));
+            (pl.recurrentes || []).forEach(k => SEARCH_INDEX.push({ tipo: 'recurrente', chapterId: c.id, titulo: k.tema, sub: c.titulo + ' · tema recurrente', texto: normalizar(k.tema + ' ' + k.por + ' ' + k.clave) }));
+            (pl.profundidad || []).forEach(k => SEARCH_INDEX.push({ tipo: 'profundidad', chapterId: c.id, titulo: k.t, sub: c.titulo + ' · en profundidad', texto: normalizar(k.t + ' ' + (k.p || []).flat().join(' ')) }));
             (c.entrevistas || []).forEach(e => {
                 SEARCH_INDEX.push({ tipo: 'entrevista', chapterId: c.id, titulo: e.pregunta, sub: c.titulo + ' · ' + e.nivel, texto: normalizar(e.pregunta + ' ' + e.respuesta) });
             });
@@ -4272,6 +4337,8 @@
             { tipo: 'pagina', route: 'matrix', titulo: 'Matriz de prioridad', sub: 'Frecuencia, importancia y dificultad' },
             { tipo: 'pagina', route: 'checklist', titulo: 'Checklist global', sub: 'Más de 500 ítems de dominio' },
             { tipo: 'pagina', route: 'interviews', titulo: 'Preparación de entrevistas', sub: 'Preguntas por nivel' },
+            { tipo: 'pagina', route: 'casos', titulo: 'Casos reales', sub: 'Incidentes documentados y sus lecciones' },
+            { tipo: 'pagina', route: 'transversales', titulo: 'Temas transversales', sub: 'Lo que aparece en todo el stack' },
             { tipo: 'pagina', route: 'projects', titulo: 'Proyectos prácticos', sub: 'Proyectos progresivos integradores' },
             { tipo: 'pagina', route: 'favorites', titulo: 'Favoritos', sub: 'Tus temas marcados' }
         ];
@@ -4453,6 +4520,33 @@
                 + '<div class="collapsible-head" onclick="toggleCollapsible(this)"><h2>' + esc(titulo) + '</h2><span class="chev">▾</span></div>'
                 + '<div class="collapsible-body">' + bodyHtml + '</div></div>';
         }
+        function fmt(str) {
+            return esc(str).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        }
+        function renderConceptos(list) {
+            return '<dl class="concept-grid">' + list.map(c => '<div class="concept-item"><dt>' + fmt(c[0]) + '</dt><dd>' + fmt(c[1]) + '</dd></div>').join('') + '</dl>';
+        }
+        function renderProfundidad(list) {
+            return list.map(s => {
+                let h = '<div class="deep-block"><h4>' + fmt(s.t) + '</h4>';
+                (s.p || []).forEach(x => { h += Array.isArray(x) ? '<ul>' + x.map(i => '<li>' + fmt(i) + '</li>').join('') + '</ul>' : '<p>' + fmt(x) + '</p>'; });
+                if (s.code) h += '<pre class="codeblock"><button class="copy-btn" onclick="copyCode(this)">Copiar</button><code>' + highlightCode(s.code.code) + '</code></pre><p class="code-cap">' + esc(s.code.lang) + '</p>';
+                return h + '</div>';
+            }).join('');
+        }
+        function renderRecurrentes(list) {
+            return '<div class="recurrent-list">' + list.map((r, i) => '<div class="recurrent"><div class="rc-num">' + String(i + 1).padStart(2, '0') + '</div><div><div class="rc-title">' + fmt(r.tema) + '</div><p class="rc-why">' + fmt(r.por) + '</p><p class="rc-key"><span>Clave</span>' + fmt(r.clave) + '</p></div></div>').join('') + '</div>';
+        }
+        function renderCaso(k, chapter) {
+            return '<article class="case-card"><div class="case-head"><span class="case-when">' + esc(k.cuando) + '</span>' + (chapter ? '<span class="case-topic" onclick="Router.go(\'chapter/' + chapter.id + '\')">' + esc(chapter.titulo) + '</span>' : '') + '</div>'
+                + '<h4>' + fmt(k.titulo) + '</h4>'
+                + '<dl class="case-body"><dt>Qué pasó</dt><dd>' + fmt(k.que) + '</dd><dt>Causa raíz</dt><dd>' + fmt(k.causa) + '</dd><dt>Lección</dt><dd>' + fmt(k.leccion) + '</dd></dl>'
+                + '<div class="case-src">Fuente: ' + esc(k.fuente) + '</div></article>';
+        }
+        function renderEscenarios(list) {
+            return list.map(e => '<div class="scenario"><div class="sc-symptom"><span>Síntoma</span>' + fmt(e.sintoma) + '</div><ol class="sc-steps">' + e.pasos.map(p => '<li>' + fmt(p) + '</li>').join('') + '</ol><div class="sc-fix"><span>Solución</span>' + fmt(e.solucion) + '</div></div>').join('');
+        }
+
         function listHtml(arr) { return '<ul>' + arr.map(i => '<li>' + esc(i) + '</li>').join('') + '</ul>'; }
 
         /* ============================================================
@@ -4462,7 +4556,7 @@
             updateGlobalProgress();
             let html = '<div class="home-hero">'
                 + '<h1>Roadmap de Ingeniería de Software en Banca</h1>'
-                + '<p>Veintidós capítulos (incluido IA generativa y agentes), más de 500 ítems de checklist, preguntas de entrevista por nivel y proyectos integradores — cubriendo el stack completo solicitado para los roles de Ingeniero de Software (Emergente) de Banco Pichincha. Usa el buscador, los filtros de la barra lateral, o explora por dominio abajo.</p>'
+                + '<p>' + CHAPTERS.length + ' temas con conceptos clave, profundización técnica, temas recurrentes, casos reales documentados, escenarios de troubleshooting, preguntas de entrevista por nivel y proyectos. Usa el buscador, los filtros de la barra lateral o explora por dominio.</p>'
                 + '</div>';
 
             DOMAIN_ORDER.forEach(domain => {
@@ -4555,10 +4649,14 @@
             html += '<div style="display:flex;gap:14px;margin-bottom:14px;"><button class="expand-all-btn" onclick="setAllCollapsibles(false)">Expandir todo</button><button class="expand-all-btn" onclick="setAllCollapsibles(true)">Colapsar todo</button></div>';
 
             html += seccion('Definición', '<p>' + esc(c.definicion) + '</p>', 'sec-def');
+            const plus = chapter.plus;
+            if (plus && plus.conceptos) html += seccion('Conceptos clave', renderConceptos(plus.conceptos), 'sec-conceptos');
             html += seccion('El problema que resuelve', '<p>' + esc(c.problema) + '</p>', 'sec-problema');
             html += seccion('Fundamentos', '<p>' + esc(c.fundamentos) + '</p>', 'sec-fund');
             html += seccion('Arquitectura', '<p>' + esc(c.arquitectura) + '</p>', 'sec-arch');
             html += seccion('Funcionamiento interno', '<p>' + esc(c.funcionamiento) + '</p>', 'sec-func');
+            if (plus && plus.profundidad) html += seccion('En profundidad', renderProfundidad(plus.profundidad), 'sec-profundidad');
+            if (plus && plus.recurrentes) html += seccion('Temas recurrentes', renderRecurrentes(plus.recurrentes), 'sec-recurrentes');
 
             let practicasBody = '<div class="two-col"><div class="col-good"><h4>✓ Buenas prácticas</h4>' + listHtml(c.buenas) + '</div>'
                 + '<div class="col-bad"><h4>✕ Malas prácticas</h4>' + listHtml(c.malas) + '</div></div>';
@@ -4573,6 +4671,8 @@
                 + '<h4>Ejemplo en banca</h4><div class="bank-callout">' + esc(c.ejemploBanca) + '</div>'
                 + '<h4>Ejemplo empresarial</h4><p>' + esc(c.ejemploEmpresarial) + '</p>';
             html += seccion('Ejemplos', ejemplosBody, 'sec-ejemplos');
+            if (plus && plus.casos) html += seccion('Casos de la vida real', '<div class="case-grid">' + plus.casos.map(k => renderCaso(k, null)).join('') + '</div>', 'sec-casos');
+            if (plus && plus.escenarios) html += seccion('Escenarios de troubleshooting', renderEscenarios(plus.escenarios), 'sec-escenarios');
 
             if (c.comparacion) {
                 html += seccion('Comparación', renderTableHtml(c.comparacion), 'sec-comparacion');
@@ -4627,14 +4727,19 @@
             const c = chapter.c;
             const items = [
                 { id: 'sec-def', label: 'Definición', exists: true },
+                { id: 'sec-conceptos', label: 'Conceptos clave', exists: !!(chapter.plus && chapter.plus.conceptos) },
                 { id: 'sec-problema', label: 'El problema', exists: true },
                 { id: 'sec-fund', label: 'Fundamentos', exists: true },
                 { id: 'sec-arch', label: 'Arquitectura', exists: true },
                 { id: 'sec-func', label: 'Funcionamiento', exists: true },
+                { id: 'sec-profundidad', label: 'En profundidad', exists: !!(chapter.plus && chapter.plus.profundidad) },
+                { id: 'sec-recurrentes', label: 'Temas recurrentes', exists: !!(chapter.plus && chapter.plus.recurrentes) },
                 { id: 'sec-practicas', label: 'Buenas/malas prácticas', exists: true },
                 { id: 'sec-errores', label: 'Errores comunes', exists: true },
                 { id: 'sec-patrones', label: 'Patrones', exists: true },
                 { id: 'sec-ejemplos', label: 'Ejemplos', exists: true },
+                { id: 'sec-casos', label: 'Casos reales', exists: !!(chapter.plus && chapter.plus.casos) },
+                { id: 'sec-escenarios', label: 'Troubleshooting', exists: !!(chapter.plus && chapter.plus.escenarios) },
                 { id: 'sec-comparacion', label: 'Comparación', exists: !!c.comparacion },
                 { id: 'sec-ventajas', label: 'Ventajas/desventajas', exists: true },
                 { id: 'sec-codigo', label: 'Código', exists: !!c.codigo },
@@ -4736,6 +4841,34 @@
             interviewFilterNivel = (interviewFilterNivel === nivel) ? null : nivel;
             renderInterviews();
         }
+        let casoFilter = null;
+        function setCasoFilter(d) { casoFilter = casoFilter === d ? null : d; renderCasos(); }
+        function renderCasos() {
+            document.getElementById('toc').innerHTML = '';
+            const all = [];
+            CHAPTERS.forEach(c => ((c.plus && c.plus.casos) || []).forEach(k => all.push({ k: k, c: c })));
+            let html = '<div class="home-hero"><h1>Casos de la vida real</h1><p>' + all.length + ' incidentes y decisiones públicas documentadas: qué pasó, la causa raíz y la lección. Son los ejemplos que conviene tener listos para una entrevista o una revisión de diseño.</p></div>';
+            html += '<div class="filter-row" style="margin-bottom:16px;">';
+            DOMAIN_ORDER.forEach(d => { if (all.some(x => x.c.dominio === d)) html += '<span class="chip ' + (casoFilter === d ? 'active' : '') + '" onclick="setCasoFilter(\'' + d + '\')">' + esc(d) + '</span>'; });
+            html += '</div><div class="case-grid">';
+            all.filter(x => !casoFilter || x.c.dominio === casoFilter).forEach(x => { html += renderCaso(x.k, x.c); });
+            html += '</div>';
+            document.getElementById('mainInner').innerHTML = html;
+        }
+        function renderTransversales() {
+            document.getElementById('toc').innerHTML = '';
+            let html = '<div class="home-hero"><h1>Temas transversales</h1><p>Conceptos que reaparecen en todas las capas del stack: los vas a encontrar en backend, datos, infraestructura y arquitectura. Dominarlos una vez paga en todos los temas.</p></div>';
+            PLUS.transversales.forEach(t => {
+                html += '<div class="collapsible"><div class="collapsible-head" onclick="toggleCollapsible(this)"><h2>' + fmt(t.tema) + '</h2><span class="chev">▾</span></div><div class="collapsible-body">'
+                    + '<p>' + fmt(t.resumen) + '</p>'
+                    + '<h4>Cómo se manifiesta en cada capa</h4><ul>' + t.capas.map(x => '<li>' + fmt(x) + '</li>').join('') + '</ul>'
+                    + '<p class="rc-key"><span>Regla</span>' + fmt(t.regla) + '</p>'
+                    + '<div class="related-pills">' + t.temas.map(id => CH_BY_ID[id] ? '<span class="pill" onclick="Router.go(\'chapter/' + id + '\')">' + esc(CH_BY_ID[id].titulo) + '</span>' : '').join('') + '</div>'
+                    + '</div></div>';
+            });
+            document.getElementById('mainInner').innerHTML = html;
+        }
+
         function renderInterviews() {
             document.getElementById('toc').innerHTML = '';
             let html = '<div class="home-hero"><h1>Preparación de entrevistas</h1><p>Todas las preguntas de los 21 capítulos, filtrables por nivel. Cada respuesta es la respuesta esperada, no una transcripción textual de ningún candidato real.</p></div>';
@@ -4803,7 +4936,8 @@
         const Router = {
             routes: {
                 'home': renderHome, 'roadmap': renderRoadmap, 'deps': renderDeps, 'matrix': renderMatrix,
-                'checklist': renderChecklistGlobal, 'interviews': renderInterviews, 'projects': renderProjects, 'favorites': renderFavorites
+                'checklist': renderChecklistGlobal, 'interviews': renderInterviews, 'projects': renderProjects, 'favorites': renderFavorites,
+                'casos': renderCasos, 'transversales': renderTransversales
             },
             go(route) { location.hash = '#/' + route; }
         };
